@@ -2,13 +2,18 @@ package com.example.roman.testapp;
 
 
 import android.app.ProgressDialog;
+import android.media.AsyncPlayer;
+import android.media.AudioManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,11 +24,16 @@ import java.io.IOException;
 public class MainActivity extends ActionBarActivity {
 
     ProgressDialog mProgressDialog;
+    AsyncPlayer ap;
+    boolean play, playingStream;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ap = new AsyncPlayer("MyTest");
+        playingStream = false;
+        play = false;
     }
 
 
@@ -81,6 +91,10 @@ public class MainActivity extends ActionBarActivity {
             // Set title into TextView
             TextView txttitle = (TextView) findViewById(R.id.textView);
             txttitle.setText(title);
+            String url = "http://evropa2.cz";
+            url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
+            TextView mp3url = (TextView) findViewById(R.id.mp3Url);
+            mp3url.setText(url);
             mProgressDialog.dismiss();
         }
     }
@@ -92,19 +106,18 @@ public class MainActivity extends ActionBarActivity {
         new E2().execute();
     }
 
-    public String getData1(String url){
-        String text = "none";
-        try {
-            Document doc = Jsoup.connect(url).get();
-            text = "Title: " + doc.title();
-
-        } catch (IOException e) {
-            //e.printStackTrace();
+    public void playStopStream(View v){
+        if(!playingStream) {
+            String url = ((TextView) findViewById(R.id.mp3Url)).getText().toString();
+            ap.play(this, Uri.parse(url), false, AudioManager.STREAM_MUSIC);
+            ((Button)findViewById(R.id.playBt)).setText(R.string.stop);
+            Toast.makeText(this, "Přehrávám...", Toast.LENGTH_LONG).show();
+            playingStream = true;
+        } else {
+            ap.stop();
+            ((Button)findViewById(R.id.playBt)).setText(R.string.play);
+            Toast.makeText(this, "Stop", Toast.LENGTH_LONG).show();
+            playingStream = false;
         }
-        return text;
-    }
-
-    public String getData2(String url){
-        return "none";
     }
 }
