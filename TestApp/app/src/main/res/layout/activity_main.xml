@@ -34,15 +34,38 @@
         android:layout_marginTop="39dp"
         android:hint="mp3 url" />
 
-    <Button
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/play"
-        android:id="@+id/playBt"
         android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@+id/refreshBt"
-        android:layout_alignStart="@+id/refreshBt"
-        android:layout_marginBottom="41dp"
-        android:onClick="playStopStream" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:gravity="center_horizontal">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/play"
+            android:id="@+id/playBt"
+            android:onClick="playPauseMedia"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="false"
+            android:layout_gravity="bottom" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/stop"
+            android:id="@+id/button"
+            android:layout_alignTop="@+id/playBt"
+            android:layout_toRightOf="@+id/playBt"
+            android:layout_toEndOf="@+id/playBt"
+            android:onClick="stopMedia"
+            android:layout_alignParentEnd="false"
+            android:layout_gravity="bottom" />
+    </LinearLayout>
 
 </RelativeLayout>

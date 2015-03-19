@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Mp3 archiv - Evropa 2</string>
+    <string name="app_name">E2 - Mp3 archiv</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="refresh_button">Refresh</string>
