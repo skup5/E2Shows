@@ -109,6 +109,7 @@ public class MainActivity extends ActionBarActivity {
                                     int position, long id) {
                 // TODO Auto-generated method stub
                 //navHeader.setText(categoryItems[position].toString());
+                actionBar.setTitle(categoryItems[position].toString());
                 mDrawerLayout.closeDrawers();
             }
         });
