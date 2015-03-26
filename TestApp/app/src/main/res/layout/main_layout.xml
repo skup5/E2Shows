@@ -15,7 +15,8 @@
         android:layout_height="match_parent" >
 
        <!--<include layout="@layout/toolbar" />-->
-        <include layout="@layout/activity_main" />
+        <!--<include layout="@layout/activity_main" />-->
+        <include layout="@layout/records"/>
     </FrameLayout>
     <!-- The navigation drawer -->
 

@@ -61,6 +61,10 @@ public class MainActivity extends ActionBarActivity {
     private boolean initialStage = true;
     private boolean playing, playingStream;
     private DrawerLayout mDrawerLayout;
+    
+    private ListView recList;
+    private ArrayAdapter<Object> recAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +111,6 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                // TODO Auto-generated method stub
                 //navHeader.setText(categoryItems[position].toString());
                 actionBar.setTitle(categoryItems[position].toString());
                 mDrawerLayout.closeDrawers();
@@ -118,8 +121,17 @@ public class MainActivity extends ActionBarActivity {
         mediaPlayer = null;
         playingStream = false;
         playing = false;
-        playBt = (Button) findViewById(R.id.playBt);
+        //playBt = (Button) findViewById(R.id.playBt);
+        playBt = new Button(getApplicationContext());
        // Log.d("onCreate", "\n***************\n* VYTVORIL JSEM APPKU\n***************");
+
+        initList();
+        recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getApplicationContext(), categoryItems[position].toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -230,21 +242,28 @@ public class MainActivity extends ActionBarActivity {
     }
     
     private void initNavigation() {
-        // TODO Auto-generated method stub
         //navHeader = (TextView) findViewById(R.id.navHeader);
         // Find the ListView resource.
         navList = (ListView) findViewById(R.id.left_drawer);
 
-        ArrayList<String> planetList = new ArrayList<String>();
+        ArrayList<String> planetList = new ArrayList();
         planetList.addAll(Arrays.asList(categoryItems));
 
         // Create ArrayAdapter using the planet navList.
-        navListAdapter = new ArrayAdapter<String>(this,
+        navListAdapter = new ArrayAdapter(this,
                 android.R.layout.simple_list_item_1, planetList);
 
         // Set the ArrayAdapter as the ListView's adapter.
         navList.setAdapter(navListAdapter);
+        
     }
+    
+    private void initList(){
+        recList = (ListView) findViewById(R.id.listView_records);
+        recAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_activated_1, Arrays.asList(categoryItems));
+        recList.setAdapter(recAdapter);
+    }
+
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
