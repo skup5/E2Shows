@@ -1,6 +1,5 @@
 package com.example.roman.testapp;
 
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.media.AsyncPlayer;
@@ -10,13 +9,11 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,9 +30,9 @@ import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -53,7 +50,7 @@ public class MainActivity extends ActionBarActivity {
             "Zpátky do minulosti", "Bombucman", "Odpolední odhalení - Ekl Zástěra",
             "To nejlepší z Odpolední show", "To nejlepší z Víkendové ranní show",
             "Emoce na Evropě 2", "Dance Exxtravaganza", "Novinky na DVD",
-            "Internet", "Hosté Evropy 2", "Songy Evropy 2"};
+            "Internet", "Hosté Evropy 2", "Songy Evropy 2", "Fake"};
 
     /**
      * remain false till media is not completed, inside OnCompletionListener make it true.
@@ -64,74 +61,21 @@ public class MainActivity extends ActionBarActivity {
     
     private ListView recList;
     private ArrayAdapter<Object> recAdapter;
-
+    private final String urlE2 = "http://evropa2.cz";
+    private final String urlArchiv = "/mp3-archiv/";
+    private ActionBar actionBar;
+    private CharSequence choosenCategory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
        // setContentView(R.layout.activity_main);
         setContentView(R.layout.main_layout);
-        initNavigation();
 
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeButtonEnabled(true);
+        init();
 
-        // Toolbar :it is a generalization of action bars for use within
-        // application layouts.
-        //Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        // DrawerLayout : it acts as a top-level container for window content
-        // that allows for interactive "drawer" views to be
-        // pulled out from the edge of the window.
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        //mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-
-        // ActionBarDrawerToggle : This class provides a handy way to tie
-        // together the functionality of DrawerLayout and
-        // the framework ActionBar to implement the recommended design for
-        // navigation drawers.
-        final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
-                mDrawerLayout, R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close);
-
-        mDrawerToggle.setDrawerIndicatorEnabled(true);
-        //Set the ActionBarDrawerToggle in the layout
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        //Hide the default Actionbar
-        //getSupportActionBar().hide();
-        // Call syncState() from your Activity's onPostCreate to synchronize the
-        // indicator
-        // with the state of the linked DrawerLayout after
-        // onRestoreInstanceState has occurred
-        mDrawerToggle.syncState();
-
-        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                //navHeader.setText(categoryItems[position].toString());
-                actionBar.setTitle(categoryItems[position].toString());
-                mDrawerLayout.closeDrawers();
-            }
-        });
-
-        ap = new AsyncPlayer("MyTest");
-        mediaPlayer = null;
-        playingStream = false;
-        playing = false;
-        //playBt = (Button) findViewById(R.id.playBt);
-        playBt = new Button(getApplicationContext());
        // Log.d("onCreate", "\n***************\n* VYTVORIL JSEM APPKU\n***************");
-
-        initList();
-        recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getApplicationContext(), categoryItems[position].toString(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     @Override
@@ -240,31 +184,131 @@ public class MainActivity extends ActionBarActivity {
         initialStage = true;
         playBt.setText(R.string.play);
     }
-    
-    private void initNavigation() {
+
+    private void init(){
+       // Toast.makeText(this, "Initializace...", Toast.LENGTH_SHORT).show();
+
+        Set categorySet = null;
+        Downloader downloader = null;
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+        }
+        else {
+            Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
+            downloader = new Downloader(this, Downloader.Type.Category, null);
+            downloader.execute(urlE2 + urlArchiv);
+        }
+
+        actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+
+        // Toolbar :it is a generalization of action bars for use within
+        // application layouts.
+        //Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        // DrawerLayout : it acts as a top-level container for window content
+        // that allows for interactive "drawer" views to be
+        // pulled out from the edge of the window.
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
+        //mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+
+        // ActionBarDrawerToggle : This class provides a handy way to tie
+        // together the functionality of DrawerLayout and
+        // the framework ActionBar to implement the recommended design for
+        // navigation drawers.
+        final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
+                mDrawerLayout, R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close){
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                actionBar.setTitle(R.string.categoryTitle);
+                //invalidateOptionsMenu();
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                actionBar.setTitle(R.string.app_name);
+                actionBar.setSubtitle(choosenCategory);
+                //invalidateOptionsMenu();
+            }
+        };
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        //Set the ActionBarDrawerToggle in the layout
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        //Hide the default Actionbar
+        //getSupportActionBar().hide();
+        // Call syncState() from your Activity's onPostCreate to synchronize the
+        // indicator
+        // with the state of the linked DrawerLayout after
+        // onRestoreInstanceState has occurred
+        mDrawerToggle.syncState();
+
+        ap = new AsyncPlayer("MyTest");
+        mediaPlayer = null;
+        playingStream = false;
+        playing = false;
+        //playBt = (Button) findViewById(R.id.playBt);
+        playBt = new Button(getApplicationContext());
+
+        if (downloader != null) {
+            try {
+                categorySet = downloader.get();
+                initNavigation(categorySet);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        /*initList();
+        recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getApplicationContext(), categoryItems[position].toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        */
+    }
+
+    private void initNavigation(Set categorySet) {
         //navHeader = (TextView) findViewById(R.id.navHeader);
         // Find the ListView resource.
         navList = (ListView) findViewById(R.id.left_drawer);
 
-        ArrayList<String> planetList = new ArrayList();
-        planetList.addAll(Arrays.asList(categoryItems));
+        if (categorySet == null) {
+            Toast.makeText(this, "Chyba při stahování kategorií", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-        // Create ArrayAdapter using the planet navList.
-        navListAdapter = new ArrayAdapter(this,
-                android.R.layout.simple_list_item_1, planetList);
-
+        Log.d("onCreate", "Kategorie byly stazeny, pridavam do navListu");
+        navListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, categorySet.toArray());
         // Set the ArrayAdapter as the ListView's adapter.
         navList.setAdapter(navListAdapter);
-        
+        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                //navHeader.setText(categoryItems[position].toString());
+               // actionBar.setTitle(categoryItems[position].toString());
+                choosenCategory = categoryItems[position].toString();
+                mDrawerLayout.closeDrawers();
+            }
+        });
     }
-    
+
     private void initList(){
         recList = (ListView) findViewById(R.id.listView_records);
         recAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_activated_1, Arrays.asList(categoryItems));
         recList.setAdapter(recAdapter);
     }
 
-    private boolean isNetworkConnected() {
+    public boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         if (ni == null) {
@@ -275,7 +319,7 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private boolean isInternetAvailable() {
+    public boolean isInternetAvailable() {
         try {
             InetAddress ipAddr = InetAddress.getByName("google.com"); //You can replace it with your name
 

@@ -10,5 +10,7 @@
     <string name="stop">Stop</string>
     <string name="navigation_drawer_open">Open</string>
     <string name="navigation_drawer_close">Close</string>
+    <string name="downloading">Stahuji...</string>
+    <string name="categoryTitle">Kategorie</string>
 
 </resources>
