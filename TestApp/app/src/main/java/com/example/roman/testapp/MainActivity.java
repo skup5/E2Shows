@@ -12,6 +12,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -25,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,17 +40,22 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Set;
 
-public class MainActivity extends ActionBarActivity{
+
+public class MainActivity extends ActionBarActivity 
+implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
 
     private ProgressDialog mProgressDialog;
     private AsyncPlayer ap;
     private MediaPlayer mediaPlayer;
+    private MediaController mediaController;
     private Button playBt;
     private ListView navList;
     private TextView navHeader;
 
+
     private ArrayAdapter navListAdapter;
-    //private String url;
+
+    private String url;
     final String[] categoryItems = new String[] {
             "Hudební ceny Evropy 2 (2014)", "To nejlepší z Ranní show",
             "Zpátky do minulosti", "Bombucman", "Odpolední odhalení - Ekl Zástěra",
@@ -58,6 +66,7 @@ public class MainActivity extends ActionBarActivity{
     /**
      * remain false till media is not completed, inside OnCompletionListener make it true.
      */
+
     private boolean initialStage = true, categoryIsDownloading = false;
     private boolean playing, playingStream;
     private DrawerLayout mDrawerLayout;
@@ -73,6 +82,7 @@ public class MainActivity extends ActionBarActivity{
     private int mAnimationDuration;
     private Category defaultCategory;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +92,56 @@ public class MainActivity extends ActionBarActivity{
 
         init();
 
+        // Toolbar :it is a generalization of action bars for use within
+        // application layouts.
+        //Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        // DrawerLayout : it acts as a top-level container for window content
+        // that allows for interactive "drawer" views to be
+        // pulled out from the edge of the window.
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
+        //mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+
+        // ActionBarDrawerToggle : This class provides a handy way to tie
+        // together the functionality of DrawerLayout and
+        // the framework ActionBar to implement the recommended design for
+        // navigation drawers.
+        final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
+                mDrawerLayout, R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close);
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        //Set the ActionBarDrawerToggle in the layout
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        //Hide the default Actionbar
+        //getSupportActionBar().hide();
+        // Call syncState() from your Activity's onPostCreate to synchronize the
+        // indicator
+        // with the state of the linked DrawerLayout after
+        // onRestoreInstanceState has occurred
+        mDrawerToggle.syncState();
+
+        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                // TODO Auto-generated method stub
+                //navHeader.setText(categoryItems[position].toString());
+                actionBar.setTitle(categoryItems[position].toString());
+                mDrawerLayout.closeDrawers();
+            }
+        });
+
+        ap = new AsyncPlayer("MyTest");
+        initMediaPlayer();
+        initMediaController();
+        playingStream = false;
+        playing = false;
+        playBt = (Button) findViewById(R.id.playBt);
+        url = "http://evropa2.cz";
+        url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
+        prepareMedia(url);
        // Log.d("onCreate", "\n***************\n* VYTVORIL JSEM APPKU\n***************");
     }
 
@@ -99,7 +159,7 @@ public class MainActivity extends ActionBarActivity{
         // as you specify a parent activity in AndroidManifest.xml.
         //Toast.makeText(this, "Click on " + item.getItemId(), Toast.LENGTH_LONG).show();
 
-        switch(item.getItemId()) {
+
 //            case R.id.action_settings :
 //                return true;
             case android.R.id.home :
@@ -153,14 +213,14 @@ public class MainActivity extends ActionBarActivity{
     public void playPauseMedia(View v) {
         if (!playing) {
             //btn.setBackgroundResource(R.drawable.button_pause);
-            playBt.setText(R.string.pause);
+            //playBt.setText(R.string.pause);
             if (initialStage) {
                 String url = ((TextView) findViewById(R.id.mp3Url)).getText().toString();
                 if(url == null || url.isEmpty()){
                     Log.d("playPauseMedia", "empty url");
                     playing = false;
                     initialStage = true;
-                    playBt.setText(R.string.play);
+                   // playBt.setText(R.string.play);
                     return;
                 }
                 new Player().execute(url);
@@ -172,7 +232,7 @@ public class MainActivity extends ActionBarActivity{
             playing = true;
         } else {
             //btn.setBackgroundResource(R.drawable.button_play);
-            playBt.setText(R.string.play);
+            //playBt.setText(R.string.play);
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
             }
@@ -180,7 +240,23 @@ public class MainActivity extends ActionBarActivity{
         }
     }
 
-    public void stopMedia(View v) {
+    public void prepareMedia(String url) {
+        if (mediaPlayer == null) {
+            initMediaPlayer();
+        }
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!isInternetAvailable()) {
+            Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
+            //return;
+        }
+        PrepareStream ps = new PrepareStream(this, mediaPlayer);
+        ps.execute(url);
+    }
+
+    public void stopMedia(View v){
         if(mediaPlayer == null){
             return;
         }
@@ -190,7 +266,7 @@ public class MainActivity extends ActionBarActivity{
         mediaPlayer.reset();
         playing = false;
         initialStage = true;
-        playBt.setText(R.string.play);
+        //playBt.setText(R.string.play);
     }
 
     public void hideLoading() { loadingBar.setVisibility(View.GONE); }
@@ -313,6 +389,51 @@ public class MainActivity extends ActionBarActivity{
 //            }
 //        }
 
+    }
+
+    private void initMediaPlayer() {
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setOnPreparedListener(this);
+    }
+
+    private void initMediaController() {
+        mediaController = new MediaController(this, false) {
+            @Override
+            public void hide() {
+                super.show();
+            }
+
+            /*@Override
+            public void setAnchorView(View view) {
+                super.setAnchorView(view);
+                Button searchButton = new Button(getContext());
+                searchButton.setText("Stop");
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+                params.gravity = Gravity.RIGHT;
+                addView(searchButton, params);
+            }*/
+       };
+        //mediaController = (MediaController) findViewById(R.id.media_controller);
+        mediaController.setPrevNextListeners(
+                // next
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        next();
+                    }
+                },
+                // previously
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        previously();
+                    }
+                }
+        );
+        mediaController.setFocusable(false);
+        mediaController.setFocusableInTouchMode(false);
+        mediaController.setVisibility(View.VISIBLE);
     }
 
     private void initNavigation() {
@@ -444,13 +565,21 @@ public class MainActivity extends ActionBarActivity{
 
     }
 
+    /**
+     * Zjistí, jestli je telefon připojen k síti.
+     * @return true pokud je připojen
+     */
     public boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         return ni != null;
     }
 
-    public boolean isInternetAvailable() {
+    /**
+     * Zjistí, jestli je telefon připojen k internetu.
+     * @return true pokud je připojen
+     */
+    private boolean isInternetAvailable() {
         try {
             InetAddress ipAddr = InetAddress.getByName("google.com"); //You can replace it with your name
 
@@ -459,6 +588,112 @@ public class MainActivity extends ActionBarActivity{
         } catch (Exception e) {
             return false;
         }
+
+    }
+
+    private MediaPlayer.OnPreparedListener getMediaPreparedListener() {
+        return this;
+    }
+
+    public void next(){
+
+    }
+
+    public void previously(){
+
+    }
+
+    @Override
+    public void start() {
+        mediaPlayer.start();
+    }
+
+    @Override
+    public void pause() {
+        mediaPlayer.pause();
+    }
+
+    @Override
+    public int getDuration() {
+        // if(mediaPlayer != null){
+        return mediaPlayer.getDuration();
+        //  }
+        //  return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        // if(mediaPlayer != null){
+        return mediaPlayer.getCurrentPosition();
+        //}
+        //return 0;
+    }
+
+    @Override
+    public void seekTo(int pos) {
+        // if(mediaPlayer != null){
+        mediaPlayer.seekTo(pos);
+        //}
+    }
+
+    @Override
+    public boolean isPlaying() {
+        if (mediaPlayer != null) {
+            return mediaPlayer.isPlaying();
+        }
+        return false;
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    @Override
+    public boolean canPause() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return false;
+    }
+
+    @Override
+    public boolean canSeekForward() {
+        return false;
+    }
+
+    /**
+     * Get the audio session id for the player used by this VideoView. This can be used to
+     * apply audio effects to the audio track of a video.
+     *
+     * @return The audio session, or 0 if there was an error.
+     */
+    @Override
+    public int getAudioSessionId() {
+        return 0;
+    }
+
+    /**
+     * Called when the media file is ready for playback.
+     *
+     * @param mp the MediaPlayer that is ready for playback
+     */
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        mediaController.setMediaPlayer(this);
+        mediaController.setAnchorView(findViewById(R.id.media_controller));
+        //mediaController.setAnchorView(findViewById(R.id.listview_records));
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                mediaController.setEnabled(true);
+                mediaController.show(0);
+            }
+        });
+
 
     }
 
@@ -521,6 +756,7 @@ public class MainActivity extends ActionBarActivity{
             super.onPreExecute();
             if(mediaPlayer == null) {
                 mediaPlayer = new MediaPlayer();
+                mediaPlayer.setOnPreparedListener(getMediaPreparedListener());
             } else {
                 mediaPlayer.reset();
             }
@@ -588,6 +824,7 @@ public class MainActivity extends ActionBarActivity{
 
         public Player() {
             progress = new ProgressDialog(MainActivity.this);
+            //this.mediaController = mediaController;
         }
 
     }
