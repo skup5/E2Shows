@@ -16,7 +16,9 @@
 
        <!--<include layout="@layout/toolbar" />-->
         <!--<include layout="@layout/activity_main" />-->
+        <include layout="@layout/loading_panel"/>
         <include layout="@layout/records"/>
+
     </FrameLayout>
     <!-- The navigation drawer -->
 

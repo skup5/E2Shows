@@ -10,10 +10,13 @@ import com.example.roman.testapp.jweb.E2Data;
 import com.example.roman.testapp.jweb.Extractor;
 import com.example.roman.testapp.jweb.HtmlParser;
 import com.example.roman.testapp.jweb.JWeb;
+import com.example.roman.testapp.jweb.Record;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Set;
 
 /**
@@ -23,11 +26,11 @@ public class Downloader extends AsyncTask<String, Void, Set<E2Data>> {
 
     public static enum Type {Category, Records}
 
-    private ProgressDialog mProgressDialog;
-    private Context context;
-    private Type type;
-    private HtmlParser htmlParser;
-    private boolean useProgressDialog = false;
+    protected ProgressDialog mProgressDialog;
+    protected Context context;
+    protected Type type;
+    protected HtmlParser htmlParser;
+    protected boolean useProgressDialog = false;
 
 
     public Downloader(Context context, Type type, String dialogTitle){
@@ -35,7 +38,7 @@ public class Downloader extends AsyncTask<String, Void, Set<E2Data>> {
 
         this.type = type;
         this.htmlParser = new HtmlParser();
-        if (dialogTitle != null) {
+        if (context != null) {
             useProgressDialog = true;
             this.mProgressDialog = new ProgressDialog(context);
             this.mProgressDialog.setTitle(dialogTitle);
@@ -52,7 +55,7 @@ public class Downloader extends AsyncTask<String, Void, Set<E2Data>> {
 //          mProgressDialog.setIndeterminate(false);
             mProgressDialog.show();
         }
-        Toast.makeText(context, "Stahuji kategorie...", Toast.LENGTH_LONG).show();
+        //Toast.makeText(context, "Stahuji kategorie...", Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -63,7 +66,7 @@ public class Downloader extends AsyncTask<String, Void, Set<E2Data>> {
                 case Category:
                     try {
                         set = downloadCategory(params[0]);
-                        publishProgress();
+                        //publishProgress();
                     }
                     catch (IOException e) {
 
@@ -108,4 +111,13 @@ public class Downloader extends AsyncTask<String, Void, Set<E2Data>> {
 
     }
 
+    private Set<Record> downloadRecords(Category category) throws IOException {
+//        URL site = category.getWebSite();
+//        Document doc = JWeb.httpGetSite(site.toString());
+//        Elements records = Extractor.getRecords(doc);
+//        boolean successful = category.update(this.htmlParser.parseCategory(records.first(), urlE2));
+//        return this.htmlParser.parseRecords(records, site.getProtocol() + "://" + site.getHost(), category);
+
+        return null;
+    }
 }

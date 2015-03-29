@@ -80,7 +80,7 @@ public class Category implements E2Data{
   
   @Override
   public String toString() {
-    return name;
+    return name + " (" + countRecords + ")";
   }
 
   /**
