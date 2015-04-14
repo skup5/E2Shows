@@ -10,10 +10,8 @@ import java.util.Date;
  *
  * @author Roman Zelenik
  */
-public class Record implements Comparable<Record>, E2Data{
+public class Record extends E2Data implements Comparable<Record> {
 
-  private final int id;
-  private final String name;
   private Category category;
   private final URL mp3;
   private final Date date;
@@ -32,14 +30,17 @@ public class Record implements Comparable<Record>, E2Data{
    * @param date
    */
   public Record(int id, String name, Category category, URL mp3, Date date) {
-    this.id = id;
-    this.name = name;
+    super(id, name);
     this.category = category;
     this.mp3 = mp3;
     this.date = date;
   }
 
-  public void setCategory(Category category) {
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
     this.category = category;
   }
 

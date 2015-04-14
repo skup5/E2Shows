@@ -10,15 +10,13 @@ import java.util.TreeSet;
  *
  * @author jack
  */
-public class Category implements E2Data{
+public class Category extends E2Data {
   
   private static final int NO_ID = -1;
   private static final int NO_COUNT_RECORDS = -1;
   private static final URL NO_IMAGE = null;
   private static final URL NO_WEB_SITE = null;
-  
-  private int id;
-  private final String name;
+
   private URL image;
   private int countRecords;
   private URL webSite;
@@ -33,19 +31,27 @@ public class Category implements E2Data{
   }
   
   public Category(int id, String name, URL webSite, int countRecords, URL image){
-    this.id = id;
-    this.name = name;
+    super(id, name);
     this.webSite = webSite;
     this.countRecords = countRecords;
     this.image = image;
     this.records = new TreeSet<>();
   }
 
-  
+    /**
+     *
+     * @param record
+     * @return <code>true</code> if records is modified, <code>false</code> otherwise
+     */
   public boolean addRecord(Record record){
     return this.records.add(record);
   }
-  
+
+    /**
+     *
+     * @param records
+     * @return <code>true</code> if records is modified, <code>false</code> otherwise
+     */
   public boolean addRecords(Collection<Record> records){
     return this.records.addAll(records);
   }
