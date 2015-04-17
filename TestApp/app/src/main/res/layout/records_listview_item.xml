@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -7,11 +7,30 @@
         android:id="@+id/textViewRecordName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/abc_text_size_medium_material"/>
+        android:textSize="@dimen/abc_text_size_medium_material"
+        android:layout_row="0"
+        android:layout_column="0"
+        android:typeface="serif"
+        android:layout_marginLeft= "4dp"/>
 
-    <TextView
-        android:id="@+id/textViewRecordCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="@dimen/abc_text_size_small_material"/>
-</LinearLayout>
+        <TextView
+            android:id="@+id/textViewRecordCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/abc_text_size_small_material"
+            android:layout_gravity="left"
+            android:layout_row="1"
+            android:layout_column="0"
+            android:layout_marginLeft="@dimen/abc_dropdownitem_text_padding_left" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewRecordDate"
+            android:layout_gravity="right"
+            android:layout_column="1"
+            android:layout_row="1"
+            android:layout_marginRight="@dimen/abc_dropdownitem_text_padding_right" />
+
+
+</GridLayout>

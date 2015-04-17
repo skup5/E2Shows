@@ -44,9 +44,9 @@ public class RecordParser extends Parser{
                              RECORD_SITE = 7,
                              DATE = 8;
   
-  public Record parse(String html){
-    return null;
-  }
+//  public Record parse(String html){
+//    return null;
+//  }
 
   public Record parse(Element element, String host) {
     Date date;
@@ -61,7 +61,7 @@ public class RecordParser extends Parser{
 //      System.out.println(jsParams[i].trim());
 //    }
     
-     String[] jsParams = parseFun(element);
+     String[] jsParams = parsePlayFun(element);
     name = jsParams[RECORD_NAME].trim();
     id = Integer.parseInt(jsParams[RECORD_ID].trim());
     mp3Str = host + jsParams[RECORD_MP3].trim();
@@ -83,4 +83,7 @@ public class RecordParser extends Parser{
    // return null;
   }
 
+  public String parseNextRecordsUrl(Element element){
+    return parseNextPageFun(element);
+  }
 }

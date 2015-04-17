@@ -40,14 +40,18 @@ public class Record extends E2Data implements Comparable<Record> {
         return category;
     }
 
+    public Date getDate() {
+        return date;
+    }
+
     public void setCategory(Category category) {
     this.category = category;
   }
 
   @Override
   public int compareTo(Record o) {
-    int c = this.date.compareTo(o.date);
-    return c == 0 ? c+1 : c;
+    int c = o.date.compareTo(this.date);
+    return c == 0 ? c + 1 : c;
     //return 1;
   }
 

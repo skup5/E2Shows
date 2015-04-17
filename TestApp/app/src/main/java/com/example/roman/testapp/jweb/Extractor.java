@@ -10,23 +10,34 @@ import org.jsoup.select.Elements;
  * @author jack
  */
 public class Extractor {
+  
+  public static final String JS_PLAY_FUN = "playMedia";
+  public static final String JS_NEXT_PAGE_FUN = "infinitePagination";
 
-  public static Elements getArchiveCategory(Document doc){
+  public static Elements getArchiveCategory(Document doc) {
     return doc.select("li.archive a[href^=/mp3-archiv/kategorie]");
   }
    
-  public static Elements getCategoryList(Document doc){
+  public static Elements getCategoryList(Document doc) {
     return doc.select("li:not(.archive) a[href^=/mp3-archiv/kategorie/]");
   }
 
-  public static Element getFirstRecord(Document doc){
+  public static Element getFirstRecord(Document doc) {
     return getRecords(doc).first();
   }
   
   public static Elements getRecords(Document doc) {
-    return doc.select("li a[onclick^=playMedia]");
+    return doc.select("li a[onclick^="+JS_PLAY_FUN+"]");
   }
   
+  /**
+   * 
+   * @param doc
+   * @return specific <code>Element</code> or <code>null</code> if was not found
+   */
+  public static Element getNextRecord(Document doc) {
+    return doc.select("li a[onclick^="+JS_NEXT_PAGE_FUN+"]").first();
+  }
   
   private Extractor() {
   }

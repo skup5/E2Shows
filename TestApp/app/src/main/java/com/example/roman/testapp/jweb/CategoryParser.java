@@ -24,27 +24,44 @@ public class CategoryParser extends Parser {
           CATEGORY_NAME = 3,
           CATEGORY_IMG = 5;
 
-  public Category parse(Element element, String host) {
+  /**
+   * Parse from record &lt;li&gt;
+   * @param record
+   * @param nextRecord
+   * @param host
+   * @return 
+   */
+  public Category parse(Element record, Element nextRecord, String host) {
     Element category;
-    URL webSite = null, img = null;
+    URL webSite = null, img = null, nextRecords = null;
     String name, recordsStr, imgStr;
     int id, records = 0;
 
-    String[] jsParams = parseFun(element);
+    String[] jsParams = parsePlayFun(record);
     id = Integer.parseInt(jsParams[CATEGORY_ID].trim());
     name = jsParams[CATEGORY_NAME].trim();
     
     imgStr = host + jsParams[CATEGORY_IMG].trim();
+    
+    String nextRecordsStr = host + parseNextPageFun(nextRecord);
+     
     try {
       //webSite = new URL(element.location());
       //System.out.println("imgStr:" + imgStr);
+      nextRecords = new URL(nextRecordsStr);
       img = new URL(imgStr);
     } catch (MalformedURLException ex) {
       Logger.getLogger(RecordParser.class.getName()).log(Level.SEVERE, null, ex);
     }
-    return new Category(id, name, img);
+    return new Category(id, name, img, nextRecords);
   }
 
+  /**
+   * Parse from category list
+   * @param element
+   * @return
+   * @throws MalformedURLException 
+   */
   public Category parse(Element element) throws MalformedURLException {
     URL url = new URL(element.absUrl("href"));
     String name = element.text();

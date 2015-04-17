@@ -1,3 +1,4 @@
+
 package com.example.roman.testapp.jweb;
 
 import java.net.MalformedURLException;
@@ -33,19 +34,38 @@ public class HtmlParser {
     return records;
   }
 
-  public Category parseCategory(Element element, String urlHost) throws MalformedURLException {
+  /**
+   * 
+   * @param record
+   * @param nextRecord
+   * @param urlHost
+   * @return
+   * @throws MalformedURLException 
+   * @throws NullPointerException if some parameter is <code>null</code>
+   */
+  public Category parseCategory(Element record, Element nextRecord, String urlHost) throws MalformedURLException {
 //    Set<Category> category = new LinkedHashSet<>();
 //    for (Element element : elements) {
 //      category.add(catParser.parse(element, urlHost));
 //    }
-    return catParser.parse(element, urlHost);
+    
+    if(record == null){
+      throw new NullPointerException("none 'Element record' to parse");
+    }
+    if(nextRecord == null){
+      throw new NullPointerException("none 'Element nextRecord' to parse");
+    }
+    if(urlHost == null){
+      throw new NullPointerException("none 'String urlHost' to use");
+    }
+    return catParser.parse(record, nextRecord, urlHost);
   }
   
   public Set<Category> parseCategoryItems(Elements elements) throws MalformedURLException {
     Set<Category> categoryItems = new LinkedHashSet<>();
     for (Element element : elements) {
       categoryItems.add(catParser.parse(element));
-    }
+}
     return categoryItems;
   }
 }

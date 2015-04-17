@@ -1,18 +1,14 @@
 package com.example.roman.testapp;
 
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.os.AsyncTask;
-import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
-import com.example.roman.testapp.jweb.E2Data;
 import com.example.roman.testapp.jweb.Extractor;
-import com.example.roman.testapp.jweb.HtmlParser;
 import com.example.roman.testapp.jweb.JWeb;
 import com.example.roman.testapp.jweb.Record;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -24,50 +20,44 @@ import java.util.Set;
  */
 public class DownloaderFactory {
 
-    public static enum Type {Category, Records}
+    public static enum Type {Categories, Records, NextRecords}
 
-    private DownloaderFactory(){}
+    private DownloaderFactory() {
+    }
 
     public static ADownloader getDownloader(Type type) {
         return getDownloader(type, null, null);
     }
 
-    public static ADownloader getDownloader(Type type, Context context, String dialogTitle){
+    public static ADownloader getDownloader(Type type, Context context, String dialogTitle) {
         switch (type) {
-            case Category: return new CategoryDownloader(context, dialogTitle);
-            case Records: return new RecordsDownloader(context, dialogTitle);
-            default: return null;
+            case Categories:
+                return new CategoriesDownloader(context, dialogTitle);
+            case NextRecords:
+                return new NextRecordsDownloader(context, dialogTitle);
+            case Records:
+                return new RecordsDownloader(context, dialogTitle);
+            default:
+                return null;
         }
     }
 
-    private ADownloader createCategoryDownloader(Context context, String dialogTitle) {
-        return null;
-    }
+    static class CategoriesDownloader extends ADownloader<String, Void, Set<Category>> {
 
-    static class CategoryDownloader extends ADownloader<String, Void, Set<Category>> {
-
-        public CategoryDownloader(Context context, String dialogTitle){
+        public CategoriesDownloader(Context context, String dialogTitle) {
             super(context, dialogTitle);
         }
 
         @Override
-        protected Set<Category> doInBackground(String... params) {
-            Set set = null;
-            if (params != null && params.length > 0) {
-                try {
-                    set = downloadCategory(params[0]);
-                    //publishProgress();
-                }
-                catch (IOException e) {  }
-            }
-            return set;
-        }
-
-
-        private Set<Category> downloadCategory(String url) throws IOException {
-            Set<Category> category;
+        protected Set<Category> download(String... url) {
+            Set<Category> category = null;
             Document site;
-            site = JWeb.httpGetSite(url);
+            try {
+                site = JWeb.httpGetSite(url[0]);
+                category = htmlParser.parseCategoryItems(Extractor.getCategoryList(site));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 //    Elements categoryList = Extractor.getCategory(site);
 //    category = new LinkedHashSet<>(categoryList.size());
 //    for (Element categoryItem : categoryList) {
@@ -79,41 +69,61 @@ public class DownloaderFactory {
 //        category.add(this.htmlParser.parseCategory(doc, urlE2));
 //      }
 //    }
-
-            category = htmlParser.parseCategoryItems(Extractor.getCategoryList(site));
             return category;
-
         }
 
     }
 
-    static class RecordsDownloader extends ADownloader<Category, Void, Set<Record>> {
+    static class RecordsDownloader extends ADownloader<Category, Void, Category> {
 
         public RecordsDownloader(Context context, String dialogTitle) {
             super(context, dialogTitle);
         }
 
         @Override
-        protected Set<Record> doInBackground(Category... params) {
-            Set set = null;
-            if (params != null && params.length > 0) {
+        protected Category download(Category... categories) {
+            Category category = categories[0];
+            URL site = category.getWebSite();
+            if (site != null) {
                 try {
-                    set = downloadRecords(params[0]);
-                    //publishProgress();
+                    Set<Record> set;
+                    Document doc = JWeb.httpGetSite(site.toString());
+                    Elements records = Extractor.getRecords(doc);
+                    Element nextRecord = Extractor.getNextRecord(doc);
+                    String urlE2 = site.getProtocol() + "://" + site.getHost();
+                    boolean successful = category.update(this.htmlParser.parseCategory(records.first(), nextRecord, urlE2));
+                    set = this.htmlParser.parseRecords(records, urlE2, category);
+                    category.addRecords(set);
                 } catch (IOException e) {
                 }
             }
-            return set;
-        }
-
-        private Set<Record> downloadRecords(Category category) throws IOException {
-            URL site = category.getWebSite();
-            Document doc = JWeb.httpGetSite(site.toString());
-            Elements records = Extractor.getRecords(doc);
-            String urlE2 = site.getProtocol() + "://" + site.getHost();
-            boolean successful = category.update(this.htmlParser.parseCategory(records.first(), urlE2));
-            return this.htmlParser.parseRecords(records, urlE2, category);
+            return category;
         }
     }
 
+    static class NextRecordsDownloader extends ADownloader<Category, Void, Category> {
+
+        public NextRecordsDownloader(Context context, String dialogTitle) {
+            super(context, dialogTitle);
+        }
+
+        @Override
+        protected Category download(Category... categories) {
+            Category category = categories[0];
+            URL site = category.getNextRecords();
+            if (site != null){
+                try {
+                    Set<Record> set;
+                    int page = category.getPage();
+                    page++;
+                    category.setPage(page);
+                    Document doc = JWeb.httpPostNextRecords(site.toString(), category.getId() + "", page + "");
+                    Elements records = Extractor.getRecords(doc);
+                    set = this.htmlParser.parseRecords(records, site.getProtocol()+"://"+site.getHost(), category);
+                    category.addRecords(set);
+                } catch (IOException e){}
+            }
+            return category;
+        }
+    }
 }

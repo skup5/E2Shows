@@ -38,7 +38,7 @@ import java.net.InetAddress;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity{
 
     private ProgressDialog mProgressDialog;
     private AsyncPlayer ap;
@@ -64,7 +64,7 @@ public class MainActivity extends ActionBarActivity {
     private DrawerLayout mDrawerLayout;
     
     private ListView recList;
-    private ArrayAdapter<Object> recAdapter;
+    private RecordsAdapter recAdapter;
     private final String urlE2 = "http://evropa2.cz";
     private final String urlArchiv = "/mp3-archiv/";
     private ActionBar actionBar;
@@ -72,6 +72,7 @@ public class MainActivity extends ActionBarActivity {
     private int lastChoosenCategoryId = -1;
     private View loadingBar;
     private int mAnimationDuration;
+    private Category defaultCategory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -229,16 +230,23 @@ public class MainActivity extends ActionBarActivity {
     private void init() {
        // Toast.makeText(this, "Initializace...", Toast.LENGTH_SHORT).show();
 
-        Set<Category> categorySet = null;
+        //Set<Category> categorySet = null;
         //Downloader downloader = null;
-        DownloaderFactory.CategoryDownloader downloader = null;
+        DownloaderFactory.CategoriesDownloader downloader = null;
         if (!isNetworkConnected()) {
             Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
         }
         else {
             Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
 //            downloader = new Downloader(this, Downloader.Type.Category, null);
-            downloader = (DownloaderFactory.CategoryDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Category);
+            downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
+            downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
+                @Override
+                public void onComplete(Object result) {
+                    if (result instanceof Set)
+                    fillNavigation((Set<Category>)result);
+                }
+            });
             downloader.execute(urlE2 + urlArchiv);
         }
 
@@ -304,23 +312,24 @@ public class MainActivity extends ActionBarActivity {
         // onRestoreInstanceState has occurred
         mDrawerToggle.syncState();
 
-        ap = new AsyncPlayer("MyTest");
+        //ap = new AsyncPlayer("MyTest");
+        ap = null;
         mediaPlayer = null;
         playingStream = false;
         playing = false;
         //playBt = (Button) findViewById(R.id.playBt);
         playBt = new Button(this);
 
-        if (downloader != null) {
-            try {
-                categorySet = downloader.get();
-                fillNavigation(categorySet);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
+//        if (downloader != null) {
+//            try {
+//                categorySet = downloader.get();
+//                fillNavigation(categorySet);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            } catch (ExecutionException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
     }
 
@@ -357,25 +366,34 @@ public class MainActivity extends ActionBarActivity {
                 mDrawerLayout.closeDrawer(navList);
                 //recList.setVisibility(View.GONE);
 
-               // Toast.makeText(MainActivity.this, ""+parent.getAdapter().getItem(position), Toast.LENGTH_LONG).show();
-                Set<Record> recordsSet = item.getRecords();
-                if (recordsSet.isEmpty()){
+                Toast.makeText(MainActivity.this, ""+parent.getAdapter().getItem(position), Toast.LENGTH_LONG).show();
+               // Set<Record> recordsSet = item.getRecords();
+                if (item.getRecords().isEmpty()){
                     showLoading();
                     //Toast.makeText(MainActivity.this, "recordsSet is empty", Toast.LENGTH_LONG).show();
                     DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader)DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
+                    downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
+                        @Override
+                        public void onComplete(Object result) {
+                            if(result instanceof Category) {
+                                fillRecList((Category)result);
+                                crossfade();
+                            }
+                        }
+                    });
                     downloader.execute(item);
-                    try {
+                    /*try {
                         recordsSet = downloader.get();
                         item.addRecords(recordsSet);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     } catch (ExecutionException e) {
                         e.printStackTrace();
-                    }
-                    crossfade();
+                    }*/
+                    //crossfade();
+                } else {
+                    fillRecList(item);
                 }
-
-                fillRecList(recordsSet);
                 /*hideLoading();
                 recList.setVisibility(View.VISIBLE);*/
 
@@ -385,14 +403,20 @@ public class MainActivity extends ActionBarActivity {
 
     private void initRecList() {
         recList = (ListView) findViewById(R.id.listView_records);
-        recAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_activated_1);
+        recAdapter = new RecordsAdapter(this);
         recList.setAdapter(recAdapter);
         recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, ""+parent.getAdapter().getItem(position), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "" + parent.getAdapter().getItem(position), Toast.LENGTH_SHORT).show();
             }
         });
+        recList.setOnScrollListener(new EndlessScrollListener(new EndlessScrollListener.LoadNextItems() {
+            @Override
+            public void loadNextItems() {
+                recAdapter.downloadNext();
+            }
+        }));
         recList.setVisibility(View.GONE);
     }
 
@@ -404,13 +428,12 @@ public class MainActivity extends ActionBarActivity {
         navListAdapter.addAll(categorySet);
     }
 
-    private void fillRecList(Set<Record> recordsSet){
-        if (recordsSet == null) {
+    private void fillRecList(Category category){
+        if (category == null) {
             Toast.makeText(this, "Chyba při stahování záznamů", Toast.LENGTH_LONG).show();
             return;
         }
-        recAdapter.clear();
-        recAdapter.addAll(recordsSet);
+        recAdapter.setSource(category);
     }
 
     public boolean isNetworkConnected() {

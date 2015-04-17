@@ -2,7 +2,6 @@ package com.example.roman.testapp.jweb;
 
 import java.net.URL;
 import java.util.Collection;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -15,27 +14,31 @@ public class Category extends E2Data {
   private static final int NO_ID = -1;
   private static final int NO_COUNT_RECORDS = -1;
   private static final URL NO_IMAGE = null;
-  private static final URL NO_WEB_SITE = null;
+  private static final URL NO_URL_SITE = null;
 
   private URL image;
-  private int countRecords;
   private URL webSite;
+  private URL nextRecords;
   private final SortedSet<Record> records;
+  private int totalRecordsCount;
+  private int page;
 
-  public Category(int id, String name, URL img) {
-    this(id, name, NO_WEB_SITE, NO_COUNT_RECORDS, img);
+  public Category(int id, String name, URL img, URL nextRecords) {
+    this(id, name, NO_URL_SITE, NO_COUNT_RECORDS, img, nextRecords);
   }
   
-  public Category(String name, URL webSite, int countRecords) {
-    this(NO_ID, name, webSite, countRecords, NO_IMAGE);
+  public Category(String name, URL webSite, int totalRecordsCount) {
+    this(NO_ID, name, webSite, totalRecordsCount, NO_IMAGE, NO_URL_SITE);
   }
   
-  public Category(int id, String name, URL webSite, int countRecords, URL image){
+  public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords){
     super(id, name);
     this.webSite = webSite;
-    this.countRecords = countRecords;
+    this.totalRecordsCount = totalRecordsCount;
     this.image = image;
+    this.nextRecords = nextRecords;
     this.records = new TreeSet<>();
+    this.page = 1;
   }
 
     /**
@@ -59,9 +62,23 @@ public class Category extends E2Data {
   public SortedSet<Record> getRecords() {
     return records;
   }
-  
-  public int getCountRecords() {
-    return countRecords;
+
+  public int getRecordsCount() { return records.size(); }
+
+  public URL getNextRecords() {
+    return nextRecords;
+  }
+
+  public int getPage() {
+    return page;
+  }
+
+  /**
+   *
+   * @return total records count on web in this category
+   */
+  public int getTotalRecordsCount() {
+      return totalRecordsCount;
   }
 
   public URL getWebSite() {
@@ -80,13 +97,21 @@ public class Category extends E2Data {
     this.image = image;
   }
 
+  public void setNextRecords(URL nextRecords) {
+    this.nextRecords = nextRecords;
+  }
+  
+  public void setPage(int page) {
+    this.page = page;
+  }
+
   public String info(){
-    return name + " (" + countRecords + ") \n" + webSite.toString();
+    return name + " (" + totalRecordsCount + ") \n" + webSite.toString();
   }
   
   @Override
   public String toString() {
-    return name + " (" + countRecords + ")";
+    return name + " (" + totalRecordsCount + ")";
   }
 
   /**
@@ -104,8 +129,8 @@ public class Category extends E2Data {
     } else {
       success = false;
     }
-    if(this.countRecords == NO_COUNT_RECORDS && category.countRecords != NO_COUNT_RECORDS){
-      this.countRecords = category.countRecords;
+    if(this.totalRecordsCount == NO_COUNT_RECORDS && category.totalRecordsCount != NO_COUNT_RECORDS){
+      this.totalRecordsCount = category.totalRecordsCount;
     } else {
       success = false;
     }
@@ -114,14 +139,16 @@ public class Category extends E2Data {
     } else {
       success = false;
     }
-    if(this.webSite == NO_WEB_SITE && category.webSite != NO_WEB_SITE){
+    if(this.webSite == NO_URL_SITE && category.webSite != NO_URL_SITE){
       this.webSite = category.webSite;
     } else {
       success = false;
     }
+    if(this.nextRecords == NO_URL_SITE && category.nextRecords != NO_URL_SITE){
+      this.nextRecords = category.nextRecords;
+    }
     //return success;
     return true;
   }
-  
   
 }

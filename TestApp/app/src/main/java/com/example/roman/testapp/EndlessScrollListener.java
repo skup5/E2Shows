@@ -14,7 +14,7 @@ public class EndlessScrollListener implements AbsListView.OnScrollListener {
     private LoadNextItems loader;
 
     public EndlessScrollListener(LoadNextItems loader) {
-        this(loader, 5);
+        this(loader, 1);
     }
 
     public EndlessScrollListener(LoadNextItems loader ,int visibleThreshold) {
@@ -24,25 +24,30 @@ public class EndlessScrollListener implements AbsListView.OnScrollListener {
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        if (loading) {
-            if (totalItemCount > previousTotal) {
-                loading = false;
-                previousTotal = totalItemCount;
-                currentPage++;
-            }
-        }
-        if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
-            // I load the next page of gigs using a background task,
-            // but you can call any function here.
-
-            loader.loadNextItems();
-
-            loading = true;
-        }
+//        if (loading) {
+//            if (totalItemCount > previousTotal) {
+//                loading = false;
+//                previousTotal = totalItemCount;
+//                currentPage++;
+//            }
+//        }
+//        if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
+//            // I load the next page of gigs using a background task,
+//            // but you can call any function here.
+//            loading = true;
+//            loader.loadNextItems();
+//        }
     }
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
+        if (scrollState == SCROLL_STATE_IDLE) {
+            if (view.getLastVisiblePosition() >= view.getCount() - 1 - visibleThreshold) {
+                currentPage++;
+                //load more list items:
+                loader.loadNextItems();
+            }
+        }
     }
 
     interface LoadNextItems{

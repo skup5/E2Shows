@@ -10,7 +10,8 @@ import android.widget.TextView;
 import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -20,36 +21,49 @@ public class RecordsAdapter extends BaseAdapter {
 
     private Context context;
     private Category source;
+    private static final DateFormat dateFormat = new SimpleDateFormat("dd. M. yyyy");
 
-    public RecordsAdapter(Context context, Category source){
+    public RecordsAdapter(Context context){
+        this(context, null);
+    }
+
+    public RecordsAdapter(Context context, Category source) {
         this.context = context;
         this.source = source;
     }
 
-    /**
-     *
-     * @return <code>true</code> if new records are added, <code>false</code> otherwise
-     */
-    public boolean downloadNext(){
-        DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory
-                .getDownloader(DownloaderFactory.Type.Records).execute(source);
-        try {
-            Set newRecords = downloader.get();
-            return source.addRecords(newRecords);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+    public void downloadNext() {
+        if (hasSource()) {
+            DownloaderFactory.NextRecordsDownloader downloader = (DownloaderFactory.NextRecordsDownloader) DownloaderFactory
+                    .getDownloader(DownloaderFactory.Type.NextRecords);
+            try {
+                setSource(downloader.execute(source).get());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         }
-        return false;
     }
 
     public Category getSource() {
         return source;
     }
 
+    public boolean hasSource() {
+        return source != null;
+    }
+
+    public boolean isEmpty(){
+        if(hasSource()){
+            return source.getRecords().isEmpty();
+        }
+        return false;
+    }
+
     public void setSource(Category source) {
         this.source = source;
+        notifyDataSetChanged();
     }
 
     /**
@@ -59,7 +73,10 @@ public class RecordsAdapter extends BaseAdapter {
      */
     @Override
     public int getCount() {
-       return this.source.getCountRecords();
+        if(hasSource()) {
+            return this.source.getRecordsCount();
+        }
+        return 0;
     }
 
     /**
@@ -71,7 +88,10 @@ public class RecordsAdapter extends BaseAdapter {
      */
     @Override
     public Record getItem(int position) {
-        return (Record) this.source.getRecords().toArray()[position];
+        if(!isEmpty()) {
+                return (Record) this.source.getRecords().toArray()[position];
+        }
+        return null;
     }
 
     /**
@@ -83,7 +103,10 @@ public class RecordsAdapter extends BaseAdapter {
     @Override
     public long getItemId(int position) {
         //return getItem(position).getId();
-        return position;
+        if(hasSource()) {
+            return position;
+        }
+        return -1;
     }
 
     /**
@@ -110,15 +133,19 @@ public class RecordsAdapter extends BaseAdapter {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         convertView = inflater.inflate(R.layout.records_listview_item, null);
 
-        Record record = getItem(position);
+        if(!isEmpty()) {
+            Record record = getItem(position);
 
-        // get the reference of textViews
-        TextView textViewRecordName = (TextView) convertView.findViewById(R.id.textViewRecordName);
-        TextView textViewRecordCategory = (TextView) convertView.findViewById(R.id.textViewRecordCategory);
+            // get the reference of textViews
+            TextView textViewRecordName = (TextView) convertView.findViewById(R.id.textViewRecordName);
+            TextView textViewRecordCategory = (TextView) convertView.findViewById(R.id.textViewRecordCategory);
+            TextView textViewRecordDate = (TextView) convertView.findViewById(R.id.textViewRecordDate);
 
-        // Set data to respective TextViews
-        textViewRecordName.setText(record.getName());
-        textViewRecordCategory.setText(record.getCategory().getName());
+            // Set data to respective TextViews
+            textViewRecordName.setText(record.getName());
+            textViewRecordCategory.setText(record.getCategory().getName());
+            textViewRecordDate.setText(dateFormat.format(record.getDate()));
+        }
 
         return convertView;
     }
