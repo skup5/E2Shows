@@ -70,7 +70,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
     private boolean initialStage = true, categoryIsDownloading = false;
     private boolean playing, playingStream;
     private DrawerLayout mDrawerLayout;
-    
+    private Handler handler = new Handler();
     private ListView recList;
     private RecordsAdapter recAdapter;
     private final String urlE2 = "http://evropa2.cz";
@@ -92,56 +92,6 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
 
         init();
 
-        // Toolbar :it is a generalization of action bars for use within
-        // application layouts.
-        //Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        // DrawerLayout : it acts as a top-level container for window content
-        // that allows for interactive "drawer" views to be
-        // pulled out from the edge of the window.
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        //mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-
-        // ActionBarDrawerToggle : This class provides a handy way to tie
-        // together the functionality of DrawerLayout and
-        // the framework ActionBar to implement the recommended design for
-        // navigation drawers.
-        final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
-                mDrawerLayout, R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close);
-
-        mDrawerToggle.setDrawerIndicatorEnabled(true);
-        //Set the ActionBarDrawerToggle in the layout
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        //Hide the default Actionbar
-        //getSupportActionBar().hide();
-        // Call syncState() from your Activity's onPostCreate to synchronize the
-        // indicator
-        // with the state of the linked DrawerLayout after
-        // onRestoreInstanceState has occurred
-        mDrawerToggle.syncState();
-
-        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                // TODO Auto-generated method stub
-                //navHeader.setText(categoryItems[position].toString());
-                actionBar.setTitle(categoryItems[position].toString());
-                mDrawerLayout.closeDrawers();
-            }
-        });
-
-        ap = new AsyncPlayer("MyTest");
-        initMediaPlayer();
-        initMediaController();
-        playingStream = false;
-        playing = false;
-        playBt = (Button) findViewById(R.id.playBt);
-        url = "http://evropa2.cz";
-        url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
-        prepareMedia(url);
        // Log.d("onCreate", "\n***************\n* VYTVORIL JSEM APPKU\n***************");
     }
 
@@ -159,7 +109,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         // as you specify a parent activity in AndroidManifest.xml.
         //Toast.makeText(this, "Click on " + item.getItemId(), Toast.LENGTH_LONG).show();
 
-
+        switch(item.getItemId()){
 //            case R.id.action_settings :
 //                return true;
             case android.R.id.home :
@@ -372,11 +322,14 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
 
         //ap = new AsyncPlayer("MyTest");
         ap = null;
-        mediaPlayer = null;
+        initMediaPlayer();
+        initMediaController();
         playingStream = false;
         playing = false;
-        //playBt = (Button) findViewById(R.id.playBt);
-        playBt = new Button(this);
+        playBt = (Button) findViewById(R.id.playBt);
+        url = "http://evropa2.cz";
+        url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
+        prepareMedia(url);
 
 //        if (downloader != null) {
 //            try {
