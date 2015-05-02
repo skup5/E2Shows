@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.media.AsyncPlayer;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -28,7 +29,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
-import com.example.roman.testapp.jweb.Record;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -36,7 +36,6 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends ActionBarActivity{
 
@@ -59,7 +58,7 @@ public class MainActivity extends ActionBarActivity{
     /**
      * remain false till media is not completed, inside OnCompletionListener make it true.
      */
-    private boolean initialStage = true;
+    private boolean initialStage = true, categoryIsDownloading = false;
     private boolean playing, playingStream;
     private DrawerLayout mDrawerLayout;
     
@@ -77,7 +76,7 @@ public class MainActivity extends ActionBarActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
        // setContentView(R.layout.activity_main);
         setContentView(R.layout.main_layout);
 
@@ -101,8 +100,8 @@ public class MainActivity extends ActionBarActivity{
         //Toast.makeText(this, "Click on " + item.getItemId(), Toast.LENGTH_LONG).show();
 
         switch(item.getItemId()) {
-            case R.id.action_settings :
-                return true;
+//            case R.id.action_settings :
+//                return true;
             case android.R.id.home :
                 //Toast.makeText(this, "Home click", Toast.LENGTH_LONG).show();
                 //View navigation = findViewById(R.id.left_drawer);
@@ -112,7 +111,9 @@ public class MainActivity extends ActionBarActivity{
                     mDrawerLayout.openDrawer(navList);
                 }
                 return true;
-
+            case R.id.action_refresh_category :
+                downloadCategory();
+                return true;
             default : return super.onOptionsItemSelected(item);
         }
     }
@@ -230,26 +231,7 @@ public class MainActivity extends ActionBarActivity{
     private void init() {
        // Toast.makeText(this, "Initializace...", Toast.LENGTH_SHORT).show();
 
-        //Set<Category> categorySet = null;
-        //Downloader downloader = null;
-        DownloaderFactory.CategoriesDownloader downloader = null;
-        if (!isNetworkConnected()) {
-            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
-        }
-        else {
-            Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
-//            downloader = new Downloader(this, Downloader.Type.Category, null);
-            downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
-            downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
-                @Override
-                public void onComplete(Object result) {
-                    if (result instanceof Set)
-                    fillNavigation((Set<Category>)result);
-                }
-            });
-            downloader.execute(urlE2 + urlArchiv);
-        }
-
+        downloadCategory();
         loadingBar = findViewById(R.id.loadingPanel);
         loadingBar.setVisibility(View.GONE);
         // Retrieve and cache the system's default "short" animation time.
@@ -354,10 +336,10 @@ public class MainActivity extends ActionBarActivity{
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 //navHeader.setText(categoryItems[position].toString());
-               // actionBar.setTitle(categoryItems[position].toString());
+                // actionBar.setTitle(categoryItems[position].toString());
                 //choosenCategory = categoryItems[position].toString();
                 Category item = (Category) parent.getAdapter().getItem(position);
-                if(lastChoosenCategoryId == position) {
+                if (lastChoosenCategoryId == position) {
                     mDrawerLayout.closeDrawer(navList);
                     return;
                 }
@@ -366,17 +348,17 @@ public class MainActivity extends ActionBarActivity{
                 mDrawerLayout.closeDrawer(navList);
                 //recList.setVisibility(View.GONE);
 
-                Toast.makeText(MainActivity.this, ""+parent.getAdapter().getItem(position), Toast.LENGTH_LONG).show();
-               // Set<Record> recordsSet = item.getRecords();
-                if (item.getRecords().isEmpty()){
+                //Toast.makeText(MainActivity.this, ""+parent.getAdapter().getItem(position), Toast.LENGTH_LONG).show();
+                // Set<Record> recordsSet = item.getRecords();
+                if (item.getRecords().isEmpty()) {
                     showLoading();
                     //Toast.makeText(MainActivity.this, "recordsSet is empty", Toast.LENGTH_LONG).show();
-                    DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader)DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
+                    DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
                     downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
                         @Override
                         public void onComplete(Object result) {
-                            if(result instanceof Category) {
-                                fillRecList((Category)result);
+                            if (result instanceof Category) {
+                                fillRecList((Category) result);
                                 crossfade();
                             }
                         }
@@ -434,6 +416,32 @@ public class MainActivity extends ActionBarActivity{
             return;
         }
         recAdapter.setSource(category);
+    }
+
+    private void downloadCategory(){
+        //Set<Category> categorySet = null;
+        //Downloader downloader = null;
+        DownloaderFactory.CategoriesDownloader downloader = null;
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+        }
+        else if(!categoryIsDownloading){
+            Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
+//            downloader = new Downloader(this, Downloader.Type.Category, null);
+            downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
+            downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
+                @Override
+                public void onComplete(Object result) {
+                    if (result instanceof Set) {
+                        fillNavigation((Set<Category>) result);
+                        categoryIsDownloading = false;
+                    }
+                }
+            });
+            downloader.execute(urlE2 + urlArchiv);
+            categoryIsDownloading = true;
+        }
+
     }
 
     public boolean isNetworkConnected() {

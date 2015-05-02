@@ -64,7 +64,7 @@ public class RecordParser extends Parser{
      String[] jsParams = parsePlayFun(element);
     name = jsParams[RECORD_NAME].trim();
     id = Integer.parseInt(jsParams[RECORD_ID].trim());
-    mp3Str = host + jsParams[RECORD_MP3].trim();
+    mp3Str = jsParams[RECORD_MP3].trim();
     try {
       mp3 = new URL(mp3Str);
     } catch (MalformedURLException ex) {

@@ -44,6 +44,10 @@ public class Record extends E2Data implements Comparable<Record> {
         return date;
     }
 
+    public URL getMp3() {
+        return mp3;
+    }
+
     public void setCategory(Category category) {
     this.category = category;
   }
