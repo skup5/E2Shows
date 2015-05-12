@@ -50,7 +50,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/play"
+            android:text="@string/media_controller_play_button"
             android:id="@+id/playBt"
             android:onClick="playPauseMedia"
             android:layout_alignParentBottom="true"
@@ -62,14 +62,15 @@
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/stop"
+            android:text="@string/media_controller_stop_button"
             android:id="@+id/button"
             android:layout_alignTop="@+id/playBt"
             android:layout_toRightOf="@+id/playBt"
             android:layout_toEndOf="@+id/playBt"
             android:onClick="stopMedia"
-            android:layout_alignParentEnd="false"
             android:layout_gravity="bottom" />
+        <!--android:layout_alignParentEnd="false"-->
+
     </LinearLayout>
 
 </RelativeLayout>

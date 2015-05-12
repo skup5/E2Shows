@@ -13,7 +13,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -32,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
+import com.example.roman.testapp.jweb.Record;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,15 +42,17 @@ import java.util.Set;
 
 
 public class MainActivity extends ActionBarActivity 
-implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
+implements AudioController.AudioPlayerControl,
+        MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
 
     private ProgressDialog mProgressDialog;
     private AsyncPlayer ap;
     private MediaPlayer mediaPlayer;
-    private MediaController mediaController;
+//    private MediaController mediaController;
+    private AudioController audioController;
     private Button playBt;
     private ListView navList;
-    private TextView navHeader;
+//    private TextView navHeader;
 
 
     private ArrayAdapter navListAdapter;
@@ -70,7 +72,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
     private boolean initialStage = true, categoryIsDownloading = false;
     private boolean playing, playingStream;
     private DrawerLayout mDrawerLayout;
-    private Handler handler = new Handler();
+//    private Handler handler = new Handler();
     private ListView recList;
     private RecordsAdapter recAdapter;
     private final String urlE2 = "http://evropa2.cz";
@@ -149,12 +151,12 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         if (!playingStream) {
             String url = ((TextView) findViewById(R.id.mp3Url)).getText().toString();
             ap.play(this, Uri.parse(url), false, AudioManager.STREAM_MUSIC);
-            playBt.setText(R.string.stop);
+            playBt.setText(R.string.media_controller_stop_button);
             Toast.makeText(this, "Přehrávám...", Toast.LENGTH_LONG).show();
             playingStream = true;
         } else {
             ap.stop();
-            playBt.setText(R.string.play);
+            playBt.setText(R.string.media_controller_play_button);
             Toast.makeText(this, "Stop", Toast.LENGTH_LONG).show();
             playingStream = false;
         }
@@ -199,7 +201,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
             return;
         }
         if (!isInternetAvailable()) {
-            Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
             //return;
         }
         PrepareStream ps = new PrepareStream(this, mediaPlayer);
@@ -290,10 +292,9 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
 
             @Override
             public void onDrawerOpened(View drawerView) {
-                actionBar.setTitle(R.string.categoryTitle);
+                actionBar.setTitle(R.string.category_title);
                 super.onDrawerOpened(drawerView);
                 //Animation animation = AnimationUtils.makeInAnimation(MainActivity.this, false);
-
 
                 //invalidateOptionsMenu();
             }
@@ -323,13 +324,14 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         //ap = new AsyncPlayer("MyTest");
         ap = null;
         initMediaPlayer();
-        initMediaController();
+        //initMediaController();
+        initAudioController();
         playingStream = false;
         playing = false;
         playBt = (Button) findViewById(R.id.playBt);
         url = "http://evropa2.cz";
         url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
-        prepareMedia(url);
+        //prepareMedia(url);
 
 //        if (downloader != null) {
 //            try {
@@ -350,14 +352,19 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         mediaPlayer.setOnPreparedListener(this);
     }
 
+    private void initAudioController(){
+        View controllerView = findViewById(R.id.audio_controller);
+        audioController = new AudioController(getApplicationContext(), controllerView, this);
+    }
+
     private void initMediaController() {
-        mediaController = new MediaController(this, false) {
+       /* mediaController = new MediaController(this, false) {
             @Override
             public void hide() {
                 super.show();
             }
 
-            /*@Override
+            *//*@Override
             public void setAnchorView(View view) {
                 super.setAnchorView(view);
                 Button searchButton = new Button(getContext());
@@ -365,7 +372,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
                 FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
                 params.gravity = Gravity.RIGHT;
                 addView(searchButton, params);
-            }*/
+            }*//*
        };
         //mediaController = (MediaController) findViewById(R.id.media_controller);
         mediaController.setPrevNextListeners(
@@ -387,6 +394,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         mediaController.setFocusable(false);
         mediaController.setFocusableInTouchMode(false);
         mediaController.setVisibility(View.VISIBLE);
+        */
     }
 
     private void initNavigation() {
@@ -464,7 +472,12 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "" + parent.getAdapter().getItem(position), Toast.LENGTH_SHORT).show();
+                Record item = (Record) parent.getAdapter().getItem(position);
+                Toast.makeText(MainActivity.this, "" + item, Toast.LENGTH_SHORT).show();
+                if(isPlaying()){
+                    pause();
+                }
+                prepareMedia(item.getMp3().toString());
             }
         });
         recList.setOnScrollListener(new EndlessScrollListener(new EndlessScrollListener.LoadNextItems() {
@@ -548,12 +561,14 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
         return this;
     }
 
+    @Override
     public void next(){
-
+        Toast.makeText(this, "Další", Toast.LENGTH_SHORT).show();
     }
 
-    public void previously(){
-
+    @Override
+    public void previous(){
+        Toast.makeText(this, "Předchozí", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -569,7 +584,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
     @Override
     public int getDuration() {
         // if(mediaPlayer != null){
-        return mediaPlayer.getDuration();
+        return mediaPlayer.getDuration() / 1000;
         //  }
         //  return 0;
     }
@@ -577,7 +592,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
     @Override
     public int getCurrentPosition() {
         // if(mediaPlayer != null){
-        return mediaPlayer.getCurrentPosition();
+        return mediaPlayer.getCurrentPosition() / 1000;
         //}
         //return 0;
     }
@@ -585,7 +600,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
     @Override
     public void seekTo(int pos) {
         // if(mediaPlayer != null){
-        mediaPlayer.seekTo(pos);
+        mediaPlayer.seekTo(pos * 1000);
         //}
     }
 
@@ -635,19 +650,21 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
      */
     @Override
     public void onPrepared(MediaPlayer mp) {
-        mediaController.setMediaPlayer(this);
-        mediaController.setAnchorView(findViewById(R.id.media_controller));
-        //mediaController.setAnchorView(findViewById(R.id.listview_records));
+//        mediaController.setMediaPlayer(this);
+//        mediaController.setAnchorView(findViewById(R.id.audio_controller));
+//        //mediaController.setAnchorView(findViewById(R.id.listview_records));
+//
+//        handler.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                mediaController.setEnabled(true);
+//                mediaController.show(0);
+//            }
+//        });
 
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                mediaController.setEnabled(true);
-                mediaController.show(0);
-            }
-        });
-
-
+        audioController.setEnabled(true);
+        /* play mp3 */
+        audioController.clickOnPlay();
     }
 
     private class E2 extends AsyncTask<Void, Void, Void> {
@@ -734,7 +751,7 @@ implements MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
                         // TODO Auto-generated method stub
                         initialStage = true;
                         playing = false;
-                        playBt.setText(R.string.pause);
+                        playBt.setText(R.string.media_controller_pause_button);
                         //btn.setBackgroundResource(R.drawable.);
                         mediaPlayer.stop();
                         mediaPlayer.reset();

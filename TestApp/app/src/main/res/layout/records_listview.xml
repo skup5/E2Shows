@@ -3,11 +3,60 @@
     android:id="@+id/records"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:weightSum="1">
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/listView_records"/>
+        android:id="@+id/listView_records" />
+
+    <LinearLayout
+        android:id="@+id/audio_controller"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:minHeight="20dp">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button android:id="@+id/audio_controller_previous_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/media_controller_previous_button"
+                android:icon="@drawable/track_back"
+                android:layout_gravity="left" />
+
+            <Button android:id="@+id/audio_controller_play_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:icon="@drawable/play"
+                android:text="@string/media_controller_play_button" />
+
+            <Button android:id="@+id/audio_controller_next_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:icon="@drawable/track_forward"
+                android:text="@string/media_controller_next_button"
+                android:layout_gravity="right" />
+        </LinearLayout>
+
+        <SeekBar android:id="@+id/audio_controller_seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <!--<MediaController
+        android:id="@+id/media_controller"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_alignParentBottom="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:visibility="visible" />-->
 
 </LinearLayout>
