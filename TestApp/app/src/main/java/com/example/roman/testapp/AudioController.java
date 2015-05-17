@@ -5,19 +5,21 @@ import android.media.MediaPlayer;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 /**
  * Created by Roman on 2.5.2015.
  */
 public class AudioController {
 
-    Button play, previous, next;
+    ImageButton play, next;
+    ImageButton previous;
     SeekBar seekBar;
     AudioPlayerControl controller;
     Context context;
     View view;
-    MediaPlayer player;
     Runnable run;
     Handler seekHandler = new Handler();
     boolean enabled;
@@ -40,11 +42,11 @@ public class AudioController {
             if (controller.isPlaying()) {
                 if (controller.canPause()) {
                     controller.pause();
-                    play.setBackgroundResource(R.drawable.play);
+                    play.setImageResource(R.drawable.play);
                 }
             } else {
                 controller.start();
-                play.setBackgroundResource(R.drawable.pause);
+                play.setImageResource(R.drawable.pause);
                 seekBarUpdation();
             }
         }
@@ -54,23 +56,15 @@ public class AudioController {
         this.enabled = enabled;
     }
 
-    private void setPlayer(MediaPlayer player) {
-        if(player == null){
-            throw new NullPointerException("MediaPlayer cannot by null");
-        }
-        this.player = player;
-        setUpSeekBar();
-    }
-
     public void setView(View view) {
         this.view = view;
         initControllers();
     }
 
     private void initControllers(){
-        next = (Button) view.findViewById(R.id.audio_controller_next_button);
-        play = (Button) view.findViewById(R.id.audio_controller_play_button);
-        previous = (Button) view.findViewById(R.id.audio_controller_previous_button);
+        next = (ImageButton) view.findViewById(R.id.audio_controller_next_button);
+        play = (ImageButton) view.findViewById(R.id.audio_controller_play_button);
+        previous = (ImageButton) view.findViewById(R.id.audio_controller_previous_button);
         seekBar = (SeekBar) view.findViewById(R.id.audio_controller_seekBar);
 
         seekBar.setVisibility(View.INVISIBLE);
@@ -87,12 +81,14 @@ public class AudioController {
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //Toast.makeText(context, play.getWidth()+"x"+play.getHeight(), Toast.LENGTH_SHORT).show();
                 clickOnPlay();
             }
         });
         previous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+               // Toast.makeText(context, previous.getWidth()+"x"+previous.getHeight(), Toast.LENGTH_SHORT).show();
                 if(enabled) { controller.previous(); }
             }
         });
@@ -119,13 +115,14 @@ public class AudioController {
         }
     }
 
-    private void setUpSeekBar() {
-        seekBar.setMax(player.getDuration());
+    public void setUpSeekBar() {
+        seekBar.setMax(controller.getDuration());
         seekBar.setVisibility(View.VISIBLE);
     }
 
     interface AudioPlayerControl extends android.widget.MediaController.MediaPlayerControl {
         void next();
         void previous();
+        void stop();
     }
 }

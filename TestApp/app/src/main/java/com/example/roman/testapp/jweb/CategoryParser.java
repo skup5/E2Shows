@@ -42,13 +42,16 @@ public class CategoryParser extends Parser {
     name = jsParams[CATEGORY_NAME].trim();
     
     imgStr = host + jsParams[CATEGORY_IMG].trim();
-    
-    String nextRecordsStr = host + parseNextPageFun(nextRecord);
      
     try {
       //webSite = new URL(element.location());
       //System.out.println("imgStr:" + imgStr);
-      nextRecords = new URL(nextRecordsStr);
+      if(nextRecord  == null) {
+        nextRecords = Category.NO_URL_SITE;
+      } else {
+        String nextRecordsStr = host + parseNextPageFun(nextRecord);
+        nextRecords = new URL(nextRecordsStr);
+      }
       img = new URL(imgStr);
     } catch (MalformedURLException ex) {
       Logger.getLogger(RecordParser.class.getName()).log(Level.SEVERE, null, ex);

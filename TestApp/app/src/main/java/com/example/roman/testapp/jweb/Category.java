@@ -14,7 +14,7 @@ public class Category extends E2Data {
   private static final int NO_ID = -1;
   private static final int NO_COUNT_RECORDS = -1;
   private static final URL NO_IMAGE = null;
-  private static final URL NO_URL_SITE = null;
+  public static final URL NO_URL_SITE = null;
 
   private URL image;
   private URL webSite;
@@ -87,6 +87,10 @@ public class Category extends E2Data {
 
   public String getName() {
     return name;
+  }
+
+  public boolean hasNextRecords() {
+    return nextRecords != NO_URL_SITE;
   }
 
   public void setId(int id) {

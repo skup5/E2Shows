@@ -2,41 +2,31 @@ package com.example.roman.testapp;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.media.AsyncPlayer;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Handler;
+import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.MediaController;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Set;
 
@@ -45,34 +35,18 @@ public class MainActivity extends ActionBarActivity
 implements AudioController.AudioPlayerControl,
         MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
 
-    private ProgressDialog mProgressDialog;
-    private AsyncPlayer ap;
     private MediaPlayer mediaPlayer;
-//    private MediaController mediaController;
     private AudioController audioController;
-    private Button playBt;
     private ListView navList;
-//    private TextView navHeader;
-
 
     private ArrayAdapter navListAdapter;
-
-    private String url;
-    final String[] categoryItems = new String[] {
-            "Hudební ceny Evropy 2 (2014)", "To nejlepší z Ranní show",
-            "Zpátky do minulosti", "Bombucman", "Odpolední odhalení - Ekl Zástěra",
-            "To nejlepší z Odpolední show", "To nejlepší z Víkendové ranní show",
-            "Emoce na Evropě 2", "Dance Exxtravaganza", "Novinky na DVD",
-            "Internet", "Hosté Evropy 2", "Songy Evropy 2", "Fake"};
 
     /**
      * remain false till media is not completed, inside OnCompletionListener make it true.
      */
 
-    private boolean initialStage = true, categoryIsDownloading = false;
-    private boolean playing, playingStream;
+    private boolean categoryIsDownloading = false;
     private DrawerLayout mDrawerLayout;
-//    private Handler handler = new Handler();
     private ListView recList;
     private RecordsAdapter recAdapter;
     private final String urlE2 = "http://evropa2.cz";
@@ -93,7 +67,6 @@ implements AudioController.AudioPlayerControl,
         setContentView(R.layout.main_layout);
 
         init();
-
        // Log.d("onCreate", "\n***************\n* VYTVORIL JSEM APPKU\n***************");
     }
 
@@ -139,58 +112,6 @@ implements AudioController.AudioPlayerControl,
             mediaPlayer = null;
         }*/
     }
-    
-    public void refresh(View v) {
-        /*TextView textView = (TextView) findViewById(R.id.textView);
-        textView.setText(getData1("http://evropa2.cz/mp3-archiv/"));
-        */
-        new E2().execute();
-    }
-
-    public void playStopStream(View v) {
-        if (!playingStream) {
-            String url = ((TextView) findViewById(R.id.mp3Url)).getText().toString();
-            ap.play(this, Uri.parse(url), false, AudioManager.STREAM_MUSIC);
-            playBt.setText(R.string.media_controller_stop_button);
-            Toast.makeText(this, "Přehrávám...", Toast.LENGTH_LONG).show();
-            playingStream = true;
-        } else {
-            ap.stop();
-            playBt.setText(R.string.media_controller_play_button);
-            Toast.makeText(this, "Stop", Toast.LENGTH_LONG).show();
-            playingStream = false;
-        }
-    }
-
-    public void playPauseMedia(View v) {
-        if (!playing) {
-            //btn.setBackgroundResource(R.drawable.button_pause);
-            //playBt.setText(R.string.pause);
-            if (initialStage) {
-                String url = ((TextView) findViewById(R.id.mp3Url)).getText().toString();
-                if(url == null || url.isEmpty()){
-                    Log.d("playPauseMedia", "empty url");
-                    playing = false;
-                    initialStage = true;
-                   // playBt.setText(R.string.play);
-                    return;
-                }
-                new Player().execute(url);
-            } else {
-                if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer.start();
-                }
-            }
-            playing = true;
-        } else {
-            //btn.setBackgroundResource(R.drawable.button_play);
-            //playBt.setText(R.string.play);
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
-            }
-            playing = false;
-        }
-    }
 
     public void prepareMedia(String url) {
         if (mediaPlayer == null) {
@@ -206,19 +127,6 @@ implements AudioController.AudioPlayerControl,
         }
         PrepareStream ps = new PrepareStream(this, mediaPlayer);
         ps.execute(url);
-    }
-
-    public void stopMedia(View v){
-        if(mediaPlayer == null){
-            return;
-        }
-        if(mediaPlayer.isPlaying()){
-            mediaPlayer.stop();
-        }
-        mediaPlayer.reset();
-        playing = false;
-        initialStage = true;
-        //playBt.setText(R.string.play);
     }
 
     public void hideLoading() { loadingBar.setVisibility(View.GONE); }
@@ -321,28 +229,8 @@ implements AudioController.AudioPlayerControl,
         // onRestoreInstanceState has occurred
         mDrawerToggle.syncState();
 
-        //ap = new AsyncPlayer("MyTest");
-        ap = null;
         initMediaPlayer();
-        //initMediaController();
         initAudioController();
-        playingStream = false;
-        playing = false;
-        playBt = (Button) findViewById(R.id.playBt);
-        url = "http://evropa2.cz";
-        url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
-        //prepareMedia(url);
-
-//        if (downloader != null) {
-//            try {
-//                categorySet = downloader.get();
-//                fillNavigation(categorySet);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            } catch (ExecutionException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
     }
 
@@ -355,46 +243,6 @@ implements AudioController.AudioPlayerControl,
     private void initAudioController(){
         View controllerView = findViewById(R.id.audio_controller);
         audioController = new AudioController(getApplicationContext(), controllerView, this);
-    }
-
-    private void initMediaController() {
-       /* mediaController = new MediaController(this, false) {
-            @Override
-            public void hide() {
-                super.show();
-            }
-
-            *//*@Override
-            public void setAnchorView(View view) {
-                super.setAnchorView(view);
-                Button searchButton = new Button(getContext());
-                searchButton.setText("Stop");
-                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-                params.gravity = Gravity.RIGHT;
-                addView(searchButton, params);
-            }*//*
-       };
-        //mediaController = (MediaController) findViewById(R.id.media_controller);
-        mediaController.setPrevNextListeners(
-                // next
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        next();
-                    }
-                },
-                // previously
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        previously();
-                    }
-                }
-        );
-        mediaController.setFocusable(false);
-        mediaController.setFocusableInTouchMode(false);
-        mediaController.setVisibility(View.VISIBLE);
-        */
     }
 
     private void initNavigation() {
@@ -474,9 +322,7 @@ implements AudioController.AudioPlayerControl,
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Record item = (Record) parent.getAdapter().getItem(position);
                 Toast.makeText(MainActivity.this, "" + item, Toast.LENGTH_SHORT).show();
-                if(isPlaying()){
-                    pause();
-                }
+                stop();
                 prepareMedia(item.getMp3().toString());
             }
         });
@@ -557,10 +403,6 @@ implements AudioController.AudioPlayerControl,
 
     }
 
-    private MediaPlayer.OnPreparedListener getMediaPreparedListener() {
-        return this;
-    }
-
     @Override
     public void next(){
         Toast.makeText(this, "Další", Toast.LENGTH_SHORT).show();
@@ -568,12 +410,23 @@ implements AudioController.AudioPlayerControl,
 
     @Override
     public void previous(){
-        Toast.makeText(this, "Předchozí", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Předchozí", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void start() {
         mediaPlayer.start();
+    }
+
+    @Override
+    public void stop() {
+        if(mediaPlayer != null) {
+            if (isPlaying()) {
+                mediaPlayer.pause();
+            }
+            mediaPlayer.stop();
+            mediaPlayer.reset();
+        }
     }
 
     @Override
@@ -663,140 +516,9 @@ implements AudioController.AudioPlayerControl,
 //        });
 
         audioController.setEnabled(true);
+        audioController.setUpSeekBar();
         /* play mp3 */
         audioController.clickOnPlay();
-    }
-
-    private class E2 extends AsyncTask<Void, Void, Void> {
-        String title;
-        String url = "http://evropa2.cz/mp3-archiv/";
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mProgressDialog = new ProgressDialog(MainActivity.this);
-            // mProgressDialog.setTitle("Mp3 archiv Evropy 2");
-            mProgressDialog.setMessage("Načítání...");
-            //  mProgressDialog.setIndeterminate(false);
-            mProgressDialog.show();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            try {
-                // Connect to the web site
-                if (isInternetAvailable()) {
-                    Document document = Jsoup.connect(url).get();
-                    // Get the html document title
-                    title = document.title();
-                    url = "http://evropa2.cz";
-                    url += "/file/edee/tym-a-porady/mp3-archiv/18058/20150225_odhaleni.mp3";
-
-                } else {
-                    title = "Chyba připojení";
-                    url = "";
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            // Set title into TextView
-            TextView txttitle = (TextView) findViewById(R.id.textView);
-            txttitle.setText(title);
-            TextView mp3url = (TextView) findViewById(R.id.mp3Url);
-            mp3url.setText(url);
-            mProgressDialog.dismiss();
-        }
-    }
-
-    /**
-     * preparing mediaplayer will take sometime to buffer the content so prepare it inside the background thread and starting it on UI thread.
-     *
-     * @author piyush
-     */
-    private class Player extends AsyncTask<String, Void, Boolean> {
-        private ProgressDialog progress;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            if(mediaPlayer == null) {
-                mediaPlayer = new MediaPlayer();
-                mediaPlayer.setOnPreparedListener(getMediaPreparedListener());
-            } else {
-                mediaPlayer.reset();
-            }
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            this.progress.setMessage("Načítání...");
-            this.progress.show();
-
-        }
-
-        @Override
-        protected Boolean doInBackground(String... params) {
-            // TODO Auto-generated method stub
-            Boolean prepared;
-            try {
-                Log.d("class Player", "params[0]=" + params[0]);
-                mediaPlayer.setDataSource(params[0]);
-
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-
-                    @Override
-                    public void onCompletion(MediaPlayer mp) {
-                        // TODO Auto-generated method stub
-                        initialStage = true;
-                        playing = false;
-                        playBt.setText(R.string.media_controller_pause_button);
-                        //btn.setBackgroundResource(R.drawable.);
-                        mediaPlayer.stop();
-                        mediaPlayer.reset();
-                    }
-                });
-                mediaPlayer.prepare();
-                prepared = true;
-            } catch (IllegalArgumentException e) {
-                // TODO Auto-generated catch block
-                Log.d("IllegarArgument", e.getMessage());
-                prepared = false;
-                e.printStackTrace();
-            } catch (SecurityException e) {
-                // TODO Auto-generated catch block
-                prepared = false;
-                e.printStackTrace();
-            } catch (IllegalStateException e) {
-                // TODO Auto-generated catch block
-                prepared = false;
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                prepared = false;
-                e.printStackTrace();
-            }
-            return prepared;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            if (progress.isShowing()) {
-                progress.cancel();
-            }
-            Log.d("Prepared", "//" + result);
-            mediaPlayer.start();
-            initialStage = false;
-        }
-
-        public Player() {
-            progress = new ProgressDialog(MainActivity.this);
-            //this.mediaController = mediaController;
-        }
-
     }
 
 }

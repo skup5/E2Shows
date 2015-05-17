@@ -52,9 +52,9 @@ public class HtmlParser {
     if(record == null){
       throw new NullPointerException("none 'Element record' to parse");
     }
-    if(nextRecord == null){
-      throw new NullPointerException("none 'Element nextRecord' to parse");
-    }
+//    if(nextRecord == null){
+//      throw new NullPointerException("none 'Element nextRecord' to parse");
+//    }
     if(urlHost == null){
       throw new NullPointerException("none 'String urlHost' to use");
     }

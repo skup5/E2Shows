@@ -1,47 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/records"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:weightSum="1">
+    android:weightSum="1"><!--android:orientation="vertical"-->
+
 
     <ListView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/listView_records" />
+        android:layout_height="match_parent"
+        android:id="@+id/listView_records"
+        android:layout_above="@+id/audio_controller" />
 
     <LinearLayout
         android:id="@+id/audio_controller"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:minHeight="20dp">
+        android:minHeight="20dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:gravity="center_horizontal"
+            android:layout_gravity="bottom">
 
-            <Button android:id="@+id/audio_controller_previous_button"
+            <ImageButton android:id="@+id/audio_controller_previous_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/media_controller_previous_button"
-                android:icon="@drawable/track_back"
-                android:layout_gravity="left" />
+                android:background="@android:color/transparent"
+                android:src="@drawable/track_back"/>
+            <!--    android:layout_gravity="left" />
+            android:text="@string/media_controller_previous_button"-->
 
-            <Button android:id="@+id/audio_controller_play_button"
+            <ImageButton android:id="@+id/audio_controller_play_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:icon="@drawable/play"
-                android:text="@string/media_controller_play_button" />
+                android:background="@android:color/transparent"
+                android:src="@drawable/play" />
+                <!--android:text="@string/media_controller_play_button" />-->
 
-            <Button android:id="@+id/audio_controller_next_button"
+            <ImageButton android:id="@+id/audio_controller_next_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:icon="@drawable/track_forward"
-                android:text="@string/media_controller_next_button"
-                android:layout_gravity="right" />
+                android:background="@android:color/transparent"
+                android:src="@drawable/track_forward" />
+                <!--android:text="@string/media_controller_next_button"/>-->
+              <!--  android:layout_gravity="right"-->
         </LinearLayout>
 
         <SeekBar android:id="@+id/audio_controller_seekBar"
@@ -59,4 +70,4 @@
         android:focusableInTouchMode="false"
         android:visibility="visible" />-->
 
-</LinearLayout>
+</RelativeLayout>

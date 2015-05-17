@@ -34,14 +34,16 @@ public class RecordsAdapter extends BaseAdapter {
 
     public void downloadNext() {
         if (hasSource()) {
-            DownloaderFactory.NextRecordsDownloader downloader = (DownloaderFactory.NextRecordsDownloader) DownloaderFactory
-                    .getDownloader(DownloaderFactory.Type.NextRecords);
-            try {
-                setSource(downloader.execute(source).get());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+            if(source.hasNextRecords()) {
+                DownloaderFactory.NextRecordsDownloader downloader = (DownloaderFactory.NextRecordsDownloader) DownloaderFactory
+                        .getDownloader(DownloaderFactory.Type.NextRecords);
+                try {
+                    setSource(downloader.execute(source).get());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
