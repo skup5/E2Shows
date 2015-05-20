@@ -11,17 +11,17 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.RecyclerView;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.MediaController;
 import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
@@ -31,12 +31,11 @@ import java.net.InetAddress;
 import java.util.Set;
 
 
-public class MainActivity extends ActionBarActivity 
-implements AudioController.AudioPlayerControl,
-        MediaController.MediaPlayerControl, MediaPlayer.OnPreparedListener{
+public class MainActivity extends AppCompatActivity {
 
     private MediaPlayer mediaPlayer;
     private AudioController audioController;
+    private AudioController.AudioPlayerControl audioPlayerControl;
     private ListView navList;
 
     private ArrayAdapter navListAdapter;
@@ -113,21 +112,6 @@ implements AudioController.AudioPlayerControl,
         }*/
     }
 
-    public void prepareMedia(String url) {
-        if (mediaPlayer == null) {
-            initMediaPlayer();
-        }
-        if (!isNetworkConnected()) {
-            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (!isInternetAvailable()) {
-            //Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
-            //return;
-        }
-        PrepareStream ps = new PrepareStream(this, mediaPlayer);
-        ps.execute(url);
-    }
 
     public void hideLoading() { loadingBar.setVisibility(View.GONE); }
 
@@ -136,7 +120,7 @@ implements AudioController.AudioPlayerControl,
         loadingBar.setAlpha(1f);
     }
 
-    private void crossfade() {
+    private void crossfadeAnimation() {
 
         // Set the content view to 0% opacity but visible, so that it is visible
         // (but fully transparent) during the animation.
@@ -237,12 +221,132 @@ implements AudioController.AudioPlayerControl,
     private void initMediaPlayer() {
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setOnPreparedListener(this);
+        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            /**
+             * Called when the media file is ready for playback.
+             *
+             * @param mp the MediaPlayer that is ready for playback
+             */
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                //        mediaController.setMediaPlayer(this);
+//        mediaController.setAnchorView(findViewById(R.id.audio_controller));
+//        //mediaController.setAnchorView(findViewById(R.id.listview_records));
+//
+//        handler.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                mediaController.setEnabled(true);
+//                mediaController.show(0);
+//            }
+//        });
+
+                audioController.setEnabled(true);
+                audioController.setUpSeekBar();
+                /* play mp3 */
+                audioController.clickOnPlay();
+            }
+
+        });
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                audioController.onCompletion();
+            }
+        });
     }
 
-    private void initAudioController(){
+    public void prepareMediaPlayerSource(String url) {
+        if (mediaPlayer == null) {
+            initMediaPlayer();
+        }
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!isInternetAvailable()) {
+            //Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
+            //return;
+        }
+        PrepareStream ps = new PrepareStream(this, mediaPlayer);
+        ps.execute(url);
+    }
+
+    private void initAudioController() {
+//        LayoutInflater li = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//        View infView = li.inflate(R.layout.audio_controller, new LinearLayout(getApplicationContext()));
         View controllerView = findViewById(R.id.audio_controller);
-        audioController = new AudioController(getApplicationContext(), controllerView, this);
+        audioPlayerControl = new AudioController.AudioPlayerControl() {
+
+            @Override
+            public void start() {
+                mediaPlayer.start();
+            }
+
+            @Override
+            public void stop() {
+                if (mediaPlayer != null) {
+                    if (isPlaying()) {
+                        mediaPlayer.pause();
+                    }
+                    mediaPlayer.stop();
+                    mediaPlayer.reset();
+                }
+            }
+
+            @Override
+            public void pause() {
+                mediaPlayer.pause();
+            }
+
+            @Override
+            public int getDuration() {
+                // if(mediaPlayer != null){
+                return mediaPlayer.getDuration() / 1000;
+                //  }
+                //  return 0;
+            }
+
+            @Override
+            public int getCurrentPosition() {
+                // if(mediaPlayer != null){
+                return mediaPlayer.getCurrentPosition() / 1000;
+                //}
+                //return 0;
+            }
+
+            @Override
+            public void seekTo(int pos) {
+                // if(mediaPlayer != null){
+                mediaPlayer.seekTo(pos * 1000);
+                //}
+            }
+
+            @Override
+            public boolean isPlaying() {
+                if (mediaPlayer != null) {
+                    return mediaPlayer.isPlaying();
+                }
+                return false;
+            }
+
+            @Override
+            public void next() {
+                Toast.makeText(getApplicationContext(), "Další", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void previous() {
+                Toast.makeText(getApplicationContext(), "Předchozí", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public boolean canPause() {
+                return true;
+            }
+
+        };
+        audioController = new AudioController(getApplicationContext(), controllerView, audioPlayerControl);
     }
 
     private void initNavigation() {
@@ -289,7 +393,7 @@ implements AudioController.AudioPlayerControl,
                         public void onComplete(Object result) {
                             if (result instanceof Category) {
                                 fillRecList((Category) result);
-                                crossfade();
+                                crossfadeAnimation();
                             }
                         }
                     });
@@ -302,7 +406,7 @@ implements AudioController.AudioPlayerControl,
                     } catch (ExecutionException e) {
                         e.printStackTrace();
                     }*/
-                    //crossfade();
+                    //crossfadeAnimation();
                 } else {
                     fillRecList(item);
                 }
@@ -322,8 +426,8 @@ implements AudioController.AudioPlayerControl,
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Record item = (Record) parent.getAdapter().getItem(position);
                 Toast.makeText(MainActivity.this, "" + item, Toast.LENGTH_SHORT).show();
-                stop();
-                prepareMedia(item.getMp3().toString());
+                audioPlayerControl.stop();
+                prepareMediaPlayerSource(item.getMp3().toString());
             }
         });
         recList.setOnScrollListener(new EndlessScrollListener(new EndlessScrollListener.LoadNextItems() {
@@ -343,7 +447,7 @@ implements AudioController.AudioPlayerControl,
         navListAdapter.addAll(categorySet);
     }
 
-    private void fillRecList(Category category){
+    private void fillRecList(Category category) {
         if (category == null) {
             Toast.makeText(this, "Chyba při stahování záznamů", Toast.LENGTH_LONG).show();
             return;
@@ -368,6 +472,7 @@ implements AudioController.AudioPlayerControl,
                     if (result instanceof Set) {
                         fillNavigation((Set<Category>) result);
                         categoryIsDownloading = false;
+                        Toast.makeText(getApplicationContext(), "Kategorie jsou připraveny", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -403,122 +508,5 @@ implements AudioController.AudioPlayerControl,
 
     }
 
-    @Override
-    public void next(){
-        Toast.makeText(this, "Další", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void previous(){
-        Toast.makeText(getApplicationContext(), "Předchozí", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void start() {
-        mediaPlayer.start();
-    }
-
-    @Override
-    public void stop() {
-        if(mediaPlayer != null) {
-            if (isPlaying()) {
-                mediaPlayer.pause();
-            }
-            mediaPlayer.stop();
-            mediaPlayer.reset();
-        }
-    }
-
-    @Override
-    public void pause() {
-        mediaPlayer.pause();
-    }
-
-    @Override
-    public int getDuration() {
-        // if(mediaPlayer != null){
-        return mediaPlayer.getDuration() / 1000;
-        //  }
-        //  return 0;
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        // if(mediaPlayer != null){
-        return mediaPlayer.getCurrentPosition() / 1000;
-        //}
-        //return 0;
-    }
-
-    @Override
-    public void seekTo(int pos) {
-        // if(mediaPlayer != null){
-        mediaPlayer.seekTo(pos * 1000);
-        //}
-    }
-
-    @Override
-    public boolean isPlaying() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.isPlaying();
-        }
-        return false;
-    }
-
-    @Override
-    public int getBufferPercentage() {
-        return 0;
-    }
-
-    @Override
-    public boolean canPause() {
-        return true;
-    }
-
-    @Override
-    public boolean canSeekBackward() {
-        return false;
-    }
-
-    @Override
-    public boolean canSeekForward() {
-        return false;
-    }
-
-    /**
-     * Get the audio session id for the player used by this VideoView. This can be used to
-     * apply audio effects to the audio track of a video.
-     *
-     * @return The audio session, or 0 if there was an error.
-     */
-    @Override
-    public int getAudioSessionId() {
-        return 0;
-    }
-
-    /**
-     * Called when the media file is ready for playback.
-     *
-     * @param mp the MediaPlayer that is ready for playback
-     */
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-//        mediaController.setMediaPlayer(this);
-//        mediaController.setAnchorView(findViewById(R.id.audio_controller));
-//        //mediaController.setAnchorView(findViewById(R.id.listview_records));
-//
-//        handler.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                mediaController.setEnabled(true);
-//                mediaController.show(0);
-//            }
-//        });
-
-        audioController.setEnabled(true);
-        audioController.setUpSeekBar();
-        /* play mp3 */
-        audioController.clickOnPlay();
-    }
 
 }

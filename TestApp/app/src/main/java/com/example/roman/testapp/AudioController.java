@@ -1,22 +1,27 @@
 package com.example.roman.testapp;
 
 import android.content.Context;
-import android.media.MediaPlayer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.MediaController;
 import android.widget.SeekBar;
-import android.widget.Toast;
+import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Roman on 2.5.2015.
  */
 public class AudioController {
 
-    ImageButton play, next;
-    ImageButton previous;
+    ImageButton next, play, previous;
     SeekBar seekBar;
+    TextView curTime, totalTime;
+    Date cur, total;
+    SimpleDateFormat dateFormater;
     AudioPlayerControl controller;
     Context context;
     View view;
@@ -34,6 +39,10 @@ public class AudioController {
                 seekBarUpdation();
             }
         };
+        this.dateFormater = new SimpleDateFormat("mm:ss");
+        this.cur = new Date();
+        this.total = new Date();
+
         setView(view);
     }
 
@@ -52,26 +61,43 @@ public class AudioController {
         }
     }
 
+    public void onCompletion(){
+        seekEnd();
+        play.setImageResource(R.drawable.play);
+    }
+
+    private void seekEnd(){
+        if(seekBar.isEnabled()) {
+            cur.setTime(total.getTime());
+            seekBar.setProgress(controller.getDuration());
+            curTime.setText(totalTime.getText());
+        }
+    }
+
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
     public void setView(View view) {
         this.view = view;
-        initControllers();
+        initComponents();
     }
 
-    private void initControllers(){
+    private void initComponents(){
         next = (ImageButton) view.findViewById(R.id.audio_controller_next_button);
         play = (ImageButton) view.findViewById(R.id.audio_controller_play_button);
         previous = (ImageButton) view.findViewById(R.id.audio_controller_previous_button);
         seekBar = (SeekBar) view.findViewById(R.id.audio_controller_seekBar);
+        curTime = (TextView) view.findViewById(R.id.audio_controller_cur_time);
+        totalTime = (TextView) view.findViewById(R.id.audio_controller_total_time);
 
-        seekBar.setVisibility(View.INVISIBLE);
+        //seekBar.setVisibility(View.INVISIBLE);
+        seekBar.setEnabled(false);
         initListeners();
     }
 
     private void initListeners() {
+        Log.i("AudioController", "init listeners");
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,7 +121,7 @@ public class AudioController {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser){
+                if(enabled && fromUser){
                     controller.seekTo(progress);
                 }
             }
@@ -109,20 +135,45 @@ public class AudioController {
     }
 
     private void seekBarUpdation() {
-        seekBar.setProgress(controller.getCurrentPosition());
+        int currentPosition = controller.getCurrentPosition();
+        cur.setTime(currentPosition * 1000);
+        seekBar.setProgress(currentPosition);
+        curTime.setText(dateFormater.format(cur));
         if(controller.isPlaying()) {
             seekHandler.postDelayed(run, 1000);
         }
     }
 
     public void setUpSeekBar() {
-        seekBar.setMax(controller.getDuration());
-        seekBar.setVisibility(View.VISIBLE);
+        int duration = controller.getDuration();
+        seekBar.setMax(duration);
+        total.setTime(duration * 1000);
+        totalTime.setText(dateFormater.format(total));
+        //seekBar.setVisibility(View.VISIBLE);
+        seekBar.setEnabled(true);
     }
 
-    interface AudioPlayerControl extends android.widget.MediaController.MediaPlayerControl {
-        void next();
-        void previous();
-        void stop();
+    static abstract class AudioPlayerControl implements MediaController.MediaPlayerControl {
+        abstract void next();
+        abstract void previous();
+        abstract void stop();
+
+        @Override
+        public int getAudioSessionId() {
+            return 0;
+        }
+
+        @Override
+        public int getBufferPercentage() { return 0; }
+
+        @Override
+        public boolean canSeekBackward() {
+            return false;
+        }
+
+        @Override
+        public boolean canSeekForward() {
+            return false;
+        }
     }
 }

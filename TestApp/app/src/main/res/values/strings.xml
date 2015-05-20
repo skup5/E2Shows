@@ -14,5 +14,6 @@
     <string name="navigation_drawer_close">Close</string>
     <string name="downloading">Stahuji...</string>
     <string name="category_title">Kategorie</string>
+    <string name="time_zero">00:00</string>
 
 </resources>
