@@ -9,14 +9,20 @@ import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -37,8 +43,10 @@ public class MainActivity extends AppCompatActivity {
     private AudioController audioController;
     private AudioController.AudioPlayerControl audioPlayerControl;
     private ListView navList;
-
     private ArrayAdapter navListAdapter;
+
+    private RecyclerView recyclerView;
+    private MyRecyclerAdapter recyclerAdapter;
 
     /**
      * remain false till media is not completed, inside OnCompletionListener make it true.
@@ -102,17 +110,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-       /* if (mediaPlayer != null) {
-            mediaPlayer.reset();
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }*/
-    }
-
-
     public void hideLoading() { loadingBar.setVisibility(View.GONE); }
 
     public void showLoading(){
@@ -124,12 +121,18 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the content view to 0% opacity but visible, so that it is visible
         // (but fully transparent) during the animation.
-        recList.setAlpha(0f);
-        recList.setVisibility(View.VISIBLE);
+//        recList.setAlpha(0f);
+//        recList.setVisibility(View.VISIBLE);
+        recyclerView.setAlpha(0f);
+        recyclerView.setVisibility(View.VISIBLE);
 
         // Animate the content view to 100% opacity, and clear any animation
         // listener set on the view.
-        recList.animate()
+//        recList.animate()
+//                .alpha(1f)
+//                .setDuration(mAnimationDuration)
+//                .setListener(null);
+        recyclerView.animate()
                 .alpha(1f)
                 .setDuration(mAnimationDuration)
                 .setListener(null);
@@ -158,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
         mAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
         initNavigation();
-        initRecList();
+        //initRecList();
+        initRecyclerView();
 
         actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -172,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         // that allows for interactive "drawer" views to be
         // pulled out from the edge of the window.
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        //mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
 
         // ActionBarDrawerToggle : This class provides a handy way to tie
         // together the functionality of DrawerLayout and
@@ -216,6 +220,34 @@ public class MainActivity extends AppCompatActivity {
         initMediaPlayer();
         initAudioController();
 
+    }
+
+    private void initRecyclerView() {
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        recyclerAdapter = new MyRecyclerAdapter(this, new MyRecyclerAdapter.OnRecordClickListener() {
+            @Override
+            public void onRecordClick(Record record) {
+                Toast.makeText(MainActivity.this, "" + record, Toast.LENGTH_SHORT).show();
+                audioPlayerControl.stop();
+                prepareMediaPlayerSource(record.getMp3().toString());
+            }
+        });
+        recyclerView.setAdapter(recyclerAdapter);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.addOnScrollListener(new MyRecyclerScrollListener(
+                new EndlessScrollListener.LoadNextItems() {
+                    @Override
+                    public void loadNextItems() {
+                        recyclerAdapter.downloadNext();
+                    }
+                }, 3
+        ));
+//        recyclerView.addItemDecoration(new SpacesItemDecoration(5));
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
+        recyclerView.setHasFixedSize(true);
+        //recyclerView.setItemAnimator(some animator);
+        recyclerView.setVisibility(View.GONE);
     }
 
     private void initMediaPlayer() {
@@ -418,25 +450,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initRecList() {
-        recList = (ListView) findViewById(R.id.listView_records);
-        recAdapter = new RecordsAdapter(this);
-        recList.setAdapter(recAdapter);
-        recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Record item = (Record) parent.getAdapter().getItem(position);
-                Toast.makeText(MainActivity.this, "" + item, Toast.LENGTH_SHORT).show();
-                audioPlayerControl.stop();
-                prepareMediaPlayerSource(item.getMp3().toString());
-            }
-        });
-        recList.setOnScrollListener(new EndlessScrollListener(new EndlessScrollListener.LoadNextItems() {
-            @Override
-            public void loadNextItems() {
-                recAdapter.downloadNext();
-            }
-        }));
-        recList.setVisibility(View.GONE);
+//        recList = (ListView) findViewById(R.id.listView_records);
+//        recAdapter = new RecordsAdapter(this);
+//        recList.setAdapter(recAdapter);
+//        recList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                Record item = (Record) parent.getAdapter().getItem(position);
+//                Toast.makeText(MainActivity.this, "" + item, Toast.LENGTH_SHORT).show();
+//                audioPlayerControl.stop();
+//                prepareMediaPlayerSource(item.getMp3().toString());
+//            }
+//        });
+//        recList.setOnScrollListener(new EndlessScrollListener(new EndlessScrollListener.LoadNextItems() {
+//            @Override
+//            public void loadNextItems() {
+//                recAdapter.downloadNext();
+//            }
+//        }));
+//        recList.setVisibility(View.GONE);
     }
 
     private void fillNavigation(Set<Category> categorySet) {
@@ -452,7 +484,8 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Chyba při stahování záznamů", Toast.LENGTH_LONG).show();
             return;
         }
-        recAdapter.setSource(category);
+        //recAdapter.setSource(category);
+        recyclerAdapter.setSource(category);
     }
 
     private void downloadCategory(){
