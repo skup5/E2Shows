@@ -8,14 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Roman on 27.5.2015.
@@ -44,7 +42,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
             if(source.hasNextRecords()) {
                 DownloaderFactory.NextRecordsDownloader downloader = (DownloaderFactory.NextRecordsDownloader) DownloaderFactory
                         .getDownloader(DownloaderFactory.Type.NextRecords);
-                downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
+                downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
                     @Override
                     public void onComplete(Object result) {
                         if(result instanceof Category) {

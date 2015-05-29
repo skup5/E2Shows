@@ -14,19 +14,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -420,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
                     showLoading();
                     //Toast.makeText(MainActivity.this, "recordsSet is empty", Toast.LENGTH_LONG).show();
                     DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
-                    downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
+                    downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
                         @Override
                         public void onComplete(Object result) {
                             if (result instanceof Category) {
@@ -499,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
 //            downloader = new Downloader(this, Downloader.Type.Category, null);
             downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
-            downloader.setOnCompleteListener(new ADownloader.OnCompleteListener() {
+            downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
                 @Override
                 public void onComplete(Object result) {
                     if (result instanceof Set) {
