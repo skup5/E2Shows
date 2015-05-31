@@ -9,6 +9,7 @@ import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -20,8 +21,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.Interpolator;
+import android.view.animation.LayoutAnimationController;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
+import android.view.animation.ScaleAnimation;
 import android.widget.ArrayAdapter;
+import android.widget.ExpandableListView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -43,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private MyRecyclerAdapter recyclerAdapter;
 
+    private ExpandableListView categoriesList;
+    private CategoriesAdapter categoriesAdapter;
+
     /**
      * remain false till media is not completed, inside OnCompletionListener make it true.
      */
@@ -59,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private View loadingBar;
     private int mAnimationDuration;
     private Category defaultCategory;
-
+    private View refreshCategoryButton;
+    private Animation refreshCategoryAnim;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +90,16 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                refreshCategoryButton = findViewById(R.id.action_refresh_category);
+                refreshCategoryAnim = createRotateAnim(refreshCategoryButton, 360, 1000, true);
+                if (categoryIsDownloading) {
+                    refreshCategoryButton.startAnimation(refreshCategoryAnim);
+                }
+            }
+        });
         return true;
     }
 
@@ -89,20 +113,54 @@ public class MainActivity extends AppCompatActivity {
         switch(item.getItemId()){
 //            case R.id.action_settings :
 //                return true;
+
             case android.R.id.home :
                 //Toast.makeText(this, "Home click", Toast.LENGTH_LONG).show();
                 //View navigation = findViewById(R.id.left_drawer);
-                if(mDrawerLayout.isDrawerOpen(navList)){
-                    mDrawerLayout.closeDrawer(navList);
+//                if(mDrawerLayout.isDrawerOpen(navList)){
+//                    mDrawerLayout.closeDrawer(navList);
+//                } else {
+//                    mDrawerLayout.openDrawer(navList);
+//                }
+                if(mDrawerLayout.isDrawerOpen(categoriesList)){
+                    mDrawerLayout.closeDrawer(categoriesList);
                 } else {
-                    mDrawerLayout.openDrawer(navList);
+                    mDrawerLayout.openDrawer(categoriesList);
                 }
                 return true;
+
             case R.id.action_refresh_category :
                 downloadCategory();
                 return true;
+
             default : return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void prepareMediaPlayerSource(String url) {
+        if (mediaPlayer == null) {
+            initMediaPlayer();
+        }
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!isInternetAvailable()) {
+            //Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
+            //return;
+        }
+        PrepareStream ps = new PrepareStream(this, mediaPlayer);
+        ps.execute(url);
+    }
+
+    /**
+     * Zjistí, jestli je telefon připojen k síti.
+     * @return true pokud je připojen
+     */
+    public boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        return ni != null;
     }
 
     public void hideLoading() { loadingBar.setVisibility(View.GONE); }
@@ -110,40 +168,6 @@ public class MainActivity extends AppCompatActivity {
     public void showLoading(){
         loadingBar.setVisibility(View.VISIBLE);
         loadingBar.setAlpha(1f);
-    }
-
-    private void crossfadeAnimation() {
-
-        // Set the content view to 0% opacity but visible, so that it is visible
-        // (but fully transparent) during the animation.
-//        recList.setAlpha(0f);
-//        recList.setVisibility(View.VISIBLE);
-        recyclerView.setAlpha(0f);
-        recyclerView.setVisibility(View.VISIBLE);
-
-        // Animate the content view to 100% opacity, and clear any animation
-        // listener set on the view.
-//        recList.animate()
-//                .alpha(1f)
-//                .setDuration(mAnimationDuration)
-//                .setListener(null);
-        recyclerView.animate()
-                .alpha(1f)
-                .setDuration(mAnimationDuration)
-                .setListener(null);
-
-        // Animate the loading view to 0% opacity. After the animation ends,
-        // set its visibility to GONE as an optimization step (it won't
-        // participate in layout passes, etc.)
-        loadingBar.animate()
-                .alpha(0f)
-                .setDuration(mAnimationDuration)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        loadingBar.setVisibility(View.GONE);
-                    }
-                });
     }
 
     private void init() {
@@ -155,14 +179,22 @@ public class MainActivity extends AppCompatActivity {
         // Retrieve and cache the system's default "short" animation time.
         mAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
-        initNavigation();
+        //initNavigation();
+        initCategoriesList();
         //initRecList();
         initRecyclerView();
 
+        initActionBar();
+
+        initMediaPlayer();
+        initAudioController();
+
+    }
+
+    private void initActionBar() {
         actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
-
 
         // Toolbar :it is a generalization of action bars for use within
         // application layouts.
@@ -211,9 +243,29 @@ public class MainActivity extends AppCompatActivity {
         // with the state of the linked DrawerLayout after
         // onRestoreInstanceState has occurred
         mDrawerToggle.syncState();
+    }
 
-        initMediaPlayer();
-        initAudioController();
+    private void initCategoriesList() {
+        categoriesList = (ExpandableListView) findViewById(R.id.left_drawer);
+        categoriesList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+            @Override
+            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+                if (categoriesAdapter.isActualCategories(groupPosition)) {
+                    Category item = (Category) categoriesAdapter.getGroup(groupPosition);
+                    onNavigationItemClick(item, groupPosition);
+                    return true;
+                }
+                return false;
+            }
+        });
+        categoriesList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                Category item = (Category) categoriesAdapter.getChild(groupPosition, childPosition);
+                onNavigationItemClick(item, groupPosition + childPosition);
+                return true;
+            }
+        });
 
     }
 
@@ -281,22 +333,6 @@ public class MainActivity extends AppCompatActivity {
                 audioController.onCompletion();
             }
         });
-    }
-
-    public void prepareMediaPlayerSource(String url) {
-        if (mediaPlayer == null) {
-            initMediaPlayer();
-        }
-        if (!isNetworkConnected()) {
-            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (!isInternetAvailable()) {
-            //Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
-            //return;
-        }
-        PrepareStream ps = new PrepareStream(this, mediaPlayer);
-        ps.execute(url);
     }
 
     private void initAudioController() {
@@ -377,71 +413,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initNavigation() {
-        //navHeader = (TextView) findViewById(R.id.navHeader);
-        // Find the ListView resource.
-        navList = (ListView) findViewById(R.id.left_drawer);
-
-//        if (categorySet == null) {
-//            Toast.makeText(this, "Chyba při stahování kategorií", Toast.LENGTH_LONG).show();
-//            return;
-//        }
-
-        Log.d("onCreate", "Kategorie byly stazeny, pridavam do navListu");
-        //navListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, categorySet.toArray());
-        navListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
-        // Set the ArrayAdapter as the ListView's adapter.
-        navList.setAdapter(navListAdapter);
-        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                //navHeader.setText(categoryItems[position].toString());
-                // actionBar.setTitle(categoryItems[position].toString());
-                //choosenCategory = categoryItems[position].toString();
-                Category item = (Category) parent.getAdapter().getItem(position);
-                if (lastChoosenCategoryId == position) {
-                    mDrawerLayout.closeDrawer(navList);
-                    return;
-                }
-                lastChoosenCategoryId = position;
-                choosenCategory = item.toString();
-                mDrawerLayout.closeDrawer(navList);
-                //recList.setVisibility(View.GONE);
-
-                //Toast.makeText(MainActivity.this, ""+parent.getAdapter().getItem(position), Toast.LENGTH_LONG).show();
-                // Set<Record> recordsSet = item.getRecords();
-                if (item.getRecords().isEmpty()) {
-                    showLoading();
-                    //Toast.makeText(MainActivity.this, "recordsSet is empty", Toast.LENGTH_LONG).show();
-                    DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
-                    downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
-                        @Override
-                        public void onComplete(Object result) {
-                            if (result instanceof Category) {
-                                fillRecList((Category) result);
-                                crossfadeAnimation();
-                            }
-                        }
-                    });
-                    downloader.execute(item);
-                    /*try {
-                        recordsSet = downloader.get();
-                        item.addRecords(recordsSet);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    }*/
-                    //crossfadeAnimation();
-                } else {
-                    fillRecList(item);
-                }
-                /*hideLoading();
-                recList.setVisibility(View.VISIBLE);*/
-
-            }
-        });
+//        //navHeader = (TextView) findViewById(R.id.navHeader);
+//        // Find the ListView resource.
+//        navList = (ListView) findViewById(R.id.left_drawer);
+//
+//        //        if (categorySet == null) {
+//        //            Toast.makeText(this, "Chyba při stahování kategorií", Toast.LENGTH_LONG).show();
+//        //            return;
+//        //        }
+//
+//        Log.d("onCreate", "Kategorie byly stazeny, pridavam do navListu");
+//        //navListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, categorySet.toArray());
+//        navListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
+//        // Set the ArrayAdapter as the ListView's adapter.
+//        navList.setAdapter(navListAdapter);
+//        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view,
+//                                    int position, long id) {
+//                Category item = (Category) parent.getAdapter().getItem(position);
+//                onNavigationItemClick(item);
+//            }
+//        });
     }
 
     private void initRecList() {
@@ -471,7 +465,15 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Chyba při stahování kategorií", Toast.LENGTH_LONG).show();
             return;
         }
-        navListAdapter.addAll(categorySet);
+        //navListAdapter.addAll(categorySet);
+        categoriesAdapter = new CategoriesAdapter(this);
+        categoriesAdapter.setActualCategories(categorySet.toArray(new Category[categorySet.size()]));
+        Category[] archived = new Category[5];
+        for (int i = 0; i < archived.length; i++) {
+            archived[i] = new Category(Integer.MAX_VALUE - i - 1, "Historie"+i+1, Category.NO_URL_SITE, i+1, Category.NO_URL_SITE, Category.NO_URL_SITE); }
+        categoriesAdapter.setArchivedCategories(archived);
+        categoriesList.setGroupIndicator(null);
+        categoriesList.setAdapter(categoriesAdapter);
     }
 
     private void fillRecList(Category category) {
@@ -483,7 +485,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerAdapter.setSource(category);
     }
 
-    private void downloadCategory(){
+    private void downloadCategory() {
         //Set<Category> categorySet = null;
         //Downloader downloader = null;
         DownloaderFactory.CategoriesDownloader downloader = null;
@@ -492,6 +494,9 @@ public class MainActivity extends AppCompatActivity {
         }
         else if(!categoryIsDownloading){
             Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
+            if(refreshCategoryButton != null) {
+                refreshCategoryButton.startAnimation(refreshCategoryAnim);
+            }
 //            downloader = new Downloader(this, Downloader.Type.Category, null);
             downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
             downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
@@ -501,6 +506,9 @@ public class MainActivity extends AppCompatActivity {
                         fillNavigation((Set<Category>) result);
                         categoryIsDownloading = false;
                         Toast.makeText(getApplicationContext(), "Kategorie jsou připraveny", Toast.LENGTH_SHORT).show();
+                        if (refreshCategoryButton != null) {
+                            refreshCategoryButton.setAnimation(null);
+                        }
                     }
                 }
             });
@@ -510,14 +518,34 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /**
-     * Zjistí, jestli je telefon připojen k síti.
-     * @return true pokud je připojen
-     */
-    public boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo ni = cm.getActiveNetworkInfo();
-        return ni != null;
+    private void onNavigationItemClick(Category item, int position) {
+
+        int id = position;
+        Toast.makeText(this, id+":"+item.getName(), Toast.LENGTH_SHORT).show();
+        if (lastChoosenCategoryId == id) {
+            mDrawerLayout.closeDrawer(categoriesList);
+            return;
+        }
+        lastChoosenCategoryId = id;
+        choosenCategory = item.toString();
+        mDrawerLayout.closeDrawer(categoriesList);
+        if (item.getRecords().isEmpty()) {
+            showLoading();
+            //Toast.makeText(MainActivity.this, "recordsSet is empty", Toast.LENGTH_LONG).show();
+            DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
+            downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
+                @Override
+                public void onComplete(Object result) {
+                    if (result instanceof Category) {
+                        fillRecList((Category) result);
+                        crossfadeAnimation();
+                    }
+                }
+            });
+            downloader.execute(item);
+        } else {
+            fillRecList(item);
+        }
     }
 
     /**
@@ -536,5 +564,50 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void crossfadeAnimation() {
+
+        // Set the content view to 0% opacity but visible, so that it is visible
+        // (but fully transparent) during the animation.
+//        recList.setAlpha(0f);
+//        recList.setVisibility(View.VISIBLE);
+        recyclerView.setAlpha(0f);
+        recyclerView.setVisibility(View.VISIBLE);
+
+        // Animate the content view to 100% opacity, and clear any animation
+        // listener set on the view.
+//        recList.animate()
+//                .alpha(1f)
+//                .setDuration(mAnimationDuration)
+//                .setListener(null);
+        recyclerView.animate()
+                .alpha(1f)
+                .setDuration(mAnimationDuration)
+                .setListener(null);
+
+        // Animate the loading view to 0% opacity. After the animation ends,
+        // set its visibility to GONE as an optimization step (it won't
+        // participate in layout passes, etc.)
+        loadingBar.animate()
+                .alpha(0f)
+                .setDuration(mAnimationDuration)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        loadingBar.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    public static Animation createRotateAnim(View animatedView, int toDegrees, int duration, boolean infinite) {
+        Animation anim = new RotateAnimation(0, toDegrees,
+                animatedView.getPivotX() + animatedView.getWidth() / 2,
+                animatedView.getPivotY() + animatedView.getHeight() /2);
+        anim.setDuration(duration);
+        if(infinite) {
+            anim.setRepeatMode(Animation.INFINITE);
+        }
+        anim.setInterpolator(new LinearInterpolator());
+        return anim;
+    }
 
 }
