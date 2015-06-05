@@ -17,21 +17,14 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.Interpolator;
-import android.view.animation.LayoutAnimationController;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
-import android.view.animation.ScaleAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.ExpandableListView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -60,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
      * remain false till media is not completed, inside OnCompletionListener make it true.
      */
 
-    private boolean categoryIsDownloading = false;
+    private boolean actualCategoriesIsDownloading = false;
+    private boolean archivedCategoriesIsDownloading = false;
     private DrawerLayout mDrawerLayout;
     private ListView recList;
     private RecordsAdapter recAdapter;
@@ -95,9 +89,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 refreshCategoryButton = findViewById(R.id.action_refresh_category);
                 refreshCategoryAnim = createRotateAnim(refreshCategoryButton, 360, 1000, true);
-                if (categoryIsDownloading) {
-                    refreshCategoryButton.startAnimation(refreshCategoryAnim);
-                }
+                runCategoryRefreshAnim();
             }
         });
         return true;
@@ -247,6 +239,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void initCategoriesList() {
         categoriesList = (ExpandableListView) findViewById(R.id.left_drawer);
+        categoriesList.setGroupIndicator(null);
+        initCategoriesAdapter();
+        categoriesList.setAdapter(categoriesAdapter);
         categoriesList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
@@ -266,7 +261,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-
     }
 
     private void initRecyclerView() {
@@ -412,6 +406,11 @@ public class MainActivity extends AppCompatActivity {
         audioController = new AudioController(getApplicationContext(), controllerView, audioPlayerControl);
     }
 
+    private void initCategoriesAdapter() {
+        categoriesAdapter = new CategoriesAdapter(this);
+
+    }
+
     private void initNavigation() {
 //        //navHeader = (TextView) findViewById(R.id.navHeader);
 //        // Find the ListView resource.
@@ -460,18 +459,21 @@ public class MainActivity extends AppCompatActivity {
 //        recList.setVisibility(View.GONE);
     }
 
-    private void fillNavigation(Set<Category> categorySet) {
-        if (categorySet == null) {
+    @Deprecated
+    private void fillNavigation(Set<Category> actualCategories, Set<Category> archiveCategories) {
+        if (actualCategories == null) {
             Toast.makeText(this, "Chyba při stahování kategorií", Toast.LENGTH_LONG).show();
             return;
         }
         //navListAdapter.addAll(categorySet);
         categoriesAdapter = new CategoriesAdapter(this);
-        categoriesAdapter.setActualCategories(categorySet.toArray(new Category[categorySet.size()]));
-        Category[] archived = new Category[5];
-        for (int i = 0; i < archived.length; i++) {
-            archived[i] = new Category(Integer.MAX_VALUE - i - 1, "Historie"+i+1, Category.NO_URL_SITE, i+1, Category.NO_URL_SITE, Category.NO_URL_SITE); }
-        categoriesAdapter.setArchivedCategories(archived);
+        categoriesAdapter.setActualCategories(actualCategories.toArray(new Category[actualCategories.size()]));
+//        Category[] archived = new Category[5];
+//        for (int i = 0; i < archived.length; i++) {
+//            archived[i] = new Category(Integer.MAX_VALUE - i - 1, "Historie"+i+1, Category.NO_URL_SITE, i+1, Category.NO_URL_SITE, Category.NO_URL_SITE); }
+        if (archiveCategories != null) {
+            categoriesAdapter.setArchivedCategories(archiveCategories.toArray(new Category[archiveCategories.size()]));
+        }
         categoriesList.setGroupIndicator(null);
         categoriesList.setAdapter(categoriesAdapter);
     }
@@ -485,43 +487,72 @@ public class MainActivity extends AppCompatActivity {
         recyclerAdapter.setSource(category);
     }
 
-    private void downloadCategory() {
+    private void downloadActualCategories() {
         //Set<Category> categorySet = null;
         //Downloader downloader = null;
-        DownloaderFactory.CategoriesDownloader downloader = null;
+
         if (!isNetworkConnected()) {
             Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
         }
-        else if(!categoryIsDownloading){
+        else if(!actualCategoriesIsDownloading){
             Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
-            if(refreshCategoryButton != null) {
-                refreshCategoryButton.startAnimation(refreshCategoryAnim);
-            }
+            runCategoryRefreshAnim();
 //            downloader = new Downloader(this, Downloader.Type.Category, null);
-            downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
+            DownloaderFactory.CategoriesDownloader downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
             downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
                 @Override
                 public void onComplete(Object result) {
                     if (result instanceof Set) {
-                        fillNavigation((Set<Category>) result);
-                        categoryIsDownloading = false;
+                        //fillNavigation((Set<Category>) result);
+                        setNavActualCategories((Set<Category>) result);
+                        actualCategoriesIsDownloading = false;
                         Toast.makeText(getApplicationContext(), "Kategorie jsou připraveny", Toast.LENGTH_SHORT).show();
-                        if (refreshCategoryButton != null) {
-                            refreshCategoryButton.setAnimation(null);
-                        }
+                        stopCategoryRefreshAnim();
                     }
                 }
             });
             downloader.execute(urlE2 + urlArchiv);
-            categoryIsDownloading = true;
+            actualCategoriesIsDownloading = true;
         }
+    }
 
+    private void downloadArchivedCategories() {
+        //Set<Category> categorySet = null;
+        //Downloader downloader = null;
+
+        if (!isNetworkConnected()) {
+            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+        }
+        else if(!archivedCategoriesIsDownloading){
+            Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
+            runCategoryRefreshAnim();
+//            downloader = new Downloader(this, Downloader.Type.Category, null);
+            DownloaderFactory.ArchivedCategoriesDownloader downloader = (DownloaderFactory.ArchivedCategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.ArchivedCategories);
+            downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
+                @Override
+                public void onComplete(Object result) {
+                    if (result instanceof Set) {
+                        //fillNavigation((Set<Category>) result);
+                        setNavArchivedCategories((Set<Category>) result);
+                        archivedCategoriesIsDownloading = false;
+                        Toast.makeText(getApplicationContext(), "Kategorie jsou připraveny", Toast.LENGTH_SHORT).show();
+                        stopCategoryRefreshAnim();
+                    }
+                }
+            });
+            downloader.execute(urlE2 + urlArchiv);
+            archivedCategoriesIsDownloading = true;
+        }
+    }
+
+    private void downloadCategory() {
+        downloadActualCategories();
+        downloadArchivedCategories();
     }
 
     private void onNavigationItemClick(Category item, int position) {
-
         int id = position;
-        Toast.makeText(this, id+":"+item.getName(), Toast.LENGTH_SHORT).show();
+       // Toast.makeText(this, id+":"+item.getName(), Toast.LENGTH_SHORT).show();
         if (lastChoosenCategoryId == id) {
             mDrawerLayout.closeDrawer(categoriesList);
             return;
@@ -596,6 +627,40 @@ public class MainActivity extends AppCompatActivity {
                         loadingBar.setVisibility(View.GONE);
                     }
                 });
+    }
+
+    private void runCategoryRefreshAnim() {
+        if (refreshCategoryButton != null && refreshCategoryAnim != null) {
+            if (actualCategoriesIsDownloading || archivedCategoriesIsDownloading) {
+                refreshCategoryButton.startAnimation(refreshCategoryAnim);
+            }
+        }
+    }
+
+    private void stopCategoryRefreshAnim() {
+        if (refreshCategoryButton != null) {
+            if (!actualCategoriesIsDownloading && !archivedCategoriesIsDownloading) {
+                refreshCategoryButton.clearAnimation();
+            }
+        }
+    }
+
+    private void setNavActualCategories(Set<Category> actualCategories) {
+        if (categoriesAdapter == null) {
+            initCategoriesAdapter();
+            categoriesList.setAdapter(categoriesAdapter);
+        }
+        categoriesAdapter.setActualCategories(actualCategories.toArray(new Category[actualCategories.size()]));
+        categoriesAdapter.notifyDataSetChanged();
+    }
+
+    private void setNavArchivedCategories(Set<Category> archivedCategories) {
+        if (categoriesAdapter == null) {
+            initCategoriesAdapter();
+            categoriesList.setAdapter(categoriesAdapter);
+        }
+        categoriesAdapter.setArchivedCategories(archivedCategories.toArray(new Category[archivedCategories.size()]));
+        categoriesAdapter.notifyDataSetChanged();
     }
 
     public static Animation createRotateAnim(View animatedView, int toDegrees, int duration, boolean infinite) {

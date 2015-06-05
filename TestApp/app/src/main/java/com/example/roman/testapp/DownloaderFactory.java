@@ -23,7 +23,7 @@ import java.util.Set;
  */
 public class DownloaderFactory {
 
-    public static enum Type {Categories, Records, NextRecords}
+    public static enum Type {ArchivedCategories, Categories, Records, NextRecords}
 
     private DownloaderFactory() {
     }
@@ -34,6 +34,8 @@ public class DownloaderFactory {
 
     public static AbstractDownloader getDownloader(Type type, Context context, String dialogTitle) {
         switch (type) {
+            case ArchivedCategories:
+                return new ArchivedCategoriesDownloader(context, dialogTitle);
             case Categories:
                 return new CategoriesDownloader(context, dialogTitle);
             case NextRecords:
@@ -105,6 +107,26 @@ public class DownloaderFactory {
         }
     }
 
+    static class ArchivedCategoriesDownloader extends AbstractDownloader<String, Void, Set<Category>> {
+
+        public ArchivedCategoriesDownloader(Context context, String dialogTitle) {
+            super(context, dialogTitle);
+        }
+
+        @Override
+        protected Set<Category> download(String... url) {
+            Set<Category> archiveCategories = null;
+            Document site;
+            try {
+                site = JWeb.httpGetSite(url[0]);
+                archiveCategories = htmlParser.parseCategoryItems(Extractor.getArchiveCategory(site));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return archiveCategories;
+        }
+    }
+
     static class CategoriesDownloader extends AbstractDownloader<String, Void, Set<Category>> {
 
         public CategoriesDownloader(Context context, String dialogTitle) {
@@ -113,11 +135,11 @@ public class DownloaderFactory {
 
         @Override
         protected Set<Category> download(String... url) {
-            Set<Category> category = null;
+            Set<Category> categories = null;
             Document site;
             try {
                 site = JWeb.httpGetSite(url[0]);
-                category = htmlParser.parseCategoryItems(Extractor.getCategoryList(site));
+                categories = htmlParser.parseCategoryItems(Extractor.getCategoryList(site));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -132,7 +154,7 @@ public class DownloaderFactory {
 //        category.add(this.htmlParser.parseCategory(doc, urlE2));
 //      }
 //    }
-            return category;
+            return categories;
         }
 
     }

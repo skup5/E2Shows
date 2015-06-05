@@ -41,8 +41,15 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
 
     public CategoriesAdapter(Context context) {
         this.context = context;
-        this.archived = new Category(Integer.MAX_VALUE, "Archiv", Category.NO_URL_SITE, Category.NO_URL_SITE);
+        this.archived = new Category(Integer.MAX_VALUE, "Archiv", Category.NO_URL_SITE, Category.NO_URL_SITE){
+            @Override
+            public String toString() {
+                return getName();
+            }
+        };
         this.inflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        setActualCategories(new Category[0]);
+        setArchivedCategories(new Category[0]);
     }
 
     public void setActualCategories(Category[] actualCategories) {
@@ -68,7 +75,7 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
      */
     @Override
     public int getGroupCount() {
-        return actualCategories.length + 1;
+        return archivedCategories.length > 0 ? actualCategories.length + 1 : actualCategories.length;
     }
 
     /**
