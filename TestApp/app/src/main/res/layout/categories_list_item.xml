@@ -8,6 +8,8 @@
         android:id="@+id/categories_list_item"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
         android:paddingLeft="?android:attr/expandableListPreferredChildPaddingLeft"
         android:textStyle="normal"/>
 </LinearLayout>
