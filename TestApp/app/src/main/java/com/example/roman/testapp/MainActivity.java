@@ -388,16 +388,24 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void next() {
-                Record nextRecord = recyclerAdapter.getItem(selectedRecordIndex+1);
+                Record nextRecord = recyclerAdapter.getItem(selectedRecordIndex + 1);
                 if (nextRecord != null) {
-                    onRecordItemClick(nextRecord, selectedRecordIndex+1);
+                    onRecordItemClick(nextRecord, selectedRecordIndex + 1);
                 }
-
             }
 
             @Override
             public void previous() {
-                Toast.makeText(getApplicationContext(), "Předchozí", Toast.LENGTH_SHORT).show();
+                if (getCurrentPosition() > 3) {
+                    seekTo(0);
+                } else {
+                    Record previousRecord = recyclerAdapter.getItem(selectedRecordIndex - 1);
+                    if (previousRecord == null) {
+                        seekTo(0);
+                    } else {
+                        onRecordItemClick(previousRecord, selectedRecordIndex - 1);
+                    }
+                }
             }
 
             @Override
