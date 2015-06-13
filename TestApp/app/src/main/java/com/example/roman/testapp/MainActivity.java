@@ -61,13 +61,14 @@ public class MainActivity extends AppCompatActivity {
     private final String urlE2 = "http://evropa2.cz";
     private final String urlArchiv = "/mp3-archiv/";
     private ActionBar actionBar;
-    private String choosenCategory;
-    private int lastChoosenCategoryId = -1;
+    private String chosenCategory;
+    private int lastChosenCategoryId = -1;
     private View loadingBar;
     private int mAnimationDuration;
     private Category defaultCategory;
     private View refreshCategoryButton;
     private Animation refreshCategoryAnim;
+    private int selectedRecordIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -217,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDrawerClosed(View drawerView) {
                 actionBar.setTitle(R.string.app_name);
-                actionBar.setSubtitle(choosenCategory);
+                actionBar.setSubtitle(chosenCategory);
                 super.onDrawerClosed(drawerView);
 
                 //invalidateOptionsMenu();
@@ -268,10 +269,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerAdapter = new MyRecyclerAdapter(this, new MyRecyclerAdapter.OnRecordClickListener() {
             @Override
-            public void onRecordClick(Record record) {
-                Toast.makeText(MainActivity.this, "" + record, Toast.LENGTH_SHORT).show();
-                audioPlayerControl.stop();
-                prepareMediaPlayerSource(record.getMp3().toString());
+            public void onRecordClick(Record record, int index) {
+                onRecordItemClick(record, index);
             }
         });
         recyclerView.setAdapter(recyclerAdapter);
@@ -389,7 +388,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void next() {
-                Toast.makeText(getApplicationContext(), "Další", Toast.LENGTH_SHORT).show();
+                Record nextRecord = recyclerAdapter.getItem(selectedRecordIndex+1);
+                if (nextRecord != null) {
+                    onRecordItemClick(nextRecord, selectedRecordIndex+1);
+                }
+
             }
 
             @Override
@@ -553,12 +556,12 @@ public class MainActivity extends AppCompatActivity {
     private void onNavigationItemClick(Category item, int position) {
         int id = position;
        // Toast.makeText(this, id+":"+item.getName(), Toast.LENGTH_SHORT).show();
-        if (lastChoosenCategoryId == id) {
+        if (lastChosenCategoryId == id) {
             mDrawerLayout.closeDrawer(categoriesList);
             return;
         }
-        lastChoosenCategoryId = id;
-        choosenCategory = item.toString();
+        lastChosenCategoryId = id;
+        chosenCategory = item.toString();
         mDrawerLayout.closeDrawer(categoriesList);
         if (item.getRecords().isEmpty()) {
             showLoading();
@@ -577,6 +580,22 @@ public class MainActivity extends AppCompatActivity {
         } else {
             fillRecList(item);
         }
+    }
+
+    private void onRecordItemClick(Record record, int index) {
+        Toast.makeText(this, "" + record, Toast.LENGTH_SHORT).show();
+        audioPlayerControl.stop();
+        prepareMediaPlayerSource(record.getMp3().toString());
+        RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(index);
+        if (viewHolder != null) {
+            recyclerAdapter.markViewHolder((MyRecyclerAdapter.MyViewHolder) viewHolder);
+        }
+        viewHolder = recyclerView.findViewHolderForAdapterPosition(selectedRecordIndex);
+        if (viewHolder != null) {
+            recyclerAdapter.unmarkViewHolder((MyRecyclerAdapter.MyViewHolder) viewHolder);
+        }
+        selectedRecordIndex = index;
+        recyclerAdapter.setSelected(index);
     }
 
     /**

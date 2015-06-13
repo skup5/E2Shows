@@ -1,6 +1,7 @@
 package com.example.roman.testapp;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.LayoutInflater;
@@ -24,6 +25,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     private Category source;
     private OnRecordClickListener onRecordClickListener;
     private Record[] records;
+    private int selected;
     private boolean loading;
 
     public MyRecyclerAdapter(Context context, OnRecordClickListener listener) {
@@ -34,6 +36,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
         this.context = context;
         this.onRecordClickListener = listener;
         this.loading = false;
+        this.selected = -1;
         if(source != null) setSource(source);
     }
 
@@ -64,6 +67,10 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
         }
     }
 
+    public Record getItem(int index) {
+        return index >= 0 && index < records.length ? records[index] : null;
+    }
+
     public Category getSource() {
         return source;
     }
@@ -79,10 +86,23 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
         return false;
     }
 
+    public void markViewHolder(MyViewHolder viewHolder) {
+        //viewHolder.getParentView().setSelected(true);
+        viewHolder.getTextViewRecordName().setTypeface(null, Typeface.ITALIC);
+    }
+
+    public void setSelected(int selected) {
+        this.selected = selected;
+    }
+
     public void setSource(Category source) {
         this.source = source;
         records = source.getRecords().toArray(new Record[source.getRecordsCount()]);
         notifyDataSetChanged();
+    }
+
+    public void unmarkViewHolder(MyViewHolder viewHolder) {
+        viewHolder.getTextViewRecordName().setTypeface(null, Typeface.NORMAL);
     }
 
     /**
@@ -108,7 +128,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.records_listview_item, null);
-        MyViewHolder holder = new MyViewHolder(v, onRecordClickListener);
+        MyViewHolder holder = new MyViewHolder(v, onRecordClickListener, this);
         return holder;
     }
 
@@ -132,8 +152,17 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
         if(!isEmpty()) {
-            holder.setData(records[position]);
+            holder.setData(records[position], position);
+            if (isSelected(position)) {
+                markViewHolder(holder);
+            } else {
+                unmarkViewHolder(holder);
+            }
         }
+    }
+
+    private boolean isSelected(int position) {
+        return position == selected;
     }
 
     /**
@@ -149,36 +178,52 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     static class MyViewHolder extends ViewHolder implements View.OnClickListener {
 
         private static final DateFormat dateFormat = new SimpleDateFormat("dd. M. yyyy");
+        private View parentView;
         private TextView textViewRecordName,
                 textViewRecordCategory,
                 textViewRecordDate;
         private Record actualRecord;
+        private MyRecyclerAdapter adapter;
         private OnRecordClickListener listener;
+        private int recordIndex;
 
-        public MyViewHolder(View itemView, OnRecordClickListener listener) {
+        public MyViewHolder(View itemView, OnRecordClickListener listener, MyRecyclerAdapter adapter) {
             super(itemView);
-            itemView.setOnClickListener(this);
             this.listener = listener;
+            this.adapter = adapter;
+            this.parentView = itemView;
+
+            parentView.setOnClickListener(this);
             textViewRecordName = (TextView) itemView.findViewById(R.id.textViewRecordName);
             textViewRecordCategory = (TextView) itemView.findViewById(R.id.textViewRecordCategory);
             textViewRecordDate = (TextView) itemView.findViewById(R.id.textViewRecordDate);
             actualRecord = null;
+            recordIndex = -1;
         }
 
-        public void setData(Record record) {
+        public View getParentView() {
+            return parentView;
+        }
+
+        public TextView getTextViewRecordName() {
+            return textViewRecordName;
+        }
+
+        public void setData(Record record, int index) {
             textViewRecordName.setText(record.getName());
             textViewRecordCategory.setText(record.getCategory().getName());
             textViewRecordDate.setText(dateFormat.format(record.getDate()));
             actualRecord = record;
+            recordIndex = index;
         }
 
         @Override
         public void onClick(View view) {
-            listener.onRecordClick(actualRecord);
+            listener.onRecordClick(actualRecord, recordIndex);
         }
     }
 
     interface OnRecordClickListener {
-        void onRecordClick(Record record);
+        void onRecordClick(Record record, int index);
     }
 }

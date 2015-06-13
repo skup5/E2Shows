@@ -168,12 +168,12 @@ public class AudioController {
 
         @Override
         public boolean canSeekBackward() {
-            return false;
+            return true;
         }
 
         @Override
         public boolean canSeekForward() {
-            return false;
+            return true;
         }
     }
 }
