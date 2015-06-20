@@ -1,5 +1,5 @@
 package com.example.roman.testapp.jweb;
-
+ 
 import org.jsoup.nodes.Element;
 
 /**
@@ -16,12 +16,15 @@ public abstract class Parser<E> {
    * @param element
    * @return
    */
-  protected String[] parsePlayFun(Element element) {
+  protected String[] parsePlayFun(Element element) throws IndexOutOfBoundsException {
+//    Log.println(Log.ASSERT, "parsePlayFun", element.toString());
     String onclickAttr = element.attr("onclick");
     int mp3Index = onclickAttr.indexOf(".mp3");
     int funEndIndex = onclickAttr.indexOf(");", mp3Index);
-    onclickAttr = onclickAttr.substring(onclickAttr.indexOf(JS_PLAY_FUN), funEndIndex);
-    onclickAttr = onclickAttr.substring(onclickAttr.indexOf("'") + 1, onclickAttr.lastIndexOf("'"));
+
+      onclickAttr = onclickAttr.substring(onclickAttr.indexOf(JS_PLAY_FUN), funEndIndex);
+      onclickAttr = onclickAttr.substring(onclickAttr.indexOf("'") + 1, onclickAttr.lastIndexOf("'"));
+
     return onclickAttr.split("','");
   }
   
@@ -30,7 +33,7 @@ public abstract class Parser<E> {
    * @param element
    * @return suburl for downloading next mp3 records
    */
-  protected String parseNextPageFun(Element element) {
+  protected String parseNextPageFun(Element element) throws IndexOutOfBoundsException {
     String onclickAttr = element.attr("onclick");
     int begin = onclickAttr.indexOf(JS_NEXT_PAGE_FUN+"(");
     begin = onclickAttr.indexOf("'", begin);

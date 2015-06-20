@@ -1,4 +1,3 @@
-
 package com.example.roman.testapp.jweb;
 
 import org.jsoup.nodes.Element;
@@ -32,9 +31,13 @@ public class HtmlParser {
     Record newRecord;
     Set<Record> records = new LinkedHashSet<>();
     for (Element element : elements) {
-      newRecord = recParser.parse(element);
-      newRecord.setCategory(category);
-      records.add(newRecord);
+      try {
+        newRecord = recParser.parse(element);
+        newRecord.setCategory(category);
+        records.add(newRecord);
+      } catch (IndexOutOfBoundsException | MalformedURLException | java.text.ParseException e) {
+        e.printStackTrace();
+      }
     }
     return records;
   }
@@ -58,11 +61,23 @@ public class HtmlParser {
     return catParser.parse(record, nextRecord, urlHost);
   }
 
-  public Set<Category> parseCategoryItems(Elements elements) throws MalformedURLException {
+  /**
+   * Creates set of categories.
+   * Every category contains name, url of website and total number of records.
+   * @param elements
+   * @return <code>Set&lt;Category&gt;</code> (empty if none not found)
+   */
+  public Set<Category> parseCategoryItems(Elements elements) {
     Set<Category> categoryItems = new LinkedHashSet<>();
+    Category newCategory;
     for (Element element : elements) {
-      categoryItems.add(catParser.parse(element));
-}
+      try {
+        newCategory = catParser.parse(element);
+        categoryItems.add(newCategory);
+      } catch (IndexOutOfBoundsException | MalformedURLException e) {
+        e.printStackTrace();
+      }
+    }
     return categoryItems;
   }
 }

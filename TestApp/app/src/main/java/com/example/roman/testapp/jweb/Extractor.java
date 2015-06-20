@@ -7,17 +7,28 @@ import org.jsoup.select.Elements;
 /**
  * Knihovni trida pro vyhledavani v html dokumentu.
  * 
- * @author jack
+ * @author Roman Zelenik
  */
 public class Extractor {
   
-  public static final String JS_PLAY_FUN = "playMedia";
-  public static final String JS_NEXT_PAGE_FUN = "infinitePagination";
+  public static final String
+          JS_PLAY_FUN = "playMedia",
+          JS_NEXT_PAGE_FUN = "infinitePagination";
 
+  /**
+   *
+   * @param doc
+   * @return specific <code>Elements</code> (empty if not found)
+   */
   public static Elements getArchiveCategory(Document doc) {
     return doc.select("li.archive a[href^=/mp3-archiv/kategorie]");
   }
-   
+
+  /**
+   *
+   * @param doc
+   * @return specific <code>Elements</code> (empty if not found)
+   */
   public static Elements getCategoryList(Document doc) {
     return doc.select("li:not(.archive) a[href^=/mp3-archiv/kategorie/]");
   }
@@ -25,7 +36,12 @@ public class Extractor {
   public static Element getFirstRecord(Document doc) {
     return getRecords(doc).first();
   }
-  
+
+  /**
+   *
+   * @param doc
+   * @return specific <code>Elements</code> (empty if not found)
+   */
   public static Elements getRecords(Document doc) {
     return doc.select("li a[onclick^="+JS_PLAY_FUN+"]");
   }
@@ -39,6 +55,5 @@ public class Extractor {
     return doc.select("li a[onclick^="+JS_NEXT_PAGE_FUN+"]").first();
   }
   
-  private Extractor() {
-  }
+  private Extractor() {}
 }

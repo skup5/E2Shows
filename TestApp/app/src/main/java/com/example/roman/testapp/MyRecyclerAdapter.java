@@ -1,5 +1,5 @@
 package com.example.roman.testapp;
-
+ 
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -20,7 +20,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * Created by Roman on 27.5.2015.
+ * 
+ * @author Roman Zelenik
  */
 public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.MyViewHolder> {
 
@@ -57,14 +58,20 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
                         loading = false;
                     }
                 });
+                downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
+                    @Override
+                    public void onError(List<String> errors) {
+                        MainActivity.errorReportsDialog(context, errors);
+                    }
+                });
                 downloader.execute(source);
                 loading = true;
             } else {
-//                Toast.makeText(context, "chybí url pro stažení dalších záznamů", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context, "chybí url pro stažení dalších záznamů", Toast.LENGTH_SHORT).show();
             }
         } else {
-//            String msg = hasSource() ? "stahování dalších záznamů již probíhá" : "recycler nemá nastavenou kategorii";
-//            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+            //String msg = hasSource() ? "stahování dalších záznamů již probíhá" : "recycler nemá nastavenou kategorii";
+            //Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -1,5 +1,5 @@
 package com.example.roman.testapp.jweb;
-
+ 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -12,6 +12,7 @@ import java.net.URL;
  Hudební ceny Evropy 2 (2014) <span>(12)</span></a>
  </li>
  */
+ 
 /**
  *
  * @author Roman Zelenik
@@ -30,31 +31,24 @@ public class CategoryParser extends Parser {
    * @param host
    * @return new Category with id, name, url of cover image and url of next records
    */
-  public Category parse(Element record, Element nextRecord, String host) {
-    Element category;
-    URL webSite = null, img = null, nextRecords = null;
-    String name, recordsStr, imgStr;
-    int id, records = 0;
+  public Category parse(Element record, Element nextRecord, String host) throws MalformedURLException{
+    URL img = Category.NO_URL, nextRecords = Category.NO_URL;
+    String name, imgStr;
+    int id;
 
     String[] jsParams = parsePlayFun(record);
+
     id = Integer.parseInt(jsParams[CATEGORY_ID].trim());
     name = jsParams[CATEGORY_NAME].trim();
-
     imgStr = jsParams[CATEGORY_IMG].trim();
 
-    try {
-      //webSite = new URL(element.location());
-      //System.out.println("imgStr:" + imgStr);
-      if(nextRecord  == null) {
-        nextRecords = Category.NO_URL;
-      } else {
-        String nextRecordsStr = host + parseNextPageFun(nextRecord);
-        nextRecords = new URL(nextRecordsStr);
-      }
-      img = new URL(imgStr);
-    } catch (MalformedURLException ex) {
-      ex.printStackTrace();
+    if(nextRecord != null) {
+      String nextRecordsStr = host + parseNextPageFun(nextRecord);
+      nextRecords = new URL(nextRecordsStr);
     }
+
+    img = new URL(imgStr);
+
     return new Category(id, name, img, nextRecords);
   }
 
@@ -63,7 +57,7 @@ public class CategoryParser extends Parser {
    * @param element
    * @return new Category with name, url of website and total number of records
    */
-  public Category parse(Element element) throws MalformedURLException {
+  public Category parse(Element element) throws IndexOutOfBoundsException, MalformedURLException {
     URL url = new URL(element.absUrl("href"));
     String name = element.text();
     String recordsStr = element.getElementsByTag("span").text();

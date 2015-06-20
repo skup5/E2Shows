@@ -1,13 +1,10 @@
 package com.example.roman.testapp.jweb;
-
+ 
 import org.jsoup.nodes.Element;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /*
   <li class="clr" id="podcast-item-18077">
@@ -43,7 +40,7 @@ public class RecordParser extends Parser{
                              RECORD_SITE = 7,
                              DATE = 8;
 
-  public Record parse(Element element) {
+  public Record parse(Element element) throws IndexOutOfBoundsException, MalformedURLException, java.text.ParseException {
     Date date;
     URL mp3 = null;
     String dateStr = "",
@@ -55,20 +52,9 @@ public class RecordParser extends Parser{
     name = jsParams[RECORD_NAME].trim();
     id = Integer.parseInt(jsParams[RECORD_ID].trim());
     mp3Str = jsParams[RECORD_MP3].trim();
-    try {
-      mp3 = new URL(mp3Str);
-    } catch (MalformedURLException ex) {
-      ex.printStackTrace();
-    }
-
-    //category = new Category(catId, catName, catImg);
+    mp3 = new URL(mp3Str);
     dateStr = jsParams[DATE].trim();
-    try {
-      date = Record.dateFormat.parse(dateStr);
-    } catch (ParseException ex) {
-      Logger.getLogger(RecordParser.class.getName()).log(Level.SEVERE, "date parser");
-      date = new Date();
-    }
+    date = Record.dateFormat.parse(dateStr);
     return new Record(id, name, mp3, date);
   }
 

@@ -1,5 +1,5 @@
 package com.example.roman.testapp;
-
+ 
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by Roman on 28.3.2015.
+ * 
+ * @author Roman Zelenik
  */
 public class DownloaderFactory {
 
@@ -62,11 +63,15 @@ public class DownloaderFactory {
         protected HtmlParser htmlParser;
         protected boolean useProgressDialog = false;
         protected OnCompleteListener onCompleteListener;
+        protected OnErrorListener onErrorListener;
+        protected List<String> errors;
 
         public AbstractDownloader(Context context, String dialogTitle){
             this.context = context;
             this.htmlParser = new HtmlParser();
+            this.errors = new ArrayList();
             this.onCompleteListener = null;
+            this.onErrorListener = null;
             if (context != null) {
                 useProgressDialog = true;
                 this.mProgressDialog = new ProgressDialog(context);
@@ -76,6 +81,10 @@ public class DownloaderFactory {
 
         public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
             this.onCompleteListener = onCompleteListener;
+        }
+
+        public void setOnErrorListener(OnErrorListener onErrorListener) {
+            this.onErrorListener = onErrorListener;
         }
 
         protected abstract Result download(Params... params);
@@ -104,7 +113,9 @@ public class DownloaderFactory {
         @Override
         protected void onPostExecute(Result result) {
             super.onPostExecute(result);
-            //Toast.makeText(context, "Stahovani dokonceno", Toast.LENGTH_SHORT).show();
+            if(onErrorListener != null && !errors.isEmpty()){
+                onErrorListener.onError(errors);
+            }
             if(onCompleteListener != null){
                 onCompleteListener.onComplete(result);
             }
@@ -127,9 +138,13 @@ public class DownloaderFactory {
             Document site;
             try {
                 site = JWeb.httpGetSite(url[0]);
-                archiveCategories = htmlParser.parseCategoryItems(Extractor.getArchiveCategory(site));
+                Elements categories = Extractor.getArchiveCategory(site);
+                if (!categories.isEmpty()) {
+                    archiveCategories = htmlParser.parseCategoryItems(categories);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
+                errors.add("Chyba při stahování seznamu kategorií z archivu.");
             }
             return archiveCategories;
         }
@@ -143,15 +158,19 @@ public class DownloaderFactory {
 
         @Override
         protected Set<Category> download(String... url) {
-            Set<Category> categories = null;
+            Set<Category> actualCategories = null;
             Document site;
             try {
                 site = JWeb.httpGetSite(url[0]);
-                categories = htmlParser.parseCategoryItems(Extractor.getCategoryList(site));
+                Elements categories = Extractor.getCategoryList(site);
+                if (!categories.isEmpty()) {
+                    actualCategories = htmlParser.parseCategoryItems(categories);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
+                errors.add("Chyba při stahování seznamu kategorií.");
             }
-            return categories;
+            return actualCategories;
         }
 
     }
@@ -171,12 +190,25 @@ public class DownloaderFactory {
                     Set<Record> set;
                     Document doc = JWeb.httpGetSite(site.toString());
                     Elements records = Extractor.getRecords(doc);
-                    Element nextRecord = Extractor.getNextRecord(doc);
-                    String urlE2 = site.getProtocol() + "://" + site.getHost();
-                    boolean successful = category.update(this.htmlParser.parseCategory(records.first(), nextRecord, urlE2));
-                    set = this.htmlParser.parseRecords(records, category);
-                    category.addRecords(set);
+                    if (!records.isEmpty()) {
+                        set = this.htmlParser.parseRecords(records, category);
+                        if (!set.isEmpty()) {
+                            category.addRecords(set);
+                        }
+                        Element nextRecord = Extractor.getNextRecord(doc);
+                        if (nextRecord != null) {
+                            String urlE2 = site.getProtocol() + "://" + site.getHost();
+                            try {
+                                category.update(this.htmlParser.parseCategory(records.first(), nextRecord, urlE2));
+                            } catch (MalformedURLException e) {
+                                e.printStackTrace();
+                                errors.add("Chyba při aktualizaci údajů kategorie '" + category.getName() + "'.");
+                            }
+                        }
+                    }
                 } catch (IOException e) {
+                    e.printStackTrace();
+                    errors.add("Chyba při stahování seznamu záznamů.");
                 }
             }
             return category;
@@ -200,9 +232,15 @@ public class DownloaderFactory {
                     page++;
                     Document doc = JWeb.httpPostNextRecords(site.toString(), category.getId() + "", page + "");
                     Elements records = Extractor.getRecords(doc);
-                    set = this.htmlParser.parseRecords(records, category);
-                    category.addRecords(set);
-                } catch (IOException e){}
+                    if (!records.isEmpty()) {
+                        set = this.htmlParser.parseRecords(records, category);
+                        category.addRecords(set);
+                    }
+                } catch (IOException e){
+                    e.printStackTrace();
+                    page--;
+                    errors.add("Chyba při stahování dalších záznamů.");
+                }
             }
             category.setPage(page);
             return category;
@@ -230,6 +268,7 @@ public class DownloaderFactory {
                     stream.close();
                 } catch (IOException e) {
                     e.printStackTrace();
+                    errors.add("Chyba při stahování obrázku kategorie.");
                 }
             }
             return category;
@@ -238,5 +277,9 @@ public class DownloaderFactory {
 
     interface OnCompleteListener{
         void onComplete(Object result);
+    }
+
+    interface OnErrorListener{
+        void onError(List<String> errors);
     }
 }

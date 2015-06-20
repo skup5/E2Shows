@@ -1,5 +1,5 @@
 package com.example.roman.testapp;
-
+ 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.AlertDialog;
@@ -29,7 +29,6 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.ExpandableListView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -40,7 +39,10 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Set;
 
-
+/**
+ *
+ * @author Roman Zelenik
+ */
 public class MainActivity extends AppCompatActivity {
 
     public static final String URL_E2 = "http://evropa2.cz",
@@ -367,7 +369,6 @@ public class MainActivity extends AppCompatActivity {
 //        View infView = li.inflate(R.layout.audio_controller, new LinearLayout(getApplicationContext()));
         View controllerView = findViewById(R.id.audio_controller);
         audioPlayerControl = new AudioController.AudioPlayerControl() {
-
             @Override
             public void start() {
                 mediaPlayer.start();
@@ -568,6 +569,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+            downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
+                @Override
+                public void onError(List<String> errors) {
+                    errorReportsDialog(errors);
+                }
+            });
             downloader.execute(URL_E2 + SUB_URL_ARCHIV);
             actualCategoriesIsDownloading = true;
         }
@@ -597,6 +604,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+            downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
+                @Override
+                public void onError(List<String> errors) {
+                    errorReportsDialog(errors);
+                }
+            });
             downloader.execute(URL_E2 + SUB_URL_ARCHIV);
             archivedCategoriesIsDownloading = true;
         }
@@ -619,7 +632,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
+            @Override
+            public void onError(List<String> errors) {
+                errorReportsDialog(errors);
+            }
+        });
         downloader.execute(category);
+    }
+
+    private void errorReportsDialog(List<String> reports) {
+        errorReportsDialog(this, reports);
     }
 
     private void onNavigationItemClick(Category item, int position) {
@@ -643,6 +666,12 @@ public class MainActivity extends AppCompatActivity {
                         fillRecList((Category) result);
                         crossfadeAnimation();
                     }
+                }
+            });
+            downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
+                @Override
+                public void onError(List<String> errors) {
+                    errorReportsDialog(errors);
                 }
             });
             downloader.execute(item);
@@ -779,4 +808,25 @@ public class MainActivity extends AppCompatActivity {
         return anim;
     }
 
+    public static void errorReportsDialog(Context context, List<String> reports) {
+        String msg = "Došlo k ";
+        msg += reports.size() > 1 ? "několika chybám." : "chybě.";
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1){
+            @Override
+            public boolean isEnabled(int position) {
+                return false;
+            }
+        };
+        adapter.addAll(reports);
+        new AlertDialog.Builder(context)
+                .setTitle(msg)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setAdapter(adapter, null)
+                .setNeutralButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+    }
 }
