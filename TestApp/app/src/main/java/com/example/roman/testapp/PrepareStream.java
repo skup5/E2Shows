@@ -1,7 +1,7 @@
 package com.example.roman.testapp;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -14,10 +14,21 @@ import java.io.IOException;
 public class PrepareStream extends AsyncTask<String, Void, Boolean> {
     private ProgressDialog progress;
     private MediaPlayer mediaPlayer;
+    private Context context;
+    private OnErrorListener listener;
 
-    public PrepareStream(Activity activity, MediaPlayer mediaPlayer) {
+    public PrepareStream(Context context, MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
-        progress = new ProgressDialog(activity);
+        this.context = context;
+        progress = new ProgressDialog(context);
+        listener = new OnErrorListener() {
+            @Override
+            public void onError() {}
+        };
+    }
+
+    public void setOnErrorListener(OnErrorListener listener) {
+        this.listener = listener;
     }
 
     @Override
@@ -37,7 +48,7 @@ public class PrepareStream extends AsyncTask<String, Void, Boolean> {
             mediaPlayer.prepare();
             prepared = true;
         } catch (IllegalArgumentException e) {
-            Log.d("IllegarArgument", e.getMessage());
+            Log.d("IllegalArgument", e.getMessage());
             e.printStackTrace();
         } catch (SecurityException e) {
             e.printStackTrace();
@@ -55,8 +66,14 @@ public class PrepareStream extends AsyncTask<String, Void, Boolean> {
         if (progress.isShowing()) {
             progress.cancel();
         }
+        if (!result) {
+            listener.onError();
+        }
         Log.d("Prepared", "//" + result);
     }
 
+    interface OnErrorListener {
+        void onError();
+    }
 }
 

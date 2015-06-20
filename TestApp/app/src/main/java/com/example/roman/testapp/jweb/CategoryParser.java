@@ -1,12 +1,11 @@
 package com.example.roman.testapp.jweb;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /*
  <li><a href="http://www.evropa2.cz/mp3-archiv/kategorie/hudebni-ceny-evropy-2-2014-5810">
@@ -15,7 +14,7 @@ import org.jsoup.select.Elements;
  */
 /**
  *
- * @author jack
+ * @author Roman Zelenik
  */
 public class CategoryParser extends Parser {
 
@@ -29,7 +28,7 @@ public class CategoryParser extends Parser {
    * @param record
    * @param nextRecord
    * @param host
-   * @return 
+   * @return new Category with id, name, url of cover image and url of next records
    */
   public Category parse(Element record, Element nextRecord, String host) {
     Element category;
@@ -40,21 +39,21 @@ public class CategoryParser extends Parser {
     String[] jsParams = parsePlayFun(record);
     id = Integer.parseInt(jsParams[CATEGORY_ID].trim());
     name = jsParams[CATEGORY_NAME].trim();
-    
-    imgStr = host + jsParams[CATEGORY_IMG].trim();
-     
+
+    imgStr = jsParams[CATEGORY_IMG].trim();
+
     try {
       //webSite = new URL(element.location());
       //System.out.println("imgStr:" + imgStr);
       if(nextRecord  == null) {
-        nextRecords = Category.NO_URL_SITE;
+        nextRecords = Category.NO_URL;
       } else {
         String nextRecordsStr = host + parseNextPageFun(nextRecord);
         nextRecords = new URL(nextRecordsStr);
       }
       img = new URL(imgStr);
     } catch (MalformedURLException ex) {
-      Logger.getLogger(RecordParser.class.getName()).log(Level.SEVERE, null, ex);
+      ex.printStackTrace();
     }
     return new Category(id, name, img, nextRecords);
   }
@@ -62,8 +61,7 @@ public class CategoryParser extends Parser {
   /**
    * Parse from category list
    * @param element
-   * @return
-   * @throws MalformedURLException 
+   * @return new Category with name, url of website and total number of records
    */
   public Category parse(Element element) throws MalformedURLException {
     URL url = new URL(element.absUrl("href"));

@@ -1,6 +1,7 @@
 package com.example.roman.testapp;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
@@ -9,12 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 /**
  * Created by Roman on 27.5.2015.
@@ -50,20 +53,18 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
                     public void onComplete(Object result) {
                         if(result instanceof Category) {
                             setSource((Category) result);
-                            loading = false;
                         }
+                        loading = false;
                     }
                 });
                 downloader.execute(source);
                 loading = true;
-//                try {
-//                    setSource(downloader.execute(source).get());
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                } catch (ExecutionException e) {
-//                    e.printStackTrace();
-//                }
+            } else {
+//                Toast.makeText(context, "chybí url pro stažení dalších záznamů", Toast.LENGTH_SHORT).show();
             }
+        } else {
+//            String msg = hasSource() ? "stahování dalších záznamů již probíhá" : "recycler nemá nastavenou kategorii";
+//            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -87,7 +88,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     }
 
     public void markViewHolder(MyViewHolder viewHolder) {
-        //viewHolder.getParentView().setSelected(true);
+        viewHolder.getParentView().setBackgroundResource(android.R.color.holo_blue_dark);
         viewHolder.getTextViewRecordName().setTypeface(null, Typeface.ITALIC);
     }
 
@@ -102,6 +103,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     }
 
     public void unmarkViewHolder(MyViewHolder viewHolder) {
+        viewHolder.getParentView().setBackgroundColor(Color.TRANSPARENT);
         viewHolder.getTextViewRecordName().setTypeface(null, Typeface.NORMAL);
     }
 
@@ -128,7 +130,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.records_listview_item, null);
-        MyViewHolder holder = new MyViewHolder(v, onRecordClickListener, this);
+        MyViewHolder holder = new MyViewHolder(v, onRecordClickListener);
         return holder;
     }
 
@@ -183,14 +185,12 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
                 textViewRecordCategory,
                 textViewRecordDate;
         private Record actualRecord;
-        private MyRecyclerAdapter adapter;
         private OnRecordClickListener listener;
         private int recordIndex;
 
-        public MyViewHolder(View itemView, OnRecordClickListener listener, MyRecyclerAdapter adapter) {
+        public MyViewHolder(View itemView, OnRecordClickListener listener) {
             super(itemView);
             this.listener = listener;
-            this.adapter = adapter;
             this.parentView = itemView;
 
             parentView.setOnClickListener(this);
@@ -201,9 +201,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
             recordIndex = -1;
         }
 
-        public View getParentView() {
-            return parentView;
-        }
+        public View getParentView() { return parentView; }
 
         public TextView getTextViewRecordName() {
             return textViewRecordName;

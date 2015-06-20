@@ -1,14 +1,13 @@
 package com.example.roman.testapp.jweb;
 
+import org.jsoup.nodes.Element;
+
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jsoup.nodes.Element;
 
 /*
   <li class="clr" id="podcast-item-18077">
@@ -43,12 +42,8 @@ public class RecordParser extends Parser{
                              RECORD_MP3 = 6,
                              RECORD_SITE = 7,
                              DATE = 8;
-  
-//  public Record parse(String html){
-//    return null;
-//  }
 
-  public Record parse(Element element, String host) {
+  public Record parse(Element element) {
     Date date;
     URL mp3 = null;
     String dateStr = "",
@@ -56,21 +51,16 @@ public class RecordParser extends Parser{
            mp3Str = null;
     int id;
 
-    
-//    for (int i = 0; i < jsParams.length; i++) {
-//      System.out.println(jsParams[i].trim());
-//    }
-    
-     String[] jsParams = parsePlayFun(element);
+    String[] jsParams = parsePlayFun(element);
     name = jsParams[RECORD_NAME].trim();
     id = Integer.parseInt(jsParams[RECORD_ID].trim());
     mp3Str = jsParams[RECORD_MP3].trim();
     try {
       mp3 = new URL(mp3Str);
     } catch (MalformedURLException ex) {
-      Logger.getLogger(RecordParser.class.getName()).log(Level.SEVERE, null, ex);
+      ex.printStackTrace();
     }
-    
+
     //category = new Category(catId, catName, catImg);
     dateStr = jsParams[DATE].trim();
     try {
@@ -80,10 +70,6 @@ public class RecordParser extends Parser{
       date = new Date();
     }
     return new Record(id, name, mp3, date);
-   // return null;
   }
 
-  public String parseNextRecordsUrl(Element element){
-    return parseNextPageFun(element);
-  }
 }

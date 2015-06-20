@@ -1,32 +1,19 @@
 package com.example.roman.testapp;
 
 import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.AnticipateInterpolator;
-import android.view.animation.AnticipateOvershootInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
-import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
 import android.widget.Adapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.roman.testapp.jweb.Category;
-
-import java.util.List;
 
 /**
  * Created by Roman on 29.5.2015.
@@ -41,7 +28,7 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
 
     public CategoriesAdapter(Context context) {
         this.context = context;
-        this.archived = new Category(Integer.MAX_VALUE, "Archiv", Category.NO_URL_SITE, Category.NO_URL_SITE){
+        this.archived = new Category(Integer.MAX_VALUE, "Archiv", Category.NO_URL, Category.NO_URL){
             @Override
             public String toString() {
                 return getName();

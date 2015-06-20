@@ -7,15 +7,21 @@ import org.jsoup.nodes.Element;
  * @author Roman Zelenik
  */
 public abstract class Parser<E> {
-  protected final String JS_PLAY_FUN = Extractor.JS_PLAY_FUN;
-  protected final String JS_NEXT_PAGE_FUN = Extractor.JS_NEXT_PAGE_FUN;
-  
-  protected String[] parsePlayFun(Element element){
+  protected final String
+          JS_PLAY_FUN = Extractor.JS_PLAY_FUN,
+          JS_NEXT_PAGE_FUN = Extractor.JS_NEXT_PAGE_FUN;
+
+  /**
+   *
+   * @param element
+   * @return
+   */
+  protected String[] parsePlayFun(Element element) {
     String onclickAttr = element.attr("onclick");
     int mp3Index = onclickAttr.indexOf(".mp3");
     int funEndIndex = onclickAttr.indexOf(");", mp3Index);
     onclickAttr = onclickAttr.substring(onclickAttr.indexOf(JS_PLAY_FUN), funEndIndex);
-    onclickAttr = onclickAttr.substring(onclickAttr.indexOf("'")+1, onclickAttr.lastIndexOf("'"));
+    onclickAttr = onclickAttr.substring(onclickAttr.indexOf("'") + 1, onclickAttr.lastIndexOf("'"));
     return onclickAttr.split("','");
   }
   
@@ -33,7 +39,7 @@ public abstract class Parser<E> {
     }
     int end = onclickAttr.indexOf("'", begin);
     onclickAttr = onclickAttr.substring(begin, end);
-    if(!onclickAttr.endsWith("/")){
+    if (!onclickAttr.endsWith("/")) {
       onclickAttr = onclickAttr.substring(0, onclickAttr.lastIndexOf("?"));
     }
     return onclickAttr;

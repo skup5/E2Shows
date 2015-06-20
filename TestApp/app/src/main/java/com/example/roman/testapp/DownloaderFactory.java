@@ -2,6 +2,8 @@ package com.example.roman.testapp;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
 import com.example.roman.testapp.jweb.Category;
@@ -15,7 +17,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -23,7 +29,7 @@ import java.util.Set;
  */
 public class DownloaderFactory {
 
-    public static enum Type {ArchivedCategories, Categories, Records, NextRecords}
+    public static enum Type {ArchivedCategories, Categories, Records, NextRecords, CoverImage}
 
     private DownloaderFactory() {
     }
@@ -38,6 +44,8 @@ public class DownloaderFactory {
                 return new ArchivedCategoriesDownloader(context, dialogTitle);
             case Categories:
                 return new CategoriesDownloader(context, dialogTitle);
+            case CoverImage:
+                return new CoverImageDownloader(context, dialogTitle);
             case NextRecords:
                 return new NextRecordsDownloader(context, dialogTitle);
             case Records:
@@ -143,17 +151,6 @@ public class DownloaderFactory {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//    Elements categoryList = Extractor.getCategory(site);
-//    category = new LinkedHashSet<>(categoryList.size());
-//    for (Element categoryItem : categoryList) {
-//      urlCat = null;
-//      urlCat = categoryItem.attr("href");
-//      if (urlCat != null) {
-//        System.out.println(urlCat);
-//        doc = JWeb.httpGetSite(urlE2 + urlCat);
-//        category.add(this.htmlParser.parseCategory(doc, urlE2));
-//      }
-//    }
             return categories;
         }
 
@@ -177,7 +174,7 @@ public class DownloaderFactory {
                     Element nextRecord = Extractor.getNextRecord(doc);
                     String urlE2 = site.getProtocol() + "://" + site.getHost();
                     boolean successful = category.update(this.htmlParser.parseCategory(records.first(), nextRecord, urlE2));
-                    set = this.htmlParser.parseRecords(records, urlE2, category);
+                    set = this.htmlParser.parseRecords(records, category);
                     category.addRecords(set);
                 } catch (IOException e) {
                 }
@@ -196,17 +193,44 @@ public class DownloaderFactory {
         protected Category download(Category... categories) {
             Category category = categories[0];
             URL site = category.getNextRecords();
-            if (site != null){
+            int page = category.getPage();
+            if (site != null && category.getRecordsCount() < category.getTotalRecordsCount()){
                 try {
                     Set<Record> set;
-                    int page = category.getPage();
                     page++;
-                    category.setPage(page);
                     Document doc = JWeb.httpPostNextRecords(site.toString(), category.getId() + "", page + "");
                     Elements records = Extractor.getRecords(doc);
-                    set = this.htmlParser.parseRecords(records, site.getProtocol()+"://"+site.getHost(), category);
+                    set = this.htmlParser.parseRecords(records, category);
                     category.addRecords(set);
                 } catch (IOException e){}
+            }
+            category.setPage(page);
+            return category;
+        }
+    }
+
+    static class CoverImageDownloader extends AbstractDownloader<Category, Void, Category> {
+
+        public CoverImageDownloader(Context context, String dialogTitle) {
+            super(context, dialogTitle);
+        }
+
+        @Override
+        protected Category download(Category... categories) {
+            Category category = categories[0];
+            URL site = category.getImageUrl();
+            if (site != null) {
+                try {
+                    InputStream stream = null;
+                    stream = site.openStream();
+                    Bitmap bitmap = BitmapFactory.decodeStream(stream);
+                    if (bitmap != null) {
+                        category.setCover(bitmap);
+                    }
+                    stream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             return category;
         }

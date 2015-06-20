@@ -13,82 +13,145 @@
         <!--android:layout_above="@+id/audio_controller" />-->
 
     <view
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         class="android.support.v7.widget.RecyclerView"
         android:id="@+id/recycler_view"
-        android:layout_above="@+id/audio_controller" />
-        <!--android:layout_alignParentStart="true" />-->
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="6dp"
+        android:layout_marginRight="6dp"
+        android:background="@color/background_material_dark"
+        android:layout_above="@+id/audio_controller"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
 
     <RelativeLayout
         android:id="@+id/audio_controller"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="100dp"
         android:minHeight="20dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true">
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
 
-        <LinearLayout
-            android:id="@+id/audio_controller_play_controllers"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
+        <ImageView
+            android:id="@+id/audio_controller_image"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:paddingBottom="0dp"
+            android:layout_marginBottom="0dp"
+            android:src="@android:drawable/ic_menu_report_image"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:scaleType="fitEnd"/>
+
+        <RelativeLayout
+            android:id="@+id/audio_controllers"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal">
+            android:paddingBottom="0dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="6dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="6dp"
+            android:gravity="bottom"
+            android:layout_alignParentBottom="true"
+            android:layout_toRightOf="@+id/audio_controller_image"
+            android:layout_toEndOf="@+id/audio_controller_image">
 
-            <ImageButton android:id="@+id/audio_controller_previous_button"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/audio_controller_time_controllers"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:src="@drawable/track_back"/>
-            <!--    android:layout_gravity="left" />
-            android:text="@string/media_controller_previous_button"-->
+                android:gravity="center">
+                <!--android:layout_below="@+id/audio_controller_play_controllers"-->
+                <TextView
+                    android:id="@+id/audio_controller_cur_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/time_zero"
+                    android:gravity="start" />
 
-            <ImageButton android:id="@+id/audio_controller_play_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:src="@drawable/play" />
-            <!--android:text="@string/media_controller_play_button" />-->
+                <SeekBar
+                    android:id="@+id/audio_controller_seekBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
 
-            <ImageButton android:id="@+id/audio_controller_next_button"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/audio_controller_total_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/time_zero"
+                    android:gravity="end" />
+            </LinearLayout>
+
+        <!--<TextView-->
+            <!--android:id="@+id/audio_controller_info_bar"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_below="@+id/audio_controller_time_controllers"-->
+            <!--android:layout_marginLeft="4dp"-->
+            <!--android:layout_marginRight="4dp"-->
+            <!--android:text="prave prehravany zaznam..."-->
+            <!--android:layout_marginTop="0dp"-->
+            <!--android:paddingTop="0dp" />-->
+
+            <LinearLayout
+                android:id="@+id/audio_controller_play_controllers"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:src="@drawable/track_forward" />
-            <!--android:text="@string/media_controller_next_button"/>-->
-            <!--  android:layout_gravity="right"-->
+                android:layout_below="@+id/audio_controller_time_controllers"
+                android:gravity="center_horizontal">
+                <!--android:background="@color/background_material_dark"-->
+
+                    <ImageButton
+                        android:id="@+id/audio_controller_previous_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/track_back"/>
+                    <!--    android:layout_gravity="left" />
+                    android:text="@string/media_controller_previous_button"-->
+
+                    <ImageButton
+                        android:id="@+id/audio_controller_play_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/play"
+                        android:paddingLeft="14dp"
+                        android:paddingRight="14dp"/>
+                    <!--android:text="@string/media_controller_play_button" />-->
+
+                    <ImageButton
+                        android:id="@+id/audio_controller_next_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/track_forward" />
+                    <!--android:text="@string/media_controller_next_button"/>-->
+                    <!--  android:layout_gravity="right"-->
+
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/audio_controller_time_controllers"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/audio_controller_play_controllers"
-            android:gravity="center">
-
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/audio_controller_info_line"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/audio_controller_cur_time"
-                android:hint="@string/time_zero"
-                android:gravity="left"
-                android:layout_marginLeft="4dp" />
+                android:singleLine="true"
+                android:layout_below="@+id/audio_controller_play_controllers"/>
 
-            <SeekBar android:id="@+id/audio_controller_seekBar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.6" />
+            <!--android:ellipsize="marquee"-->
+            <!--android:marqueeRepeatLimit="marquee_forever"-->
+            <!--android:scrollHorizontally="true"-->
+            <!--android:focusable="true"-->
+            <!--android:focusableInTouchMode="true"-->
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/audio_controller_total_time"
-                android:hint="@string/time_zero"
-                android:gravity="right"
-                android:layout_marginRight="4dp" />
-        </LinearLayout>
+        </RelativeLayout>
+
     </RelativeLayout>
 
     <!--<include layout="@layout/audio_controller"-->

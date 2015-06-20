@@ -1,10 +1,17 @@
 package com.example.roman.testapp;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -17,17 +24,20 @@ import java.util.Date;
  */
 public class AudioController {
 
-    ImageButton next, play, previous;
-    SeekBar seekBar;
-    TextView curTime, totalTime;
-    Date cur, total;
-    SimpleDateFormat dateFormater;
-    AudioPlayerControl controller;
-    Context context;
-    View view;
-    Runnable run;
-    Handler seekHandler = new Handler();
-    boolean enabled;
+    private ImageButton next, play, previous;
+    private ImageView coverImage;
+    private SeekBar seekBar;
+    private TextView curTime, totalTime;
+    private TextView infoLine;
+    private Date cur, total;
+    private SimpleDateFormat dateFormater;
+    private AudioPlayerControl controller;
+    private Context context;
+    private View view;
+    private Runnable run;
+    private Handler seekHandler = new Handler();
+    private Animation infoLineAnim, coverImageAnim;
+    private boolean enabled;
 
     public AudioController(Context context, View view, AudioPlayerControl controller){
         this.enabled = false;
@@ -46,7 +56,7 @@ public class AudioController {
         setView(view);
     }
 
-    public void clickOnPlay(){
+    public void clickOnPlay() {
         if(enabled) {
             if (controller.isPlaying()) {
                 if (controller.canPause()) {
@@ -61,21 +71,30 @@ public class AudioController {
         }
     }
 
-    public void onCompletion(){
+    public void onCompletion() {
         seekEnd();
         play.setImageResource(R.drawable.play);
     }
 
-    private void seekEnd(){
-        if(seekBar.isEnabled()) {
-            cur.setTime(total.getTime());
-            seekBar.setProgress(controller.getDuration());
-            curTime.setText(totalTime.getText());
-        }
+    public void resetCoverImage() {
+        coverImage.setImageResource(android.R.drawable.ic_menu_report_image);
+    }
+
+    public void setCoverImage(Bitmap cover) {
+        coverImage.setImageBitmap(cover);
+        coverImage.startAnimation(coverImageAnim);
     }
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public void setInfoLineText(String text) {
+        infoLine.clearAnimation();
+        infoLine.setText(text);
+        prepareInfoLineAnim();
+//        infoLine.setSelected(true);
+        infoLine.startAnimation(infoLineAnim);
     }
 
     public void setView(View view) {
@@ -83,17 +102,54 @@ public class AudioController {
         initComponents();
     }
 
-    private void initComponents(){
+    public void setVisibility(int visibility) {
+        view.setVisibility(visibility);
+    }
+
+    public void setUpSeekBar() {
+        int duration = controller.getDuration();
+        seekBar.setMax(duration);
+        total.setTime(duration * 1000);
+        totalTime.setText(dateFormater.format(total));
+        //seekBar.setVisibility(View.VISIBLE);
+        seekBar.setEnabled(true);
+    }
+
+
+    private void prepareInfoLineAnim() {
+//        infoLine.measure(0, 0);
+        // Get textView width
+        int textWidth = infoLine.getMeasuredWidth();
+        textWidth = infoLine.getWidth();
+        // Create the animation
+        infoLineAnim = new TranslateAnimation(textWidth, -textWidth, 0, 0);
+//        infoLineAnim.setDuration(infoLine.getText().length() * 500);
+        infoLineAnim.setDuration(15000);
+        infoLineAnim.setRepeatMode(Animation.RESTART);
+        infoLineAnim.setRepeatCount(Animation.INFINITE);
+        infoLineAnim.setInterpolator(new LinearInterpolator());
+    }
+
+    private void prepareCoverImageAnim() {
+        coverImageAnim = new AlphaAnimation(0.1f, 1);
+        coverImageAnim.setDuration(1500);
+        coverImageAnim.setInterpolator(new LinearInterpolator());
+    }
+
+    private void initComponents() {
         next = (ImageButton) view.findViewById(R.id.audio_controller_next_button);
         play = (ImageButton) view.findViewById(R.id.audio_controller_play_button);
         previous = (ImageButton) view.findViewById(R.id.audio_controller_previous_button);
         seekBar = (SeekBar) view.findViewById(R.id.audio_controller_seekBar);
         curTime = (TextView) view.findViewById(R.id.audio_controller_cur_time);
         totalTime = (TextView) view.findViewById(R.id.audio_controller_total_time);
+        infoLine = (TextView) view.findViewById(R.id.audio_controller_info_line);
+        coverImage = (ImageView) view.findViewById(R.id.audio_controller_image);
 
         //seekBar.setVisibility(View.INVISIBLE);
         seekBar.setEnabled(false);
         initListeners();
+        prepareCoverImageAnim();
     }
 
     private void initListeners() {
@@ -114,23 +170,27 @@ public class AudioController {
         previous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               // Toast.makeText(context, previous.getWidth()+"x"+previous.getHeight(), Toast.LENGTH_SHORT).show();
-                if(enabled) { controller.previous(); }
+                // Toast.makeText(context, previous.getWidth()+"x"+previous.getHeight(), Toast.LENGTH_SHORT).show();
+                if (enabled) {
+                    controller.previous();
+                }
             }
         });
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(enabled && fromUser){
+                if (enabled && fromUser) {
                     controller.seekTo(progress);
                 }
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
     }
 
@@ -144,13 +204,12 @@ public class AudioController {
         }
     }
 
-    public void setUpSeekBar() {
-        int duration = controller.getDuration();
-        seekBar.setMax(duration);
-        total.setTime(duration * 1000);
-        totalTime.setText(dateFormater.format(total));
-        //seekBar.setVisibility(View.VISIBLE);
-        seekBar.setEnabled(true);
+    private void seekEnd() {
+        if(seekBar.isEnabled()) {
+            cur.setTime(total.getTime());
+            seekBar.setProgress(controller.getDuration());
+            curTime.setText(totalTime.getText());
+        }
     }
 
     static abstract class AudioPlayerControl implements MediaController.MediaPlayerControl {

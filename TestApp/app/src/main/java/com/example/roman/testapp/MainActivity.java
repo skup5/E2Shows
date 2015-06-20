@@ -2,8 +2,11 @@ package com.example.roman.testapp;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.database.DataSetObserver;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -17,6 +20,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,6 +29,7 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.ExpandableListView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,10 +37,20 @@ import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String URL_E2 = "http://evropa2.cz",
+                                SUB_URL_ARCHIV = "/mp3-archiv/",
+                                DOWNLOADING_CATEGORIES = "Stahuji kategorie...",
+                                CATEGORIES_ARE_READY = "Kategorie jsou připraveny",
+                                ERROR_NO_CONNECTION = "Nejsi připojen k síti",
+                                ERROR_DOWNLOADING = "Chyba při stahování",
+                                ERROR_DOWNLOADING_CATEGORIES = "Chyba při stahování kategorií",
+                                ERROR_DOWNLOADING_RECORDS = "Chyba při stahování záznamů";
 
     private MediaPlayer mediaPlayer;
     private AudioController audioController;
@@ -58,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private ListView recList;
     private RecordsAdapter recAdapter;
-    private final String urlE2 = "http://evropa2.cz";
-    private final String urlArchiv = "/mp3-archiv/";
     private ActionBar actionBar;
     private String chosenCategory;
     private int lastChosenCategoryId = -1;
@@ -123,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_refresh_category :
-                downloadCategory();
+                downloadCategories();
                 return true;
 
             default : return super.onOptionsItemSelected(item);
@@ -135,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             initMediaPlayer();
         }
         if (!isNetworkConnected()) {
-            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+            toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
             return;
         }
         if (!isInternetAvailable()) {
@@ -143,6 +156,22 @@ public class MainActivity extends AppCompatActivity {
             //return;
         }
         PrepareStream ps = new PrepareStream(this, mediaPlayer);
+        ps.setOnErrorListener(new PrepareStream.OnErrorListener() {
+            @Override
+            public void onError() {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Načítání")
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setMessage("Při načítání došlo k chybě :-(")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                audioPlayerControl.next();
+                                dialog.dismiss();
+                            }
+                        }).show();
+            }
+        });
         ps.execute(url);
     }
 
@@ -163,10 +192,15 @@ public class MainActivity extends AppCompatActivity {
         loadingBar.setAlpha(1f);
     }
 
+    public void toast(String msg, int duration) {
+        Toast.makeText(this, msg, duration).show();
+    }
+
+
     private void init() {
        // Toast.makeText(this, "Initializace...", Toast.LENGTH_SHORT).show();
 
-        downloadCategory();
+        downloadCategories();
         loadingBar = findViewById(R.id.loadingPanel);
         loadingBar.setVisibility(View.GONE);
         // Retrieve and cache the system's default "short" animation time.
@@ -419,7 +453,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void initCategoriesAdapter() {
         categoriesAdapter = new CategoriesAdapter(this);
-
+        categoriesAdapter.registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                invalidateOptionsMenu();
+                Log.println(Log.ASSERT, "MainActivity", "refresh action bar");
+            }
+        });
     }
 
     private void initNavigation() {
@@ -473,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
     @Deprecated
     private void fillNavigation(Set<Category> actualCategories, Set<Category> archiveCategories) {
         if (actualCategories == null) {
-            Toast.makeText(this, "Chyba při stahování kategorií", Toast.LENGTH_LONG).show();
+           toast(ERROR_DOWNLOADING_CATEGORIES, Toast.LENGTH_LONG);
             return;
         }
         //navListAdapter.addAll(categorySet);
@@ -481,7 +521,7 @@ public class MainActivity extends AppCompatActivity {
         categoriesAdapter.setActualCategories(actualCategories.toArray(new Category[actualCategories.size()]));
 //        Category[] archived = new Category[5];
 //        for (int i = 0; i < archived.length; i++) {
-//            archived[i] = new Category(Integer.MAX_VALUE - i - 1, "Historie"+i+1, Category.NO_URL_SITE, i+1, Category.NO_URL_SITE, Category.NO_URL_SITE); }
+//            archived[i] = new Category(Integer.MAX_VALUE - i - 1, "Historie"+i+1, Category.NO_URL, i+1, Category.NO_URL, Category.NO_URL); }
         if (archiveCategories != null) {
             categoriesAdapter.setArchivedCategories(archiveCategories.toArray(new Category[archiveCategories.size()]));
         }
@@ -491,11 +531,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void fillRecList(Category category) {
         if (category == null) {
-            Toast.makeText(this, "Chyba při stahování záznamů", Toast.LENGTH_LONG).show();
+//            toast(ERROR_DOWNLOADING_RECORDS, Toast.LENGTH_LONG);
             return;
         }
         //recAdapter.setSource(category);
         recyclerAdapter.setSource(category);
+    }
+
+    private void finishDownloadCategoriesToast() {
+        if (!actualCategoriesIsDownloading && !archivedCategoriesIsDownloading) {
+            toast(CATEGORIES_ARE_READY, Toast.LENGTH_SHORT);
+        }
     }
 
     private void downloadActualCategories() {
@@ -503,10 +549,10 @@ public class MainActivity extends AppCompatActivity {
         //Downloader downloader = null;
 
         if (!isNetworkConnected()) {
-            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+            toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
         }
         else if(!actualCategoriesIsDownloading){
-            Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
+            startDownloadCategoriesToast();
             runCategoryRefreshAnim();
 //            downloader = new Downloader(this, Downloader.Type.Category, null);
             DownloaderFactory.CategoriesDownloader downloader = (DownloaderFactory.CategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Categories);
@@ -517,12 +563,12 @@ public class MainActivity extends AppCompatActivity {
                         //fillNavigation((Set<Category>) result);
                         setNavActualCategories((Set<Category>) result);
                         actualCategoriesIsDownloading = false;
-                        Toast.makeText(getApplicationContext(), "Kategorie jsou připraveny", Toast.LENGTH_SHORT).show();
+                        finishDownloadCategoriesToast();
                         stopCategoryRefreshAnim();
                     }
                 }
             });
-            downloader.execute(urlE2 + urlArchiv);
+            downloader.execute(URL_E2 + SUB_URL_ARCHIV);
             actualCategoriesIsDownloading = true;
         }
     }
@@ -532,10 +578,10 @@ public class MainActivity extends AppCompatActivity {
         //Downloader downloader = null;
 
         if (!isNetworkConnected()) {
-            Toast.makeText(this, "Nejsi připojen k síti", Toast.LENGTH_LONG).show();
+            toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
         }
         else if(!archivedCategoriesIsDownloading){
-            Toast.makeText(this, "Stahuji kategorie", Toast.LENGTH_SHORT).show();
+            startDownloadCategoriesToast();
             runCategoryRefreshAnim();
 //            downloader = new Downloader(this, Downloader.Type.Category, null);
             DownloaderFactory.ArchivedCategoriesDownloader downloader = (DownloaderFactory.ArchivedCategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.ArchivedCategories);
@@ -546,19 +592,34 @@ public class MainActivity extends AppCompatActivity {
                         //fillNavigation((Set<Category>) result);
                         setNavArchivedCategories((Set<Category>) result);
                         archivedCategoriesIsDownloading = false;
-                        Toast.makeText(getApplicationContext(), "Kategorie jsou připraveny", Toast.LENGTH_SHORT).show();
+                        finishDownloadCategoriesToast();
                         stopCategoryRefreshAnim();
                     }
                 }
             });
-            downloader.execute(urlE2 + urlArchiv);
+            downloader.execute(URL_E2 + SUB_URL_ARCHIV);
             archivedCategoriesIsDownloading = true;
         }
     }
 
-    private void downloadCategory() {
+    private void downloadCategories() {
         downloadActualCategories();
         downloadArchivedCategories();
+    }
+
+    private void downloadCategoryCoverImage(Category category) {
+        DownloaderFactory.CoverImageDownloader downloader = (DownloaderFactory.CoverImageDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.CoverImage);
+        downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
+            @Override
+            public void onComplete(Object result) {
+                if (result instanceof Category) {
+                    if (((Category) result).hasCover()) {
+                        audioController.setCoverImage(((Category) result).getCover());
+                    }
+                }
+            }
+        });
+        downloader.execute(category);
     }
 
     private void onNavigationItemClick(Category item, int position) {
@@ -591,9 +652,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onRecordItemClick(Record record, int index) {
-        Toast.makeText(this, "" + record, Toast.LENGTH_SHORT).show();
+        toast("" + record, Toast.LENGTH_SHORT);
+        if (selectedRecordIndex == index) {
+            return;
+        }
         audioPlayerControl.stop();
         prepareMediaPlayerSource(record.getMp3().toString());
+        if (record.getCategory().hasCover()) {
+            audioController.setCoverImage(record.getCategory().getCover());
+        } else {
+            audioController.resetCoverImage();
+            downloadCategoryCoverImage(record.getCategory());
+        }
+        audioController.setInfoLineText(record.getName());
         RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(index);
         if (viewHolder != null) {
             recyclerAdapter.markViewHolder((MyRecyclerAdapter.MyViewHolder) viewHolder);
@@ -664,6 +735,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startDownloadCategoriesToast() {
+        if (!actualCategoriesIsDownloading && !archivedCategoriesIsDownloading) {
+            toast(DOWNLOADING_CATEGORIES, Toast.LENGTH_SHORT);
+        }
+    }
+
     private void stopCategoryRefreshAnim() {
         if (refreshCategoryButton != null) {
             if (!actualCategoriesIsDownloading && !archivedCategoriesIsDownloading) {
@@ -693,7 +770,7 @@ public class MainActivity extends AppCompatActivity {
     public static Animation createRotateAnim(View animatedView, int toDegrees, int duration, boolean infinite) {
         Animation anim = new RotateAnimation(0, toDegrees,
                 animatedView.getPivotX() + animatedView.getWidth() / 2,
-                animatedView.getPivotY() + animatedView.getHeight() /2);
+                animatedView.getPivotY() + animatedView.getHeight() / 2);
         anim.setDuration(duration);
         if(infinite) {
             anim.setRepeatMode(Animation.INFINITE);

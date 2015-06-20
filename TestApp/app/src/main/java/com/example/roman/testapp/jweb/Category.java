@@ -1,5 +1,8 @@
 package com.example.roman.testapp.jweb;
 
+import android.graphics.Bitmap;
+import android.util.Log;
+
 import java.net.URL;
 import java.util.Collection;
 import java.util.SortedSet;
@@ -7,16 +10,17 @@ import java.util.TreeSet;
 
 /**
  *
- * @author jack
+ * @author Roman Zelenik
  */
 public class Category extends E2Data {
   
   private static final int NO_ID = -1;
   private static final int NO_COUNT_RECORDS = -1;
-  private static final URL NO_IMAGE = null;
-  public static final URL NO_URL_SITE = null;
+  public static final Bitmap NO_IMAGE = null;
+  public static final URL NO_URL = null;
 
-  private URL image;
+  private Bitmap cover;
+  private URL imageUrl;
   private URL webSite;
   private URL nextRecords;
   private final SortedSet<Record> records;
@@ -24,19 +28,24 @@ public class Category extends E2Data {
   private int page;
 
   public Category(int id, String name, URL img, URL nextRecords) {
-    this(id, name, NO_URL_SITE, NO_COUNT_RECORDS, img, nextRecords);
+    this(id, name, NO_URL, NO_COUNT_RECORDS, img, nextRecords);
   }
   
   public Category(String name, URL webSite, int totalRecordsCount) {
-    this(NO_ID, name, webSite, totalRecordsCount, NO_IMAGE, NO_URL_SITE);
+    this(NO_ID, name, webSite, totalRecordsCount, NO_URL, NO_URL);
   }
-  
+
   public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords){
+    this(id, name, webSite, totalRecordsCount, image, nextRecords, NO_IMAGE);
+  }
+
+  public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords, Bitmap cover){
     super(id, name);
     this.webSite = webSite;
     this.totalRecordsCount = totalRecordsCount;
-    this.image = image;
+    this.imageUrl = image;
     this.nextRecords = nextRecords;
+    this.cover = cover;
     this.records = new TreeSet<>();
     this.page = 1;
   }
@@ -58,12 +67,14 @@ public class Category extends E2Data {
   public boolean addRecords(Collection<Record> records){
     return this.records.addAll(records);
   }
-  
-  public SortedSet<Record> getRecords() {
-    return records;
+
+  public Bitmap getCover() {
+    return cover;
   }
 
-  public int getRecordsCount() { return records.size(); }
+  public URL getImageUrl() {
+    return imageUrl;
+  }
 
   public URL getNextRecords() {
     return nextRecords;
@@ -72,6 +83,12 @@ public class Category extends E2Data {
   public int getPage() {
     return page;
   }
+
+  public SortedSet<Record> getRecords() {
+    return records;
+  }
+
+  public int getRecordsCount() { return records.size(); }
 
   /**
    *
@@ -85,20 +102,22 @@ public class Category extends E2Data {
     return webSite;
   }
 
-  public String getName() {
-    return name;
-  }
+  public boolean hasCover() { return cover != NO_IMAGE; }
 
   public boolean hasNextRecords() {
-    return nextRecords != NO_URL_SITE;
+    return nextRecords != NO_URL;
+  }
+
+  public void setCover(Bitmap cover) {
+    this.cover = cover;
   }
 
   public void setId(int id) {
     this.id = id;
   }
 
-  public void setImage(URL image) {
-    this.image = image;
+  public void setImageUrl(URL imageUrl) {
+    this.imageUrl = imageUrl;
   }
 
   public void setNextRecords(URL nextRecords) {
@@ -119,9 +138,10 @@ public class Category extends E2Data {
   }
 
   /**
-   * 
+   * Update actual category with attributes from specific <code>category</code>.
    * @param category
-   * @return true if update was successful
+   * @return <code>true</code> if and only if category is complete,
+   * <code>false</code> otherwise
    */
   public boolean update(Category category) {
     if(this.name.compareTo(category.name) != 0){
@@ -138,18 +158,21 @@ public class Category extends E2Data {
     } else {
       success = false;
     }
-    if(this.image == NO_IMAGE && category.image != NO_IMAGE){
-      this.image = category.image;
+    if(this.imageUrl == NO_URL && category.imageUrl != NO_URL){
+      this.imageUrl = category.imageUrl;
     } else {
       success = false;
     }
-    if(this.webSite == NO_URL_SITE && category.webSite != NO_URL_SITE){
+    if(this.webSite == NO_URL && category.webSite != NO_URL){
       this.webSite = category.webSite;
     } else {
       success = false;
     }
-    if(this.nextRecords == NO_URL_SITE && category.nextRecords != NO_URL_SITE){
+    if(this.nextRecords == NO_URL && category.nextRecords != NO_URL){
       this.nextRecords = category.nextRecords;
+    }
+    if(this.cover == NO_IMAGE && category.cover != NO_IMAGE){
+      this.cover = category.cover;
     }
     //return success;
     return true;
