@@ -1,7 +1,6 @@
 TestApp/.gradle
 TestApp/local.properties
-TestApp/.idea/workspace.xml
-TestApp/.idea/libraries
+TestApp/.idea
 TestApp/.DS_Store
 TestApp/build
 /TestApp/.nb-gradle/private/
