@@ -10,5 +10,6 @@
         android:layout_height="wrap_content"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
-        android:paddingLeft="?android:attr/expandableListPreferredChildPaddingLeft"/>
+        android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+        android:textSize="@dimen/abc_text_size_menu_material"/>
 </LinearLayout>

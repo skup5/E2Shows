@@ -1,7 +1,6 @@
 package com.example.roman.testapp.jweb;
 
 import android.graphics.Bitmap;
-import android.util.Log;
 
 import java.net.URL;
 import java.util.Collection;
@@ -35,11 +34,11 @@ public class Category extends E2Data {
     this(NO_ID, name, webSite, totalRecordsCount, NO_URL, NO_URL);
   }
 
-  public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords){
+  public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords) {
     this(id, name, webSite, totalRecordsCount, image, nextRecords, NO_IMAGE);
   }
 
-  public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords, Bitmap cover){
+  public Category(int id, String name, URL webSite, int totalRecordsCount, URL image, URL nextRecords, Bitmap cover) {
     super(id, name);
     this.webSite = webSite;
     this.totalRecordsCount = totalRecordsCount;
@@ -134,7 +133,7 @@ public class Category extends E2Data {
   
   @Override
   public String toString() {
-    return name + " (" + totalRecordsCount + ")";
+    return name + " (" + getRecordsCount()+ "/" + totalRecordsCount + ")";
   }
 
   /**

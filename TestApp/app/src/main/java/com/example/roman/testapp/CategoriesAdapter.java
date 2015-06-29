@@ -1,6 +1,7 @@
 package com.example.roman.testapp;
-
+ 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,8 +16,12 @@ import android.widget.TextView;
 
 import com.example.roman.testapp.jweb.Category;
 
+import java.util.Observable;
+import java.util.Observer;
+
 /**
- * Created by Roman on 29.5.2015.
+ * 
+ * @author Roman Zelenik
  */
 public class CategoriesAdapter extends BaseExpandableListAdapter {
 
@@ -25,6 +30,8 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
     private Context context;
     private Category archived;
     private LayoutInflater inflater;
+    private int markItemColor;
+    private int selectedGroup, selectedChild, groupTextColor, childTextColor;
 
     public CategoriesAdapter(Context context) {
         this.context = context;
@@ -35,8 +42,33 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
             }
         };
         this.inflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.selectedGroup = -1;
+        this.selectedChild = -1;
+        this.groupTextColor = Color.TRANSPARENT;
+        this.childTextColor = Color.TRANSPARENT;
+        this.markItemColor = context.getResources().getColor(android.R.color.holo_blue_dark);
         setActualCategories(new Category[0]);
         setArchivedCategories(new Category[0]);
+    }
+
+    public boolean isActualCategories(int groupPosition) {
+        return groupPosition < actualCategories.length;
+    }
+
+    public boolean isChildSelected(int groupPosition, int childPosition) {
+        return this.selectedGroup == groupPosition && this.selectedChild == childPosition;
+    }
+
+    public boolean isGroupSelected(int groupPosition) {
+        return this.selectedGroup == groupPosition;
+    }
+
+    public void markChild(TextView header) {
+        markGroup(header);
+    }
+
+    public void markGroup(TextView header) {
+        header.setTextColor(markItemColor);
     }
 
     public void setActualCategories(Category[] actualCategories) {
@@ -47,14 +79,22 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
         this.archivedCategories = archivedCategories;
     }
 
-    public boolean isActualCategories(int groupPosition) {
-        return groupPosition < actualCategories.length;
+    public void setChildSelected(int groupPosition, int childPosition) {
+        this.selectedGroup = groupPosition;
+        this.selectedChild = childPosition;
     }
 
-    public void prepareToCollapseGroup(int groupPosition) {
-
+    public void setGroupSelected(int groupPosition) {
+        this.selectedGroup = groupPosition;
     }
 
+    public void unmarkChild(TextView header) {
+        header.setTextColor(childTextColor);
+    }
+
+    public void unmarkGroup(TextView header) {
+        header.setTextColor(groupTextColor);
+    }
     /**
      * Gets the number of groups.
      *
@@ -140,7 +180,7 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
      */
     @Override
     public boolean hasStableIds() {
-        return true;
+        return false;
     }
 
     /**
@@ -166,10 +206,17 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
         final TextView textView;
         final ImageView imageView;
         final ExpandableListView par = (ExpandableListView) parent;
+
         convertView = inflater.inflate(R.layout.categories_list_group, null);
-        final View conView = convertView;
         textView = (TextView) convertView.findViewById(R.id.categories_group_header);
-        imageView = (ImageView) conView.findViewById(R.id.categories_group_indicator);
+        imageView = (ImageView) convertView.findViewById(R.id.categories_group_indicator);
+
+        textView.setText(getGroup(groupPosition).toString());
+
+        if (groupTextColor == Color.TRANSPARENT) {
+            groupTextColor = textView.getCurrentTextColor();
+        }
+
         if (!isActualCategories(groupPosition)) {
             convertView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -199,13 +246,20 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
                             view.startAnimation(anim);
                 }
             });
+
             if(isExpanded){
                 imageView.setImageResource(R.drawable.ic_action_collapse);
             } else {
                 imageView.setImageResource(R.drawable.ic_action_expand);
             }
+        } else {
+            if (isGroupSelected(groupPosition)) {
+                markGroup(textView);
+            } else {
+                unmarkGroup(textView);
+            }
         }
-        textView.setText(getGroup(groupPosition).toString());
+
         return convertView;
     }
 
@@ -232,13 +286,21 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
         TextView textView;
         convertView = inflater.inflate(R.layout.categories_list_item, null);
         textView = (TextView) convertView.findViewById(R.id.categories_list_item);
+
         textView.setText(getChild(groupPosition, childPosition).toString());
+
+        if (childTextColor == Color.TRANSPARENT) {
+            childTextColor = textView.getCurrentTextColor();
+        }
+
+        if (isChildSelected(groupPosition, childPosition)) {
+            markChild(textView);
+        } else {
+            unmarkChild(textView);
+        }
+
         Animation animation = AnimationUtils.makeInChildBottomAnimation(context);
-//        Interpolator interpolator = new LinearInterpolator();
-//        animation = new AlphaAnimation(0,1);
-////        animation.setInterpolator(interpolator);
         animation.setDuration(100);
-        //animation.scaleCurrentDuration(5*childPosition);
         convertView.setAnimation(animation);
         return convertView;
     }

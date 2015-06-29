@@ -19,7 +19,6 @@
         android:layout_height="match_parent"
         android:layout_marginLeft="6dp"
         android:layout_marginRight="6dp"
-        android:background="@color/background_material_dark"
         android:layout_above="@+id/audio_controller"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"/>

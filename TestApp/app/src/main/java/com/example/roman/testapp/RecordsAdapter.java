@@ -1,10 +1,14 @@
 package com.example.roman.testapp;
 
 import android.content.Context;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.roman.testapp.jweb.Category;
@@ -12,40 +16,70 @@ import com.example.roman.testapp.jweb.Record;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 
 /**
- * Created by Roman on 14.4.2015.
+ * 
+ * @author Roman Zelenik
  */
-public class RecordsAdapter extends BaseAdapter {
+public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHolder> {
+
+    private static final int ITEM_MARK_BG = android.R.color.holo_blue_dark;
 
     private Context context;
     private Category source;
-    private static final DateFormat dateFormat = new SimpleDateFormat("dd. M. yyyy");
+    private OnRecordClickListener onRecordClickListener;
+    private Record[] records;
+    private Drawable itemBackground;
+    private int selected;
+    private boolean loading;
 
-    public RecordsAdapter(Context context){
-        this(context, null);
+    public RecordsAdapter(Context context, OnRecordClickListener listener) {
+        this(context, listener, null);
     }
 
-    public RecordsAdapter(Context context, Category source) {
+    public RecordsAdapter(Context context, OnRecordClickListener listener, Category source) {
         this.context = context;
-        this.source = source;
+        this.onRecordClickListener = listener;
+        this.loading = false;
+        this.selected = -1;
+        if(source != null) setSource(source);
     }
 
     public void downloadNext() {
-        if (hasSource()) {
+        if (hasSource() && !loading) {
             if(source.hasNextRecords()) {
                 DownloaderFactory.NextRecordsDownloader downloader = (DownloaderFactory.NextRecordsDownloader) DownloaderFactory
                         .getDownloader(DownloaderFactory.Type.NextRecords);
-                try {
-                    setSource(downloader.execute(source).get());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
+                downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
+                    @Override
+                    public void onComplete(Object result) {
+                        if(result instanceof Category) {
+                            setSource((Category) result);
+                        }
+                        loading = false;
+
+                    }
+                });
+                downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
+                    @Override
+                    public void onError(List<String> errors) {
+                        MainActivity.errorReportsDialog(context, errors);
+                    }
+                });
+                downloader.execute(source);
+                loading = true;
+            } else {
+                //Toast.makeText(activity, "chybí url pro stažení dalších záznamů", Toast.LENGTH_SHORT).show();
             }
+        } else {
+            //String msg = hasSource() ? "stahování dalších záznamů již probíhá" : "recycler nemá nastavenou kategorii";
+            //Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public Record getItem(int index) {
+        return index >= 0 && index < records.length ? records[index] : null;
     }
 
     public Category getSource() {
@@ -63,92 +97,142 @@ public class RecordsAdapter extends BaseAdapter {
         return false;
     }
 
+    public void markViewHolder(MyViewHolder viewHolder) {
+        viewHolder.getParentView().setBackgroundResource(ITEM_MARK_BG);
+        viewHolder.getTextViewRecordName().setTypeface(null, Typeface.ITALIC);
+    }
+
+    public void setSelected(int selected) {
+        this.selected = selected;
+    }
+
     public void setSource(Category source) {
         this.source = source;
+        records = source.getRecords().toArray(new Record[source.getRecordsCount()]);
         notifyDataSetChanged();
     }
 
-    /**
-     * How many items are in the data set represented by this Adapter.
-     *
-     * @return Count of items.
-     */
-    @Override
-    public int getCount() {
-        if(hasSource()) {
-            return this.source.getRecordsCount();
-        }
-        return 0;
+    public void unmarkViewHolder(MyViewHolder viewHolder) {
+        viewHolder.getParentView().setBackground(itemBackground);
+        viewHolder.getTextViewRecordName().setTypeface(null, Typeface.NORMAL);
     }
 
     /**
-     * Get the data item associated with the specified position in the data set.
+     * Called when RecyclerView needs a new {@link ViewHolder} of the given type to represent
+     * an item.
+     * <p/>
+     * This new ViewHolder should be constructed with a new View that can represent the items
+     * of the given type. You can either create a new View manually or inflate it from an XML
+     * layout file.
+     * <p/>
+     * The new ViewHolder will be used to display items of the adapter using
+     * {@link #onBindViewHolder(ViewHolder, int)}. Since it will be re-used to display different
+     * items in the data set, it is a good idea to cache references to sub views of the View to
+     * avoid unnecessary {@link View#findViewById(int)} calls.
      *
-     * @param position Position of the item whose data we want within the adapter's
-     *                 data set.
-     * @return The data at the specified position.
+     * @param parent   The ViewGroup into which the new View will be added after it is bound to
+     *                 an adapter position.
+     * @param viewType The view type of the new View.
+     * @return A new ViewHolder that holds a View of the given view type.
+     * @see #getItemViewType(int)
+     * @see #onBindViewHolder(ViewHolder, int)
      */
     @Override
-    public Record getItem(int position) {
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.records_listview_item, null);
+        MyViewHolder holder = new MyViewHolder(v, onRecordClickListener);
+        itemBackground = v.getBackground();
+        return holder;
+    }
+
+    /**
+     * Called by RecyclerView to display the data at the specified position. This method
+     * should update the contents of the {@link ViewHolder#itemView} to reflect the item at
+     * the given position.
+     * <p/>
+     * Note that unlike {@link ListView}, RecyclerView will not call this
+     * method again if the position of the item changes in the data set unless the item itself
+     * is invalidated or the new position cannot be determined. For this reason, you should only
+     * use the <code>position</code> parameter while acquiring the related data item inside this
+     * method and should not keep a copy of it. If you need the position of an item later on
+     * (e.g. in a click listener), use {@link ViewHolder#getAdapterPosition()} which will have
+     * the updated adapter position.
+     *
+     * @param holder   The ViewHolder which should be updated to represent the contents of the
+     *                 item at the given position in the data set.
+     * @param position The position of the item within the adapter's data set.
+     */
+    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position) {
         if(!isEmpty()) {
-                return (Record) this.source.getRecords().toArray()[position];
+            holder.setData(records[position], position);
+            if (isSelected(position)) {
+                markViewHolder(holder);
+            } else {
+                unmarkViewHolder(holder);
+            }
         }
-        return null;
+    }
+
+    private boolean isSelected(int position) {
+        return position == selected;
     }
 
     /**
-     * Get the row id associated with the specified position in the list.
+     * Returns the total number of items in the data set hold by the adapter.
      *
-     * @param position The position of the item within the adapter's data set whose row id we want.
-     * @return The id of the item at the specified position.
+     * @return The total number of items in this adapter.
      */
     @Override
-    public long getItemId(int position) {
-        //return getItem(position).getId();
-        if(hasSource()) {
-            return position;
-        }
-        return -1;
+    public int getItemCount() {
+        return hasSource() ? this.source.getRecordsCount() : 0;
     }
 
-    /**
-     * Get a View that displays the data at the specified position in the data set. You can either
-     * create a View manually or inflate it from an XML layout file. When the View is inflated, the
-     * parent View (GridView, ListView...) will apply default layout parameters unless you use
-     * {@link android.view.LayoutInflater#inflate(int, android.view.ViewGroup, boolean)}
-     * to specify a root view and to prevent attachment to the root.
-     *
-     * @param position    The position of the item within the adapter's data set of the item whose view
-     *                    we want.
-     * @param convertView The old view to reuse, if possible. Note: You should check that this view
-     *                    is non-null and of an appropriate type before using. If it is not possible to convert
-     *                    this view to display the correct data, this method can create a new view.
-     *                    Heterogeneous lists can specify their number of view types, so that this View is
-     *                    always of the right type (see {@link #getViewTypeCount()} and
-     *                    {@link #getItemViewType(int)}).
-     * @param parent      The parent that this view will eventually be attached to
-     * @return A View corresponding to the data at the specified position.
-     */
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        // inflate the layout for each item of listView
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        convertView = inflater.inflate(R.layout.records_listview_item, null);
+    static class MyViewHolder extends ViewHolder implements View.OnClickListener {
 
-        if(!isEmpty()) {
-            Record record = getItem(position);
+        private static final DateFormat dateFormat = new SimpleDateFormat("dd. M. yyyy");
+        private View parentView;
+        private TextView textViewRecordName,
+                textViewRecordCategory,
+                textViewRecordDate;
+        private Record actualRecord;
+        private OnRecordClickListener listener;
+        private int recordIndex;
 
-            // get the reference of textViews
-            TextView textViewRecordName = (TextView) convertView.findViewById(R.id.textViewRecordName);
-            TextView textViewRecordCategory = (TextView) convertView.findViewById(R.id.textViewRecordCategory);
-            TextView textViewRecordDate = (TextView) convertView.findViewById(R.id.textViewRecordDate);
+        public MyViewHolder(View itemView, OnRecordClickListener listener) {
+            super(itemView);
+            this.listener = listener;
+            this.parentView = itemView;
 
-            // Set data to respective TextViews
+            parentView.setOnClickListener(this);
+            textViewRecordName = (TextView) itemView.findViewById(R.id.textViewRecordName);
+            textViewRecordCategory = (TextView) itemView.findViewById(R.id.textViewRecordCategory);
+            textViewRecordDate = (TextView) itemView.findViewById(R.id.textViewRecordDate);
+            actualRecord = null;
+            recordIndex = -1;
+        }
+
+        public View getParentView() { return parentView; }
+
+        public TextView getTextViewRecordName() {
+            return textViewRecordName;
+        }
+
+        public void setData(Record record, int index) {
             textViewRecordName.setText(record.getName());
             textViewRecordCategory.setText(record.getCategory().getName());
             textViewRecordDate.setText(dateFormat.format(record.getDate()));
+            actualRecord = record;
+            recordIndex = index;
         }
 
-        return convertView;
+        @Override
+        public void onClick(View view) {
+            listener.onRecordClick(actualRecord, recordIndex);
+        }
+    }
+
+    interface OnRecordClickListener {
+        void onRecordClick(Record record, int index);
     }
 }
