@@ -20,7 +20,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,6 +34,7 @@ import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private ActionBar actionBar;
     private Category chosenCategory;
+    private Record chosenRecord;
     private int chosenCategoryPosition = -1;
     private View loadingBar;
     private int crossfadeAnimDuration;
     private View refreshCategoryButton;
     private Animation refreshCategoryAnim;
-    private int selectedRecordIndex = -1;
     private Map<String, Integer> selectedRecords;
 
     /*#######################################################
@@ -299,15 +299,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void downloadArchivedCategories() {
-        //Set<Category> categorySet = null;
-        //Downloader downloader = null;
-
         if (!isNetworkConnected()) {
             toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
         } else if (!archivedCategoriesAreDownloading) {
             startDownloadCategoriesToast();
             runCategoryRefreshAnim();
-//            downloader = new Downloader(this, Downloader.Type.Category, null);
             DownloaderFactory.ArchivedCategoriesDownloader downloader = (DownloaderFactory.ArchivedCategoriesDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.ArchivedCategories);
             downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
                 @Override
@@ -315,7 +311,6 @@ public class MainActivity extends AppCompatActivity {
                     archivedCategoriesAreDownloading = false;
                     finishDownloadCategoriesToast();
                     if (result instanceof Set) {
-                        //fillNavigation((Set<Category>) result);
                         setNavArchivedCategories((Set<Category>) result);
                     }
                     stopCategoryRefreshAnim();
@@ -370,6 +365,13 @@ public class MainActivity extends AppCompatActivity {
     private void fillRecList(Category category) {
         if (category != null) {
             recordsAdapter.setSource(category);
+            int selected = getSelectedRecordIndex();
+            if (chosenRecord != null && chosenRecord.equals(recordsAdapter.getItem(selected))) {
+                recordsAdapter.setSelected(selected);
+            } else {
+                recordsAdapter.setSelected(-1);
+            }
+            recordsList.scrollToPosition(getSelectedRecordIndex());
         }
     }
 
@@ -377,6 +379,11 @@ public class MainActivity extends AppCompatActivity {
         if (!actualCategoriesAreDownloading && !archivedCategoriesAreDownloading) {
             toast(CATEGORIES_ARE_READY, Toast.LENGTH_SHORT);
         }
+    }
+
+    private int getSelectedRecordIndex() {
+        Integer selected = selectedRecords.get(chosenCategory.getName());
+        return selected == null ? -1 : selected.intValue();
     }
 
     private void init() {
@@ -451,8 +458,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initAudioController() {
-//        LayoutInflater li = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//        View infView = li.inflate(R.layout.audio_controller, new LinearLayout(getApplicationContext()));
         View controllerView = findViewById(R.id.audio_controller);
         audioPlayerControl = new AudioController.AudioPlayerControl() {
             @Override
@@ -478,25 +483,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public int getDuration() {
-                // if(mediaPlayer != null){
                 return mediaPlayer.getDuration() / 1000;
-                //  }
-                //  return 0;
             }
 
             @Override
             public int getCurrentPosition() {
-                // if(mediaPlayer != null){
                 return mediaPlayer.getCurrentPosition() / 1000;
-                //}
-                //return 0;
             }
 
             @Override
             public void seekTo(int pos) {
-                // if(mediaPlayer != null){
                 mediaPlayer.seekTo(pos * 1000);
-                //}
             }
 
             @Override
@@ -509,9 +506,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void next() {
-                Record nextRecord = recordsAdapter.getItem(selectedRecordIndex + 1);
+                int selected = getSelectedRecordIndex();
+                Record nextRecord = recordsAdapter.getItem(selected + 1);
                 if (nextRecord != null) {
-                    onRecordItemClick(nextRecord, selectedRecordIndex + 1);
+                    onRecordItemClick(nextRecord, selected + 1);
                 }
             }
 
@@ -520,11 +518,12 @@ public class MainActivity extends AppCompatActivity {
                 if (getCurrentPosition() > 3) {
                     seekTo(0);
                 } else {
-                    Record previousRecord = recordsAdapter.getItem(selectedRecordIndex - 1);
+                    int selected = getSelectedRecordIndex();
+                    Record previousRecord = recordsAdapter.getItem(selected - 1);
                     if (previousRecord == null) {
                         seekTo(0);
                     } else {
-                        onRecordItemClick(previousRecord, selectedRecordIndex - 1);
+                        onRecordItemClick(previousRecord, selected - 1);
                     }
                 }
             }
@@ -535,7 +534,17 @@ public class MainActivity extends AppCompatActivity {
             }
 
         };
-        audioController = new AudioController(getApplicationContext(), controllerView, audioPlayerControl);
+        controllerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (audioController.isEnabled() && chosenRecord != null) {
+                    if (chosenRecord.getCategory().equals(chosenCategory)) {
+                        recordsList.smoothScrollToPosition(getSelectedRecordIndex());
+                    }
+                }
+            }
+        });
+        audioController = new AudioController(controllerView, audioPlayerControl);
     }
 
     private void initCategoriesAdapter() {
@@ -621,7 +630,7 @@ public class MainActivity extends AppCompatActivity {
         });
         recordsList.setAdapter(recordsAdapter);
         recordsList.setLayoutManager(linearLayoutManager);
-        recordsList.addOnScrollListener(new MyRecyclerScrollListener(
+        recordsList.addOnScrollListener(new EndlessScrollListener(
                 new EndlessScrollListener.LoadNextItems() {
                     @Override
                     public void loadNextItems() {
@@ -632,8 +641,8 @@ public class MainActivity extends AppCompatActivity {
         recordsList.addItemDecoration(new SpacesItemDecoration(20));
 //        recordsList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
         recordsList.setHasFixedSize(true);
-        //recordsList.setItemAnimator(some animator);
         recordsList.setVisibility(View.GONE);
+        selectedRecords = new HashMap<>();
     }
 
     /**
@@ -658,7 +667,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onNavigationItemClick(Category item, int groupPosition, int childPosition) {
-        // Toast.makeText(this, id+":"+item.getName(), Toast.LENGTH_SHORT).show();
         boolean isGroup = childPosition == -1;
         int position = isGroup ? groupPosition : groupPosition + childPosition;
 
@@ -672,12 +680,13 @@ public class MainActivity extends AppCompatActivity {
         } else {
             categoriesAdapter.setChildSelected(groupPosition, childPosition);
         }
+
         chosenCategoryPosition = position;
         chosenCategory = item;
         mDrawerLayout.closeDrawer(categoriesList);
         showLoading();
+
         if (item.getRecords().isEmpty()) {
-            //Toast.makeText(MainActivity.this, "recordsSet is empty", Toast.LENGTH_LONG).show();
             DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
             downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
                 @Override
@@ -703,27 +712,35 @@ public class MainActivity extends AppCompatActivity {
 
     private void onRecordItemClick(Record record, int index) {
         toast("" + record, Toast.LENGTH_SHORT);
-        if (selectedRecordIndex == index) {
+        int selected = getSelectedRecordIndex();
+        if (selected == index) {
+            audioController.clickOnPlay();
             return;
         }
+
         audioPlayerControl.stop();
         prepareMediaPlayerSource(record.getMp3().toString());
+        chosenRecord = record;
+
         if (record.getCategory().hasCover()) {
             audioController.setCoverImage(record.getCategory().getCover());
         } else {
             audioController.resetCoverImage();
             downloadCategoryCoverImage(record.getCategory());
         }
+
         audioController.setInfoLineText(record.getName());
+
         RecyclerView.ViewHolder viewHolder = recordsList.findViewHolderForAdapterPosition(index);
         if (viewHolder != null) {
             recordsAdapter.markViewHolder((RecordsAdapter.MyViewHolder) viewHolder);
         }
-        viewHolder = recordsList.findViewHolderForAdapterPosition(selectedRecordIndex);
+        viewHolder = recordsList.findViewHolderForAdapterPosition(selected);
         if (viewHolder != null) {
             recordsAdapter.unmarkViewHolder((RecordsAdapter.MyViewHolder) viewHolder);
         }
-        selectedRecordIndex = index;
+
+        selectedRecords.put(chosenCategory.getName(), index);
         recordsAdapter.setSelected(index);
     }
 

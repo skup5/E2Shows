@@ -1,56 +1,43 @@
 package com.example.roman.testapp;
 
-import android.widget.AbsListView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.OnScrollListener;
 
 /**
- * Created by Roman on 14.4.2015.
+ *
+ * @author Roman Zelenik
  */
-public class EndlessScrollListener implements AbsListView.OnScrollListener {
+public class EndlessScrollListener extends OnScrollListener {
 
-    private int visibleThreshold;
-    private int currentPage = 0;
-    private int previousTotal = 0;
-    private boolean loading = true;
+    private int visibleThreshold,
+                visibleItemCount,
+                totalItemCount,
+                pastVisiblesItems;
     private LoadNextItems loader;
 
     public EndlessScrollListener(LoadNextItems loader) {
         this(loader, 1);
     }
 
-    public EndlessScrollListener(LoadNextItems loader ,int visibleThreshold) {
+    public EndlessScrollListener(LoadNextItems loader, int visibleThreshold) {
         this.loader = loader;
         this.visibleThreshold = visibleThreshold;
     }
 
     @Override
-    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-//        if (loading) {
-//            if (totalItemCount > previousTotal) {
-//                loading = false;
-//                previousTotal = totalItemCount;
-//                currentPage++;
-//            }
-//        }
-//        if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
-//            // I load the next page of gigs using a background task,
-//            // but you can call any function here.
-//            loading = true;
-//            loader.loadNextItems();
-//        }
-    }
+    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+        visibleItemCount = layoutManager.getChildCount();
+        totalItemCount = layoutManager.getItemCount();
+        pastVisiblesItems = layoutManager.findFirstVisibleItemPosition();
 
-    @Override
-    public void onScrollStateChanged(AbsListView view, int scrollState) {
-        if (scrollState == SCROLL_STATE_IDLE) {
-            if (view.getLastVisiblePosition() >= view.getCount() - 1 - visibleThreshold) {
-                currentPage++;
-                //load more list items:
-                loader.loadNextItems();
-            }
+        if ((visibleItemCount + pastVisiblesItems) >= (totalItemCount - visibleThreshold)) {
+            loader.loadNextItems();
         }
     }
 
     interface LoadNextItems{
-        public void loadNextItems();
+        void loadNextItems();
     }
 }

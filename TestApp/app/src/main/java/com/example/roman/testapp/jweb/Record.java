@@ -52,19 +52,24 @@ public class Record extends E2Data implements Comparable<Record> {
     this.category = category;
   }
 
-  @Override
-  public int compareTo(Record o) {
+    @Override
+    public int compareTo(Record o) {
     int c = o.date.compareTo(this.date);
     return c == 0 ? c + 1 : c;
     //return 1;
   }
 
-  @Override
-  public String toString() {
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Record && ((Record)o).getId() == getId();
+    }
+
+    @Override
+    public String toString() {
     return name;
   }
 
-  public String info() {
+    public String info() {
     return id + "\n" + name + " (" + dateFormat.format(date) + ")\n" + category + "\n" + mp3;
   }
 

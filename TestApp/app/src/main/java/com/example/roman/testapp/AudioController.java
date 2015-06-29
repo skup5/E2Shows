@@ -1,8 +1,6 @@
 package com.example.roman.testapp;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
@@ -20,7 +18,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Created by Roman on 2.5.2015.
+ *
+ * @author Roman Zelenik
  */
 public class AudioController {
 
@@ -32,16 +31,14 @@ public class AudioController {
     private Date cur, total;
     private SimpleDateFormat dateFormater;
     private AudioPlayerControl controller;
-    private Context context;
     private View view;
     private Runnable run;
     private Handler seekHandler = new Handler();
     private Animation infoLineAnim, coverImageAnim;
     private boolean enabled;
 
-    public AudioController(Context context, View view, AudioPlayerControl controller){
+    public AudioController(View view, AudioPlayerControl controller){
         this.enabled = false;
-        this.context = context;
         this.controller = controller;
         this.run = new Runnable() {
             @Override
@@ -69,6 +66,10 @@ public class AudioController {
                 seekBarUpdation();
             }
         }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public void onCompletion() {
