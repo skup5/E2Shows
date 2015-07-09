@@ -33,13 +33,14 @@ import android.widget.Toast;
 import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Record;
 
-import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
+ * Main class of application and the only activity
+ *
  * @author Roman Zelenik
  */
 public class MainActivity extends AppCompatActivity {
@@ -47,13 +48,16 @@ public class MainActivity extends AppCompatActivity {
     public static final String
             CATEGORIES_ARE_READY = "Kategorie jsou připraveny",
             DOWNLOADING_CATEGORIES = "Stahuji kategorie...",
-            ERROR_DOWNLOADING = "Chyba při stahování",
-            ERROR_DOWNLOADING_CATEGORIES = "Chyba při stahování kategorií",
-            ERROR_DOWNLOADING_RECORDS = "Chyba při stahování záznamů",
+            ERROR_ON_LOADING = "Při načítání došlo k chybě :-(",
             ERROR_NO_CONNECTION = "Nejsi připojen k síti",
+            LOADING = "Načítání",
             STILL_DOWNLOADING = "Stahování probíhá...",
             SUB_URL_ARCHIV = "/mp3-archiv/",
             URL_E2 = "http://evropa2.cz";
+
+    private static final int
+            ITEM_OFFSET = 10,
+            VISIBLE_TRESHOLD = 3;
 
     private MediaPlayer mediaPlayer;
     private AudioController audioController;
@@ -182,18 +186,15 @@ public class MainActivity extends AppCompatActivity {
             toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
             return;
         }
-        if (!isInternetAvailable()) {
-            //Toast.makeText(this, "Nejsi připojen k internetu", Toast.LENGTH_LONG).show();
-            //return;
-        }
+        
         PrepareStream ps = new PrepareStream(this, mediaPlayer);
         ps.setOnErrorListener(new PrepareStream.OnErrorListener() {
             @Override
             public void onError() {
                 new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Načítání")
+                        .setTitle(LOADING)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setMessage("Při načítání došlo k chybě :-(")
+                        .setMessage(ERROR_ON_LOADING)
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -207,9 +208,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Zjistí, jestli je telefon připojen k síti.
+     * Checks network connection
      *
-     * @return true pokud je připojen
+     * @return <code>true</code> if and only if device is connected,
+     * <code>false</code> otherwise
      */
     public boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -238,21 +240,14 @@ public class MainActivity extends AppCompatActivity {
       #######################################################*/
 
     private void crossfadeAnimation() {
-        // Set the content view to 0% opacity but visible, so that it is visible
-        // (but fully transparent) during the animation.
         recordsList.setAlpha(0f);
         recordsList.setVisibility(View.VISIBLE);
 
-        // Animate the content view to 100% opacity, and clear any animation
-        // listener set on the view.
         recordsList.animate()
                 .alpha(1f)
                 .setDuration(crossfadeAnimDuration)
                 .setListener(null);
 
-        // Animate the loading view to 0% opacity. After the animation ends,
-        // set its visibility to GONE as an optimization step (it won't
-        // participate in layout passes, etc.)
         loadingBar.animate()
                 .alpha(0f)
                 .setDuration(crossfadeAnimDuration)
@@ -387,8 +382,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        // Toast.makeText(this, "Initializace...", Toast.LENGTH_SHORT).show();
-
         downloadCategories();
         loadingBar = findViewById(R.id.loadingPanel);
         loadingBar.setVisibility(View.GONE);
@@ -411,20 +404,10 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
 
-        // Toolbar :it is a generalization of action bars for use within
-        // application layouts.
-        //Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        // DrawerLayout : it acts as a top-level container for window content
-        // that allows for interactive "drawer" views to be
-        // pulled out from the edge of the window.
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
-        // ActionBarDrawerToggle : This class provides a handy way to tie
-        // together the functionality of DrawerLayout and
-        // the framework ActionBar to implement the recommended design for
-        // navigation drawers.
         final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
                 mDrawerLayout, R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close) {
@@ -555,7 +538,6 @@ public class MainActivity extends AppCompatActivity {
                 if (!mDrawerLayout.isDrawerOpen(categoriesList)) {
                     refreshActionBarSubtitle();
                 }
-
             }
         });
     }
@@ -636,30 +618,13 @@ public class MainActivity extends AppCompatActivity {
                     public void loadNextItems() {
                         recordsAdapter.downloadNext();
                     }
-                }, 3
+                }, VISIBLE_TRESHOLD
         ));
-        recordsList.addItemDecoration(new SpacesItemDecoration(20));
+        recordsList.addItemDecoration(new SpacesItemDecoration(ITEM_OFFSET));
 //        recordsList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
         recordsList.setHasFixedSize(true);
         recordsList.setVisibility(View.GONE);
         selectedRecords = new HashMap<>();
-    }
-
-    /**
-     * Zjistí, jestli je telefon připojen k internetu.
-     *
-     * @return true pokud je připojen
-     */
-    private boolean isInternetAvailable() {
-        try {
-            InetAddress ipAddr = InetAddress.getByName("google.com"); //You can replace it with your name
-
-            return !ipAddr.equals("");
-
-        } catch (Exception e) {
-            return false;
-        }
-
     }
 
     private void lockNavigationDrawer(int lockMode) {
@@ -711,7 +676,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onRecordItemClick(Record record, int index) {
-        toast("" + record, Toast.LENGTH_SHORT);
+        toast(record.toString(), Toast.LENGTH_SHORT);
         int selected = getSelectedRecordIndex();
         if (selected == index) {
             audioController.clickOnPlay();
