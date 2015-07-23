@@ -16,11 +16,9 @@ import android.widget.TextView;
 
 import com.example.roman.testapp.jweb.Category;
 
-import java.util.Observable;
-import java.util.Observer;
-
 /**
- * 
+ * A Adapter used to provide data and Views from categories to an expandable list view.
+ *
  * @author Roman Zelenik
  */
 public class CategoriesAdapter extends BaseExpandableListAdapter {
@@ -50,6 +48,10 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
         setActualCategories(new Category[0]);
         setArchivedCategories(new Category[0]);
     }
+
+    /*#######################################################
+      ###               PUBLIC METHODS                    ###
+      #######################################################*/
 
     public boolean isActualCategories(int groupPosition) {
         return groupPosition < actualCategories.length;
@@ -95,6 +97,11 @@ public class CategoriesAdapter extends BaseExpandableListAdapter {
     public void unmarkGroup(TextView header) {
         header.setTextColor(groupTextColor);
     }
+
+    /*#######################################################
+      ###               OVERRIDE METHODS                  ###
+      #######################################################*/
+
     /**
      * Gets the number of groups.
      *

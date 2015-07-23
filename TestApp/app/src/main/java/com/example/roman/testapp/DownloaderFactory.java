@@ -25,10 +25,13 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 
+ * This factory class creates AsyncTasks for downloading data (Downloaders).
+ *
  * @author Roman Zelenik
  */
 public class DownloaderFactory {
+
+    private static final String DOWNLOADING = "Stahuji...";
 
     public static enum Type {ArchivedCategories, Categories, Records, NextRecords, CoverImage}
 
@@ -101,13 +104,9 @@ public class DownloaderFactory {
         protected void onPreExecute() {
             super.onPreExecute();
             if(useProgressDialog) {
-                // mProgressDialog.setTitle("Mp3 archiv Evropy 2");
-                mProgressDialog.setMessage("Stahuji...");
-                // mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                //          mProgressDialog.setIndeterminate(false);
+                mProgressDialog.setMessage(DOWNLOADING);
                 mProgressDialog.show();
             }
-            //Toast.makeText(context, "Stahuji kategorie...", Toast.LENGTH_LONG).show();
         }
 
         @Override

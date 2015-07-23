@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Main class of application and the only activity
+ * Main class of application and the only activity.
  *
  * @author Roman Zelenik
  */

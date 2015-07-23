@@ -8,7 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Zpracuje html kod a vytvori seznam zaznamu.
+ * Creates sets of categories and records from html code.
  * 
  * @author Roman Zelenik
  */
@@ -23,6 +23,7 @@ public class HtmlParser {
 
   /**
    * Creates set of records.
+   *
    * @param elements
    * @param category
    * @return <code>Set&lt;Record&gt;</code> (empty if none not found)
@@ -44,6 +45,7 @@ public class HtmlParser {
 
   /**
    * Creates new <code>Category</code>.
+   *
    * @param record
    * @param nextRecord
    * @param urlHost
@@ -64,6 +66,7 @@ public class HtmlParser {
   /**
    * Creates set of categories.
    * Every category contains name, url of website and total number of records.
+   *  
    * @param elements
    * @return <code>Set&lt;Category&gt;</code> (empty if none not found)
    */

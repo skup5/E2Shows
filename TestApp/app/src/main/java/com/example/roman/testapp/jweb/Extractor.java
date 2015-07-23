@@ -5,7 +5,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 /**
- * Knihovni trida pro vyhledavani v html dokumentu.
+ * Static class with functions for searching in hmtl document.
  * 
  * @author Roman Zelenik
  */
@@ -16,6 +16,7 @@ public class Extractor {
           JS_NEXT_PAGE_FUN = "infinitePagination";
 
   /**
+   * Finds elements containing archive categories
    *
    * @param doc
    * @return specific <code>Elements</code> (empty if not found)
@@ -25,6 +26,7 @@ public class Extractor {
   }
 
   /**
+   * Finds elements containing actual categories
    *
    * @param doc
    * @return specific <code>Elements</code> (empty if not found)
@@ -33,11 +35,8 @@ public class Extractor {
     return doc.select("li:not(.archive) a[href^=/mp3-archiv/kategorie/]");
   }
 
-  public static Element getFirstRecord(Document doc) {
-    return getRecords(doc).first();
-  }
-
   /**
+   * Finds elements containing records
    *
    * @param doc
    * @return specific <code>Elements</code> (empty if not found)
@@ -47,7 +46,8 @@ public class Extractor {
   }
   
   /**
-   * 
+   * Finds element containing url for next records
+   *
    * @param doc
    * @return specific <code>Element</code> or <code>null</code> if was not found
    */

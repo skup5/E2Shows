@@ -8,6 +8,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
+ * This class represent one specific category of records.
  *
  * @author Roman Zelenik
  */
@@ -114,23 +115,11 @@ public class Category extends E2Data {
   public void setId(int id) {
     this.id = id;
   }
-
-  public void setImageUrl(URL imageUrl) {
-    this.imageUrl = imageUrl;
-  }
-
-  public void setNextRecords(URL nextRecords) {
-    this.nextRecords = nextRecords;
-  }
   
   public void setPage(int page) {
     this.page = page;
   }
 
-  public String info(){
-    return name + " (" + totalRecordsCount + ") \n" + webSite.toString();
-  }
-  
   @Override
   public String toString() {
     return name + " (" + getRecordsCount()+ "/" + totalRecordsCount + ")";
@@ -138,6 +127,7 @@ public class Category extends E2Data {
 
   /**
    * Update actual category with attributes from specific <code>category</code>.
+   *
    * @param category
    * @return <code>true</code> if and only if category is complete,
    * <code>false</code> otherwise

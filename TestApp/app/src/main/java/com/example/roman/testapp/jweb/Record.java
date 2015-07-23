@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Predstavuje zaznam z vysilani.
+ * This class represents one specific record.
  *
  * @author Roman Zelenik
  */

@@ -5,7 +5,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 /**
- * Created by Roman on 28.5.2015.
+ * A ItemDecoration for RecyclerView that use spaces like divider between items.
+ *
+ * @author Roman Zelenik
  */
 public class SpacesItemDecoration extends RecyclerView.ItemDecoration {
     private int space;
@@ -16,8 +18,6 @@ public class SpacesItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-//        outRect.left = space;
-//        outRect.right = space;
         outRect.top = space;
         outRect.bottom = space;
     }

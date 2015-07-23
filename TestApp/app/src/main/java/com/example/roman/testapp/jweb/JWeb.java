@@ -7,8 +7,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 /**
+ * Class of auxiliary functions for connecting to the server.
  *
- * @author SKUP
+ * @author Roman Zelenik
  */
 public class JWeb {
 
@@ -56,12 +57,7 @@ public class JWeb {
   
   public static void printElements(Elements elements){
     for(Element e : elements){
-      //if(link.attr("href", "/mp3-archiv/*"))
-      //String s = e.attr("href");
-      //if(s.contains("mp3-archiv")){
         System.out.println(e);
-      //}
-      
     }
   }
   
@@ -69,12 +65,10 @@ public class JWeb {
     Elements links = doc.select("li a");
     Elements category = Extractor.getCategoryList(doc);
     Elements archive = Extractor.getArchiveCategory(doc);
-    //printElements(doc.select("li[class=archive]"));
     System.out.println("links: (" + links.size() + ")\n");
     System.out.println("kategorie: (" + category.size() + ")");
     printElements(category);
     System.out.println("archive: ("+ archive.size() + ")");
     printElements(archive);
-    
   }
 }

@@ -2,7 +2,6 @@ package com.example.roman.testapp;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -18,6 +17,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ * A view containing controls for MediaPlayer.
+ * Play/Pause, Forward and Previous buttons and progress slider.
  *
  * @author Roman Zelenik
  */
@@ -43,7 +44,7 @@ public class AudioController {
         this.run = new Runnable() {
             @Override
             public void run() {
-                seekBarUpdation();
+                seekBarUpdate();
             }
         };
         this.dateFormater = new SimpleDateFormat("mm:ss");
@@ -52,6 +53,10 @@ public class AudioController {
 
         setView(view);
     }
+
+    /*#######################################################
+      ###               PUBLIC METHODS                    ###
+      #######################################################*/
 
     public void clickOnPlay() {
         if(enabled) {
@@ -63,7 +68,7 @@ public class AudioController {
             } else {
                 controller.start();
                 play.setImageResource(R.drawable.pause);
-                seekBarUpdation();
+                seekBarUpdate();
             }
         }
     }
@@ -103,28 +108,21 @@ public class AudioController {
         initComponents();
     }
 
-    public void setVisibility(int visibility) {
-        view.setVisibility(visibility);
-    }
-
     public void setUpSeekBar() {
         int duration = controller.getDuration();
         seekBar.setMax(duration);
         total.setTime(duration * 1000);
         totalTime.setText(dateFormater.format(total));
-        //seekBar.setVisibility(View.VISIBLE);
         seekBar.setEnabled(true);
     }
 
+    /*#######################################################
+      ###              PRIVATE METHODS                    ###
+      #######################################################*/
 
     private void prepareInfoLineAnim() {
-//        infoLine.measure(0, 0);
-        // Get textView width
-        int textWidth = infoLine.getMeasuredWidth();
-        textWidth = infoLine.getWidth();
-        // Create the animation
+        int textWidth = infoLine.getWidth();
         infoLineAnim = new TranslateAnimation(textWidth, -textWidth, 0, 0);
-//        infoLineAnim.setDuration(infoLine.getText().length() * 500);
         infoLineAnim.setDuration(15000);
         infoLineAnim.setRepeatMode(Animation.RESTART);
         infoLineAnim.setRepeatCount(Animation.INFINITE);
@@ -147,14 +145,12 @@ public class AudioController {
         infoLine = (TextView) view.findViewById(R.id.audio_controller_info_line);
         coverImage = (ImageView) view.findViewById(R.id.audio_controller_image);
 
-        //seekBar.setVisibility(View.INVISIBLE);
         seekBar.setEnabled(false);
         initListeners();
         prepareCoverImageAnim();
     }
 
     private void initListeners() {
-        Log.i("AudioController", "init listeners");
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -195,7 +191,7 @@ public class AudioController {
         });
     }
 
-    private void seekBarUpdation() {
+    private void seekBarUpdate() {
         int currentPosition = controller.getCurrentPosition();
         cur.setTime(currentPosition * 1000);
         seekBar.setProgress(currentPosition);

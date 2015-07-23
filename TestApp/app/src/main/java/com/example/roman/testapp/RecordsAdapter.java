@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
+ * A Adapter used to provide data and ViewHolders from records to an RecyclerView.
  * 
  * @author Roman Zelenik
  */
@@ -58,7 +59,6 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
                             setSource((Category) result);
                         }
                         loading = false;
-
                     }
                 });
                 downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
@@ -69,12 +69,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
                 });
                 downloader.execute(source);
                 loading = true;
-            } else {
-                //Toast.makeText(activity, "chybí url pro stažení dalších záznamů", Toast.LENGTH_SHORT).show();
             }
-        } else {
-            //String msg = hasSource() ? "stahování dalších záznamů již probíhá" : "recycler nemá nastavenou kategorii";
-            //Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show();
         }
     }
 

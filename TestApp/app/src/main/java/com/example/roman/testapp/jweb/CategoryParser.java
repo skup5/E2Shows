@@ -1,19 +1,12 @@
 package com.example.roman.testapp.jweb;
  
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/*
- <li><a href="http://www.evropa2.cz/mp3-archiv/kategorie/hudebni-ceny-evropy-2-2014-5810">
- Hudební ceny Evropy 2 (2014) <span>(12)</span></a>
- </li>
- */
- 
 /**
+ * Creates <code>Category</code> from html code.
  *
  * @author Roman Zelenik
  */
@@ -26,10 +19,11 @@ public class CategoryParser extends Parser {
 
   /**
    * Parse from record &lt;li&gt;
-   * @param record
-   * @param nextRecord
+   *
+   * @param record html code of record
+   * @param nextRecord html code with url for next records
    * @param host
-   * @return new Category with id, name, url of cover image and url of next records
+   * @return new <code>Category</code> with id, name, url of cover image and url of next records
    */
   public Category parse(Element record, Element nextRecord, String host) throws MalformedURLException{
     URL img = Category.NO_URL, nextRecords = Category.NO_URL;
@@ -53,9 +47,12 @@ public class CategoryParser extends Parser {
   }
 
   /**
-   * Parse from category list
-   * @param element
-   * @return new Category with name, url of website and total number of records
+   * Parse from category list in this format: <br>
+   *  &lt;li&gt;&lt;a href="http://www.evropa2.cz/mp3-archiv/kategorie/hudebni-ceny-evropy-2-2014-5810"&gt;
+   *  Hudební ceny Evropy 2 (2014) &lt;span&gt;(12)&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+   *
+   * @param element html code of category
+   * @return new <code>Category</code> with name, url of website and total number of records
    */
   public Category parse(Element element) throws IndexOutOfBoundsException, MalformedURLException {
     URL url = new URL(element.absUrl("href"));
@@ -64,16 +61,6 @@ public class CategoryParser extends Parser {
     name = name.substring(0, name.lastIndexOf(recordsStr)).trim();
     int records = records(recordsStr.toCharArray());
     return new Category(name, url, records);
-  }
-
-  private Element findCategory(Document document, String category) {
-    Elements elements = Extractor.getCategoryList(document);
-    for (Element element : elements) {
-      if (element.text().contains(category)) {
-        return element;
-      }
-    }
-    return null;
   }
 
   private int records(char[] recordsStr) {
