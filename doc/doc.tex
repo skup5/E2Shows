@@ -1,0 +1,99 @@
+\documentclass[12pt,a4paper,titlepage]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{indentfirst}
+\usepackage[T1]{fontenc}
+\usepackage{tocloft}
+\usepackage{secdot}
+\usepackage{courier}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{program}
+\usepackage{booktabs}
+
+\begin{document}
+
+% Úvodní strana
+\includegraphics[width = 4cm]{LOGO.png} 
+\\[8\baselineskip]
+\begin{center}
+
+\LARGE\textbf{Semestrální práce z předmětu KIV/MKZ}\linebreak\linebreak
+\Large\textbf{Evropa 2 - přehrávání mp3 záznamů z vysílání}\\[11\baselineskip]
+\end{center}
+
+\begin{center}
+\begin{tabular}{rll}
+Vypracoval: & Roman Zeleník \\ 
+Studijní číslo: & A12B0212P \\ 
+Orion login: & zelenikr \\ 
+Datum: & \multicolumn{2}{l}{30.6.2015} \\ 
+\end{tabular} 
+\end{center}
+\thispagestyle{empty}
+\pagebreak 
+
+% Obsah
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\tableofcontents
+\thispagestyle{empty}
+\pagebreak
+\setcounter{page}{1}
+%Zadání - co práce řeší
+\section{Zadání}
+	\paragraph{}
+	Vytvořte mobilní aplikaci, která poběží na platformě Android. Aplikace umožní uživateli procházet a přehrávat uložené záznamy vysílání rádia Evropa 2.
+
+%Programátorská dokumentace - použité třídy, nejdůležitější metody, algoritmy
+\section{Programátorská dokumentace}
+	\subsection{Použité třídy}
+	\paragraph{MainActivity}
+	- Hlavní třída aplikace a jediná \texttt{Activity} třída. 
+	\paragraph{AudioController}
+	- Obsahuje \texttt{View} všech ovládacích prvků (play, next, previous, seekbar) a informačních prvků (aktuální čas, celkový čas, název, obrázek).
+	\paragraph{DownloaderFactory}
+	- Tovární třída pro vytváření speciálních \texttt{AsyncTask} objektů, které stahují data ze serveru rádia Evropa 2 (seznam kategorií, záznamů, mp3 soubory, obrázky, atd.).
+	\paragraph{PrepareStream}
+	- \texttt{AsyncTask}, který volá nad objektem třídy \texttt{MediaPlayer} metody \texttt{setDataSource()} a \texttt{prepare()}. Tyto metody nastaví a připraví datový proud, pro přehrání záznamu. Pomocí posluchače \texttt{OnPreparedListener} upozorní, že je zdroj připraven ke čtení.
+	\paragraph{CategoriesAdapter}
+	- Adapter pro \texttt{ExpandableListView} a potomek třídy \texttt{BaseExpandableListAdapter}. Spravuje seznam aktuálních i archivních kategorií.
+	\paragraph{RecordsAdapter}
+	- Adapter pro \texttt{RecyclerView} a potomek třídy \linebreak \texttt{RecyclerView.Adapter}. Spravuje seznam aktuálně zobrazených záznamů.
+	\paragraph{EndlessScrollListener}
+	Potomek rozhraní \texttt{RecyclerView.OnScrollListener} a slouží k automatickému stahování záznamů, pokud se uživatel rolováním v seznamu dostane ke konci seznamu.
+	\paragraph{Category}
+	
+	\paragraph{Record}
+	\paragraph{--ConnectionHelper--}
+	\paragraph{Extractor}
+	\paragraph{HtmlParser}
+	\paragraph{Parser}
+	\paragraph{CategoryParser}
+	\paragraph{RecordParser}
+	\subsection{Externí knihovny}{
+	\paragraph{}
+	Použil jsem knihovnu \texttt{jsoup} pro práci s html dokumenty. 
+	
+
+%Uživatelská dokumentace - ovládání aplikace, screenshot aplikace,
+%	případné poznámky k instalaci aplikace (pokud je nestandardní)
+\section{Uživatelská dokumentace}
+
+
+%Řešené problémy - narazili jste na nějaký problém, 
+%	něco fungovalo jinak, než jste zvyklí či nešlo vůbec, 
+%	problémy s výkonem/rychlostí aplikace apod.
+\section{Řešené problémy}
+	
+		
+	
+%Závěr
+\section{Závěr}
+\paragraph{}
+
+\end{document}
