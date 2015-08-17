@@ -1,0 +1,6 @@
+/TestApp
+/doc - kopie
+/doc/*
+!doc/*.png
+!doc/*.PNG
+!doc/*.tex
