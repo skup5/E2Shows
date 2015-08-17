@@ -47,7 +47,7 @@ Datum: & \multicolumn{2}{l}{30.6.2015} \\
 %Zadání - co práce řeší
 \section{Zadání}
 	\paragraph{}
-	Vytvořte mobilní aplikaci, která poběží na platformě Android. Aplikace umožní uživateli procházet a přehrávat uložené záznamy vysílání rádia Evropa 2.
+	Vytvořte mobilní aplikaci, která poběží na platformě Android. Aplikace umožní uživateli procházet a přehrávat záznamy vysílání rádia Evropa 2.
 
 %Programátorská dokumentace - použité třídy, nejdůležitější metody, algoritmy
 \section{Programátorská dokumentace}
@@ -92,14 +92,14 @@ Datum: & \multicolumn{2}{l}{30.6.2015} \\
 	- Abstraktní třída s pomocnými \uv{parsovacími} metodami.
 
 	\paragraph{CategoryParser}
-	- Potomek třídy \texttt{Parser}. Slouží k vytvoření kategorie z html kódu.
+	- Potomek třídy \texttt{Parser}. Slouží k vytvoření kategorie z~html kódu.
 
 	\paragraph{RecordParser}
-	- Potomek třídy \texttt{Parser}. Slouží k vytvoření záznamu z html kódu.
+	- Potomek třídy \texttt{Parser}. Slouží k vytvoření záznamu z~html kódu.
 
 	\subsection{Externí knihovny}{
 	\paragraph{}
-	Použil jsem knihovnu \texttt{jsoup} pro práci s html dokumenty. 
+	Použil jsem knihovnu \texttt{jsoup.jar} pro práci s html dokumenty. 
 	
 \pagebreak
 %Uživatelská dokumentace - ovládání aplikace, screenshot aplikace,
@@ -145,13 +145,13 @@ Datum: & \multicolumn{2}{l}{30.6.2015} \\
 	\paragraph{Ovládání přehrávání\\}
 	Chtěl jsem použít komponentu \texttt{MediaController} pro ovládání přehrávání. Zřejmě byl navrhnut pro ovládání video přehrávače, protože po pár vteřinách zmizel. Po úpravě viditelnosti, ale nešlo kliknout na nic jiného, protože měl stále zabraný \uv{focus} pro sebe.
 	
-	Vytvořil jsem si tedy vlastní komponentu - \texttt{AudioController}, která funguje obdobně. Při inicializaci se předá konstruktoru \texttt{View}, ve kterém najde veškeré ovládací prvky. Druhým parametrem je objekt implementující speciální rozhraní \texttt{AudioPlayerControl}. Toto rozhraní definuje všechny potřebné metody pro ovládání přehrávače. 
-	 
-	
+	Vytvořil jsem si tedy vlastní komponentu - \texttt{AudioController}, která funguje obdobně. Při inicializaci se předá konstruktoru \texttt{View}, ve kterém najde veškeré ovládací prvky. Druhým parametrem je objekt implementující speciální rozhraní \texttt{AudioPlayerControl}. Toto rozhraní definuje všechny potřebné metody pro ovládání přehrávače. 	
 		
-	
+\pagebreak
 %Závěr
 \section{Závěr}
-\paragraph{}
-
+	\paragraph{}
+	Aplikace plně splňuje zadání. Byla otestována na skutečném telefonu s~Androidem 4.3 a na dvou virtuálních s Androidem 4.1 a 5.1. Na všech běží bezproblémově. Při testování byly ošetřeny veškeré odhalené chyby. Aplikace by tedy neměla při běhu zamrznout či se sama ukončit kvůli chybě.
+	
+	Aplikace by se mohla rozšířit o offline režim přehrávání uživatelem vybraných záznamů nebo možnost označit či přímo uložit oblíbené nahrávky.
 \end{document}
