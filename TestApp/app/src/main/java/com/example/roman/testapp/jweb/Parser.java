@@ -18,8 +18,8 @@ public abstract class Parser {
    * &lt;li class="clr" id="podcast-item-18077"&gt; <br>
    * &lt;a onclick="playMedia(&#39;18077&#39;,
    *         &#39;true&#39;,
-   *         &#39;Páteèní houseparty&#39;,
-   *         &#39;To nejlepší z Ranní show&#39;,
+   *         &#39;PÃ¡teÄnÃ­ houseparty&#39;,
+   *         &#39;To nejlepÅ¡Ã­ z RannÃ­ show&#39;,
    *         &#39;100&#39;,
    *         &#39;/img/edee/tym-a-porady/mp3-archiv/leos_patrik-1.jpg&#39;,
    *         &#39;/file/edee/tym-a-porady/mp3-archiv/18077/zvuky-patecni-houseparty.mp3&#39;,
@@ -27,10 +27,10 @@ public abstract class Parser {
    *         &#39;27. 2. 2015&#39;);
    * return false;"
    * href="http://www.evropa2.cz/mp3-archiv/patecni-houseparty-18077"&gt;
-   * Páteèní houseparty&lt;br&gt;To nejlepší z Ranní show (27. 2. 2015)
+   * PÃ¡teÄnÃ­ houseparty&lt;br&gt;To nejlepÅ¡Ã­ z RannÃ­ show (27. 2. 2015)
    * &lt;/a&gt; <br>
    * &lt;p title="74" class="rating" id="rating-18077"&gt; <br>
-   * &lt;img width="74%" height="15" alt="" src="./Páteèní houseparty · MP3 archiv To nejlepší z Ranní show · Evropa 2 · MaXXimum muziky_files/spacer.gif"&gt; <br>
+   * &lt;img width="74%" height="15" alt="" src="./PÃ¡teÄnÃ­ houseparty Â· MP3 archiv To nejlepÅ¡Ã­ z RannÃ­ show Â· Evropa 2 Â· MaXXimum muziky_files/spacer.gif"&gt; <br>
    * &lt;/p&gt; <br>
    * &lt;/li&gt;
    *

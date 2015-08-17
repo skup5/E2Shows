@@ -9,7 +9,7 @@ import android.os.AsyncTask;
 import com.example.roman.testapp.jweb.Category;
 import com.example.roman.testapp.jweb.Extractor;
 import com.example.roman.testapp.jweb.HtmlParser;
-import com.example.roman.testapp.jweb.JWeb;
+import com.example.roman.testapp.jweb.HttpRequests;
 import com.example.roman.testapp.jweb.Record;
 
 import org.jsoup.nodes.Document;
@@ -33,7 +33,7 @@ public class DownloaderFactory {
 
     private static final String DOWNLOADING = "Stahuji...";
 
-    public static enum Type {ArchivedCategories, Categories, Records, NextRecords, CoverImage}
+    public enum Type {ArchivedCategories, Categories, Records, NextRecords, CoverImage}
 
     private DownloaderFactory() {
     }
@@ -136,7 +136,7 @@ public class DownloaderFactory {
             Set<Category> archiveCategories = null;
             Document site;
             try {
-                site = JWeb.httpGetSite(url[0]);
+                site = HttpRequests.httpGetSite(url[0]);
                 Elements categories = Extractor.getArchiveCategory(site);
                 if (!categories.isEmpty()) {
                     archiveCategories = htmlParser.parseCategoryItems(categories);
@@ -160,7 +160,7 @@ public class DownloaderFactory {
             Set<Category> actualCategories = null;
             Document site;
             try {
-                site = JWeb.httpGetSite(url[0]);
+                site = HttpRequests.httpGetSite(url[0]);
                 Elements categories = Extractor.getCategoryList(site);
                 if (!categories.isEmpty()) {
                     actualCategories = htmlParser.parseCategoryItems(categories);
@@ -187,7 +187,7 @@ public class DownloaderFactory {
             if (site != null) {
                 try {
                     Set<Record> set;
-                    Document doc = JWeb.httpGetSite(site.toString());
+                    Document doc = HttpRequests.httpGetSite(site.toString());
                     Elements records = Extractor.getRecords(doc);
                     if (!records.isEmpty()) {
                         set = this.htmlParser.parseRecords(records, category);
@@ -229,7 +229,7 @@ public class DownloaderFactory {
                 try {
                     Set<Record> set;
                     page++;
-                    Document doc = JWeb.httpPostNextRecords(site.toString(), category.getId() + "", page + "");
+                    Document doc = HttpRequests.httpPostNextRecords(site.toString(), category.getId() + "", page + "");
                     Elements records = Extractor.getRecords(doc);
                     if (!records.isEmpty()) {
                         set = this.htmlParser.parseRecords(records, category);

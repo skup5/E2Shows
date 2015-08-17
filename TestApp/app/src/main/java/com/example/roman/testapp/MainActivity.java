@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             URL_E2 = "http://evropa2.cz";
 
     private static final int
-            ITEM_OFFSET = 10,
+            ITEM_OFFSET = 6,
             VISIBLE_TRESHOLD = 3;
 
     private MediaPlayer mediaPlayer;
