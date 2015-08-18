@@ -1,4 +1,4 @@
-package com.example.roman.testapp;
+package com.example.roman.E2Mp3Archiv;
  
 import android.content.Context;
 import android.graphics.Color;
@@ -14,7 +14,7 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.roman.testapp.jweb.Category;
+import com.example.roman.E2Mp3Archiv.jweb.Category;
 
 /**
  * A Adapter used to provide data and Views from categories to an expandable list view.

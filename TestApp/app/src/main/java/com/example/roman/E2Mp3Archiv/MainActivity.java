@@ -1,4 +1,4 @@
-package com.example.roman.testapp;
+package com.example.roman.E2Mp3Archiv;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -30,8 +30,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
-import com.example.roman.testapp.jweb.Category;
-import com.example.roman.testapp.jweb.Record;
+import com.example.roman.E2Mp3Archiv.jweb.Category;
+import com.example.roman.E2Mp3Archiv.jweb.Record;
 
 import java.util.HashMap;
 import java.util.List;

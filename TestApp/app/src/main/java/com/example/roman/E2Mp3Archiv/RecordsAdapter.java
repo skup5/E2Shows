@@ -1,4 +1,4 @@
-package com.example.roman.testapp;
+package com.example.roman.E2Mp3Archiv;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -11,8 +11,8 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.roman.testapp.jweb.Category;
-import com.example.roman.testapp.jweb.Record;
+import com.example.roman.E2Mp3Archiv.jweb.Category;
+import com.example.roman.E2Mp3Archiv.jweb.Record;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

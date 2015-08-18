@@ -1,4 +1,4 @@
-package com.example.roman.testapp;
+package com.example.roman.E2Mp3Archiv;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

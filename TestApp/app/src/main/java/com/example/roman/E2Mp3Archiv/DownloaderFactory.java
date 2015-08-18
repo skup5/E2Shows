@@ -1,4 +1,4 @@
-package com.example.roman.testapp;
+package com.example.roman.E2Mp3Archiv;
  
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -6,11 +6,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
-import com.example.roman.testapp.jweb.Category;
-import com.example.roman.testapp.jweb.Extractor;
-import com.example.roman.testapp.jweb.HtmlParser;
-import com.example.roman.testapp.jweb.HttpRequests;
-import com.example.roman.testapp.jweb.Record;
+import com.example.roman.E2Mp3Archiv.jweb.Category;
+import com.example.roman.E2Mp3Archiv.jweb.Extractor;
+import com.example.roman.E2Mp3Archiv.jweb.HtmlParser;
+import com.example.roman.E2Mp3Archiv.jweb.HttpRequests;
+import com.example.roman.E2Mp3Archiv.jweb.Record;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

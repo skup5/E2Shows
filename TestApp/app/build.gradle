@@ -4,7 +4,7 @@ android {
     compileSdkVersion 22
     buildToolsVersion '22.0.1'
     defaultConfig {
-        applicationId "com.example.roman.testapp"
+        applicationId "com.example.roman.E2Mp3Archiv"
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1
