@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int
             ITEM_OFFSET = 6,
-            VISIBLE_TRESHOLD = 3;
+            VISIBLE_THRESHOLD = 3;
 
     private MediaPlayer mediaPlayer;
     private AudioController audioController;
@@ -150,9 +150,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-//            case R.id.action_settings :
-//                return true;
-
             case android.R.id.home:
                 if (categoriesAdapter != null && categoriesAdapter.isEmpty()) {
                     toast("Seznam je prázdný", Toast.LENGTH_SHORT);
@@ -186,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
             toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
             return;
         }
-        
+
         PrepareStream ps = new PrepareStream(this, mediaPlayer);
         ps.setOnErrorListener(new PrepareStream.OnErrorListener() {
             @Override
@@ -217,10 +214,6 @@ public class MainActivity extends AppCompatActivity {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         return ni != null;
-    }
-
-    public void hideLoading() {
-        loadingBar.setVisibility(View.GONE);
     }
 
     public void showLoading() {
@@ -428,15 +421,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mDrawerToggle.setDrawerIndicatorEnabled(true);
-        //Set the ActionBarDrawerToggle in the layout
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        //Hide the default Actionbar
-        //getSupportActionBar().hide();
-        // Call syncState() from your Activity's onPostCreate to synchronize the
-        // indicator
-        // with the state of the linked DrawerLayout after
-        // onRestoreInstanceState has occurred
         mDrawerToggle.syncState();
     }
 
@@ -618,17 +603,12 @@ public class MainActivity extends AppCompatActivity {
                     public void loadNextItems() {
                         recordsAdapter.downloadNext();
                     }
-                }, VISIBLE_TRESHOLD
+                }, VISIBLE_THRESHOLD
         ));
         recordsList.addItemDecoration(new SpacesItemDecoration(ITEM_OFFSET));
-//        recordsList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
         recordsList.setHasFixedSize(true);
         recordsList.setVisibility(View.GONE);
         selectedRecords = new HashMap<>();
-    }
-
-    private void lockNavigationDrawer(int lockMode) {
-        mDrawerLayout.setDrawerLockMode(lockMode);
     }
 
     private void onNavigationItemClick(Category item, int groupPosition, int childPosition) {

@@ -17,10 +17,6 @@ public class EndlessScrollListener extends OnScrollListener {
                 pastVisibleItems;
     private LoadNextItems loader;
 
-    public EndlessScrollListener(LoadNextItems loader) {
-        this(loader, 1);
-    }
-
     public EndlessScrollListener(LoadNextItems loader, int visibleThreshold) {
         this.loader = loader;
         this.visibleThreshold = visibleThreshold;

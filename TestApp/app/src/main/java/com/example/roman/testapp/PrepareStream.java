@@ -17,12 +17,10 @@ public class PrepareStream extends AsyncTask<String, Void, Boolean> {
 
     private ProgressDialog progress;
     private MediaPlayer mediaPlayer;
-    private Context context;
     private OnErrorListener listener;
 
     public PrepareStream(Context context, MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
-        this.context = context;
         progress = new ProgressDialog(context);
         listener = new OnErrorListener() {
             @Override

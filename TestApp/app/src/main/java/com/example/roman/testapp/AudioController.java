@@ -99,7 +99,6 @@ public class AudioController {
         infoLine.clearAnimation();
         infoLine.setText(text);
         prepareInfoLineAnim();
-//        infoLine.setSelected(true);
         infoLine.startAnimation(infoLineAnim);
     }
 
@@ -160,14 +159,12 @@ public class AudioController {
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Toast.makeText(context, play.getWidth()+"x"+play.getHeight(), Toast.LENGTH_SHORT).show();
                 clickOnPlay();
             }
         });
         previous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Toast.makeText(context, previous.getWidth()+"x"+previous.getHeight(), Toast.LENGTH_SHORT).show();
                 if (enabled) {
                     controller.previous();
                 }
