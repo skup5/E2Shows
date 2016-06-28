@@ -1,14 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion '22.0.1'
+    compileSdkVersion 24
+    buildToolsVersion '24.0.0'
     defaultConfig {
         applicationId "com.example.roman.testapp"
-        minSdkVersion 16
-        targetSdkVersion 22
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion 17
+        targetSdkVersion 23
+        versionCode 2
+        versionName '2.0'
+        jackOptions{
+            enabled true
+        }
     }
     buildTypes {
         release {
@@ -18,11 +21,20 @@ android {
     }
     productFlavors {
     }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+    dexOptions {
+        incremental true
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:+'
     compile 'com.android.support:recyclerview-v7:+'
-    compile 'org.jsoup:jsoup:1.8.1'
+    compile 'org.jsoup:jsoup:1.9.2'
+    compile files('C:/Users/Roman/Git/Andy/TestApp/libs/jEvropa2/jEvropa2.jar')
+    compile 'org.mod4j.org.apache.commons:lang:2.1.0'
 }

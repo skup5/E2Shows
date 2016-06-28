@@ -5,6 +5,16 @@
     android:background="@color/background_material_dark"
     android:paddingBottom="4dp">
 
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="4dp"
+        android:id="@+id/imageViewRecordType"/>
+
     <TextView
         android:id="@+id/textViewRecordName"
         android:layout_width="match_parent"
@@ -12,8 +22,9 @@
         android:textSize="@dimen/abc_text_size_medium_material"
         android:typeface="serif"
         android:layout_marginLeft="4dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@id/imageViewRecordType"/>
 
     <TextView
         android:id="@+id/textViewRecordCategory"

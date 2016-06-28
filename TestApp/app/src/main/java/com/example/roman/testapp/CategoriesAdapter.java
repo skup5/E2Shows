@@ -14,7 +14,8 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.roman.testapp.jweb.Category;
+import jEvropa2.data.Category;
+
 
 /**
  * A Adapter used to provide data and Views from categories to an expandable list view.
