@@ -1,6 +1,7 @@
 package com.example.roman.e2zaznamy.record;
 
 import android.graphics.Bitmap;
+import android.graphics.Interpolator;
 
 import jEvropa2.data.Item;
 
@@ -59,28 +60,35 @@ public class RecordItem implements Comparable<RecordItem> {
       return (itemTime[itemTime.length - 1].contains("hod")) ? 1 : -1;
     }
     if (itemTime[0].contains("včera")) {
-      return (thisTime[thisTime.length - 1].contains("hod")) ? 1 : -1;
+      return (thisTime[thisTime.length - 1].contains("hod")) ? -1 : 1;
     }
     thisTimeHash = timeHash(thisTime[thisTime.length - 1]);
     itemTimeHash = timeHash(itemTime[itemTime.length - 1]);
-    if(itemTimeHash == thisTimeHash){
-      if(thisTime.length == 3){
-        if(itemTime.length==3) return thisTime[1].compareTo(itemTime[1]);
+    if (itemTimeHash == thisTimeHash) {
+      if (thisTime.length == 3) {
+        if (itemTime.length == 3) {
+          int a = 0, b = 0;
+          try {
+            a = Integer.parseInt(thisTime[1]);
+            b = Integer.parseInt(itemTime[1]);
+          }catch (NumberFormatException nfe){nfe.printStackTrace();}
+          return a - b;
+        }
         return 1;
       }
       return -1;
     }
-    return thisTimeHash-itemTimeHash;
+    return thisTimeHash - itemTimeHash;
   }
 
   private static int timeHash(String time) {
     time = time.trim();
     if (time.contains("hod")) return 1;
     if (time.contains("dny")) return 2;
-    if (time.contains("tyd")) return 3;
-    if (time.contains("mes")) return 4;
-
-    return 5;
+    if (time.contains("týd")) return 3;
+    if (time.contains("měs")) return 4;
+    if (time.contains("rokem")) return 5;
+    return 6;
   }
 
   public enum Type {Audio, Video}

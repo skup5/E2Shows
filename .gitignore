@@ -1,6 +1,7 @@
-TestApp/.gradle
-TestApp/local.properties
-TestApp/.idea
-TestApp/.DS_Store
-TestApp/build
-/TestApp/.nb-gradle/private/
+E2Zaznamy/.gradle
+E2Zaznamy/local.properties
+E2Zaznamy/.idea
+E2Zaznamy/.DS_Store
+E2Zaznamy/build
+/E2Zaznamy/.nb-gradle/private/
+*.html

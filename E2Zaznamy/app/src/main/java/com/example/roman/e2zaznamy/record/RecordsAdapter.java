@@ -99,7 +99,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
 
   public void markViewHolder(MyViewHolder viewHolder) {
     viewHolder.getParentView().setBackgroundResource(ITEM_MARK_BG);
-    viewHolder.getTextViewRecordName().setTypeface(null, Typeface.ITALIC);
+    //viewHolder.getTextViewRecordName().setTypeface(null, Typeface.ITALIC);
   }
 
   public void setSelected(int selected) {
@@ -116,7 +116,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
 
   public void unmarkViewHolder(MyViewHolder viewHolder) {
     viewHolder.getParentView().setBackground(itemBackground);
-    viewHolder.getTextViewRecordName().setTypeface(null, Typeface.NORMAL);
+    //viewHolder.getTextViewRecordName().setTypeface(null, Typeface.NORMAL);
   }
 
   public void update(){

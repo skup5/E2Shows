@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.database.DataSetObserver;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -15,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -72,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
   private AudioController audioController;
   private AudioController.AudioPlayerControl audioPlayerControl;
 
+  private SwipeRefreshLayout swipeRefreshLayout;
   private RecyclerView recordsList;
   private RecordsAdapter recordsAdapter;
 
@@ -585,6 +588,15 @@ public class MainActivity extends AppCompatActivity {
 //        recordsList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
     recordsList.setHasFixedSize(true);
     recordsList.setVisibility(View.GONE);
+    swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+      @Override
+      public void onRefresh() {
+        onRefreshRecords();
+      }
+    });
+    swipeRefreshLayout.setColorSchemeColors(Color.BLUE, Color.RED, Color.WHITE);
+    swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.primary_material_dark);
     selectedRecords = new HashMap<>();
   }
 
@@ -713,6 +725,16 @@ public class MainActivity extends AppCompatActivity {
     if (nextPage != null) item.setNextPageUrl(nextPage);
     crossfadeAnimation();
     recordsAreDownloading = false;
+  }
+
+  private void onRefreshRecords() {
+    //swipeRefreshLayout.setRefreshing(true);
+
+    new Handler().postDelayed(() -> {
+      swipeRefreshLayout.setRefreshing(false);
+      toast("Refresh done", Toast.LENGTH_LONG);
+    },5000);
+
   }
 
   private void refreshActionBarSubtitle() {
