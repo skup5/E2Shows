@@ -56,19 +56,19 @@ import jEvropa2.data.Show;
 public class MainActivity extends AppCompatActivity {
 
   public static final String
-      SHOWS_ARE_READY = "Show jsou připraveny",
-      DOWNLOADING_SHOWS = "Stahuji seznam Show...",
-      ERROR_ON_LOADING = "Při načítání došlo k chybě :-(",
-      ERROR_NO_CONNECTION = "Nejsi připojen k síti",
-      LOADING = "Načítání",
-      STILL_DOWNLOADING = "Stahování probíhá...",
-      SUB_URL_ARCHIV = "/mp3-archiv/",
-      SUB_URL_SHOWS = "/shows/",
-      URL_E2 = "https://evropa2.cz";
+          SHOWS_ARE_READY = "Show jsou připraveny",
+          DOWNLOADING_SHOWS = "Stahuji seznam Show...",
+          ERROR_ON_LOADING = "Při načítání došlo k chybě :-(",
+          ERROR_NO_CONNECTION = "Nejsi připojen k síti",
+          LOADING = "Načítání",
+          STILL_DOWNLOADING = "Stahování probíhá...",
+          SUB_URL_ARCHIV = "/mp3-archiv/",
+          SUB_URL_SHOWS = "/shows/",
+          URL_E2 = "https://evropa2.cz";
 
   private static final int
-      ITEM_OFFSET = 6,
-      VISIBLE_TRESHOLD = 5;
+          ITEM_OFFSET = 6,
+          VISIBLE_TRESHOLD = 5;
 
   private MediaPlayer mediaPlayer;
   private AudioController audioController;
@@ -82,8 +82,8 @@ public class MainActivity extends AppCompatActivity {
   private ShowsAdapter showsAdapter;
 
   private boolean
-      recordsAreDownloading = false,
-      showsAreDownloading = false;
+          recordsAreDownloading = false,
+          showsAreDownloading = false;
   private DrawerLayout mDrawerLayout;
   private ActionBar actionBar;
   private RecordItem chosenRecord;
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
   public static Animation createRotateAnim(View animatedView, int toDegrees, int duration, boolean infinite) {
     Animation anim = new RotateAnimation(0, toDegrees,
-        animatedView.getWidth() / 2, animatedView.getHeight() / 2);
+            animatedView.getWidth() / 2, animatedView.getHeight() / 2);
     anim.setDuration(duration);
     if (infinite) {
       anim.setRepeatMode(Animation.INFINITE);
@@ -121,15 +121,15 @@ public class MainActivity extends AppCompatActivity {
     };
     adapter.addAll(reports);
     new AlertDialog.Builder(context)
-        .setTitle(msg)
-        .setIcon(android.R.drawable.ic_dialog_alert)
-        .setAdapter(adapter, null)
-        .setNeutralButton("OK", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            dialog.dismiss();
-          }
-        }).show();
+            .setTitle(msg)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setAdapter(adapter, null)
+            .setNeutralButton("OK", new DialogInterface.OnClickListener() {
+              @Override
+              public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+              }
+            }).show();
   }
 
     /*#######################################################
@@ -212,16 +212,16 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onError() {
         new AlertDialog.Builder(MainActivity.this)
-            .setTitle(LOADING)
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .setMessage(ERROR_ON_LOADING)
-            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-              @Override
-              public void onClick(DialogInterface dialog, int which) {
-                audioPlayerControl.next();
-                dialog.dismiss();
-              }
-            }).show();
+                .setTitle(LOADING)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setMessage(ERROR_ON_LOADING)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialog, int which) {
+                    audioPlayerControl.next();
+                    dialog.dismiss();
+                  }
+                }).show();
       }
     });
     ps.execute(url);
@@ -264,19 +264,19 @@ public class MainActivity extends AppCompatActivity {
     recordsList.setVisibility(View.VISIBLE);
 
     recordsList.animate()
-        .alpha(1f)
-        .setDuration(crossfadeAnimDuration)
-        .setListener(null);
+            .alpha(1f)
+            .setDuration(crossfadeAnimDuration)
+            .setListener(null);
 
     loadingBar.animate()
-        .alpha(0f)
-        .setDuration(crossfadeAnimDuration)
-        .setListener(new AnimatorListenerAdapter() {
-          @Override
-          public void onAnimationEnd(Animator animation) {
-            loadingBar.setVisibility(View.GONE);
-          }
-        });
+            .alpha(0f)
+            .setDuration(crossfadeAnimDuration)
+            .setListener(new AnimatorListenerAdapter() {
+              @Override
+              public void onAnimationEnd(Animator animation) {
+                loadingBar.setVisibility(View.GONE);
+              }
+            });
   }
 
   private void downloadCoverImage(RecordItem record) {
@@ -366,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
     loadingBar.setVisibility(View.GONE);
     // Retrieve and cache the system's default "short" animation time.
     crossfadeAnimDuration = getResources().getInteger(
-        android.R.integer.config_shortAnimTime);
+            android.R.integer.config_shortAnimTime);
 
     initShowsList();
     initRecordsList();
@@ -415,8 +415,8 @@ public class MainActivity extends AppCompatActivity {
     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
     final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
-        mDrawerLayout, R.string.navigation_drawer_open,
-        R.string.navigation_drawer_close) {
+            mDrawerLayout, R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close) {
 
       @Override
       public void onDrawerOpened(View drawerView) {
@@ -575,14 +575,14 @@ public class MainActivity extends AppCompatActivity {
     recordsList.setAdapter(recordsAdapter);
     recordsList.setLayoutManager(linearLayoutManager);
     recordsList.addOnScrollListener(new EndlessScrollListener(
-        new EndlessScrollListener.LoadNextItems() {
-          @Override
-          public void loadNextItems() {
-            if (!recordsAreDownloading) {
-              downloadNextRecords(playShow);
-            }
-          }
-        }, VISIBLE_TRESHOLD
+            new EndlessScrollListener.LoadNextItems() {
+              @Override
+              public void loadNextItems() {
+                if (!recordsAreDownloading) {
+                  downloadNextRecords(playShow);
+                }
+              }
+            }, VISIBLE_TRESHOLD
     ));
     recordsList.addItemDecoration(new SpacesItemDecoration(ITEM_OFFSET));
 //        recordsList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
@@ -649,6 +649,7 @@ public class MainActivity extends AppCompatActivity {
       downloader.setOnCompleteListener(result -> {
         onRecordsDownloaded(item, result);
         fillRecList(item);
+        crossfadeAnimation();
       });
       downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
       downloader.execute(item.getShow().getWebSiteUrl());
@@ -708,7 +709,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void onRecordsDownloaded(ShowItem item, Map<String, Object> result) {
     ArrayList<RecordItem> audioList = new ArrayList<>(),
-        videoList = new ArrayList<>();
+            videoList = new ArrayList<>();
     Set<RecordItem> records = (Set<RecordItem>) result.get("records");
     if (!records.isEmpty()) {
       for (RecordItem i : records) {
@@ -723,18 +724,25 @@ public class MainActivity extends AppCompatActivity {
     }
     URL nextPage = (URL) result.get("nextPage");
     if (nextPage != null) item.setNextPageUrl(nextPage);
-    crossfadeAnimation();
     recordsAreDownloading = false;
   }
 
   private void onRefreshRecords() {
-    //swipeRefreshLayout.setRefreshing(true);
-
-    new Handler().postDelayed(() -> {
+    DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
+    downloader.setOnCompleteListener(result -> {
+      onRecordsDownloaded(playShow, result);
+      recordsAdapter.update();
       swipeRefreshLayout.setRefreshing(false);
       toast("Refresh done", Toast.LENGTH_LONG);
-    },5000);
-
+    });
+    downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
+    if (playShow.getShow().getWebSiteUrl() != Show.EMPTY_URL) {
+      downloader.execute(playShow.getShow().getWebSiteUrl());
+      recordsAreDownloading = true;
+    } else {
+      swipeRefreshLayout.setRefreshing(false);
+      toast("Refresh done", Toast.LENGTH_LONG);
+    }
   }
 
   private void refreshActionBarSubtitle() {
