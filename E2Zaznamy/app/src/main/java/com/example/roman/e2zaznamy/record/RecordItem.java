@@ -91,5 +91,5 @@ public class RecordItem implements Comparable<RecordItem> {
     return 6;
   }
 
-  public enum Type {Audio, Video}
+  public enum Type {All, Audio, Video}
 }

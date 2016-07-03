@@ -3,11 +3,16 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Base.Theme.AppCompat">
         <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+        <item name="actionButtonStyle">@style/AppTheme.Widget.ActionButton</item>
     </style>
 
     <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
         <item name="spinBars">true</item>
         <item name="color">@android:color/white</item>
+    </style>
+
+    <style name="AppTheme.Widget.ActionButton" parent="@style/Widget.AppCompat.ActionButton">
+        <item name="textAllCaps">false</item>
     </style>
 
 </resources>

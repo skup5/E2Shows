@@ -90,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
   private boolean
           recordsAreDownloading = false,
           showsAreDownloading = false;
+
+  private Menu menu;
   private DrawerLayout mDrawerLayout;
   private ActionBar actionBar;
   private RecordItem chosenRecord;
@@ -163,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
         runShowRefreshAnim();
       }
     });
+    this.menu = menu;
     return true;
   }
 
@@ -193,6 +196,18 @@ public class MainActivity extends AppCompatActivity {
           list.add(e.getLocalizedMessage());
           errorReportsDialog(list);
         }
+        return true;
+
+      case R.id.action_filter_all:
+        onAllFilterClick();
+        return true;
+
+      case R.id.action_filter_audio:
+        onAudioFilterClick();
+        return true;
+
+      case R.id.action_filter_video:
+        onVideoFilterClick();
         return true;
 
       default:
@@ -319,6 +334,7 @@ public class MainActivity extends AppCompatActivity {
     if (!isNetworkConnected()) {
       toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
     } else if (!showsAreDownloading) {
+      showsAreDownloading = true;
       startDownloadShowsToast();
       runShowRefreshAnim();
       ShowsDownloader downloader = (ShowsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Shows);
@@ -335,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
       });
       downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
       downloader.execute(new URL(URL_E2 + SUB_URL_SHOWS));
-      showsAreDownloading = true;
+
     } else {
       toast(STILL_DOWNLOADING, Toast.LENGTH_SHORT);
     }
@@ -354,6 +370,11 @@ public class MainActivity extends AppCompatActivity {
       recordsAdapter.setSelected(-1);
     }
     recordsList.scrollToPosition(getSelectedRecordIndex());
+  }
+
+  private void filterRecords(Type type){
+    if(recordsAdapter == null)return;
+    recordsAdapter.filter(type);
   }
 
   private void finishDownloadShowsToast() {
@@ -646,6 +667,21 @@ public class MainActivity extends AppCompatActivity {
     mDrawerLayout.setDrawerLockMode(lockMode);
   }
 
+  private void onAllFilterClick() {
+    filterRecords(Type.All);
+    updateFilterMenuItem(menu.findItem(R.id.action_filter_all));
+  }
+
+  private void onAudioFilterClick() {
+    filterRecords(Type.Audio);
+    updateFilterMenuItem(menu.findItem(R.id.action_filter_audio));
+  }
+
+  private void onVideoFilterClick() {
+    filterRecords(Type.Video);
+    updateFilterMenuItem(menu.findItem(R.id.action_filter_video));
+  }
+
   private void onAudioItemClick(RecordItem record) {
     if (record.getRecord().hasMediaUrl()) {
       prepareMediaPlayerSource(record.getRecord().getMediaUrl().toString());
@@ -844,5 +880,11 @@ public class MainActivity extends AppCompatActivity {
 
   private void unlockNavigationDrawer() {
     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+  }
+
+  private void updateFilterMenuItem(MenuItem item){
+    MenuItem filterItem = menu.findItem(R.id.filter_records_list);
+    filterItem.setTitle(item.getTitle());
+    filterItem.setIcon(item.getIcon());
   }
 }

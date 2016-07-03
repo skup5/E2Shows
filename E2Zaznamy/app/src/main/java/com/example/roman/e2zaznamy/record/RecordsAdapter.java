@@ -18,6 +18,8 @@ import android.widget.TextView;
 import com.example.roman.e2zaznamy.R;
 import com.example.roman.e2zaznamy.show.ShowItem;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -34,6 +36,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
   private ShowItem source;
   private OnRecordClickListener onRecordClickListener;
   private RecordItem[] publicRecords = new RecordItem[0];
+  private RecordItem.Type filterType = RecordItem.Type.All;
   private Drawable itemBackground;
   private Filter filter;
   private int selected;
@@ -52,30 +55,9 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
     this.filter = initFilter();
   }
 
-  public void downloadNext() {
-    if (hasSource() && !loading) {
-            /*if(source.hasNextRecords()) {
-                DownloaderFactory.NextRecordsDownloader downloader = (DownloaderFactory.NextRecordsDownloader) DownloaderFactory
-                        .getDownloader(DownloaderFactory.Type.NextRecords);
-                downloader.setOnCompleteListener(new DownloaderFactory.OnCompleteListener() {
-                    @Override
-                    public void onComplete(Object result) {
-                        if(result instanceof Category) {
-                            setSource((Category) result);
-                        }
-                        loading = false;
-                    }
-                });
-                downloader.setOnErrorListener(new DownloaderFactory.OnErrorListener() {
-                    @Override
-                    public void onError(List<String> errors) {
-                        MainActivity.errorReportsDialog(context, errors);
-                    }
-                });
-                downloader.execute(source);
-                loading = true;
-            }*/
-    }
+  public void filter(RecordItem.Type type){
+    this.filterType = type;
+    getFilter().filter(type.name());
   }
 
   public RecordItem getItem(int index) {
@@ -108,10 +90,11 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
 
   public void setSource(ShowItem source) {
     this.source = source;
-    SortedSet<RecordItem> recs = new TreeSet<>(source.getAudioRecords());
+    /*SortedSet<RecordItem> recs = new TreeSet<>(source.getAudioRecords());
     recs.addAll(source.getVideoRecords());
     publicRecords = recs.toArray(new RecordItem[recs.size()]);
-    notifyDataSetChanged();
+    */filter(filterType);
+    //notifyDataSetChanged();
   }
 
   public void unmarkViewHolder(MyViewHolder viewHolder) {
@@ -204,14 +187,19 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
       protected FilterResults performFiltering(CharSequence charSequence) {
         FilterResults results = new FilterResults();
         String type = charSequence.toString();
-        String a = RecordItem.Type.Audio.name();
+        String a = RecordItem.Type.All.name();
+        String m = RecordItem.Type.Audio.name();
         String v = RecordItem.Type.Video.name();
         results.values = publicRecords;
         if (hasSource()) {
-          if (type.compareTo(a) == 0) {
+          if (type.compareTo(m) == 0) {
             results.values = getSource().getAudioRecords().toArray(new RecordItem[getSource().getAudioRecords().size()]);
           } else if (type.compareTo(v) == 0) {
             results.values = getSource().getVideoRecords().toArray(new RecordItem[getSource().getVideoRecords().size()]);
+          } else if (type.compareTo(a) == 0){
+            SortedSet<RecordItem> set = new TreeSet<>(getSource().getAudioRecords());
+            set.addAll(getSource().getVideoRecords());
+            results.values = set.toArray(new RecordItem[set.size()]);
           }
         }
         results.count = ((RecordItem[]) results.values).length;
@@ -265,9 +253,9 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
       textViewRecordCategory.setText(showName);
       textViewRecordDate.setText(record.getRecord().getTime());
       if(record.getType() == RecordItem.Type.Audio){
-        imageViewRecordType.setBackgroundResource(android.R.drawable.presence_audio_online);
+        imageViewRecordType.setBackgroundResource(R.drawable.ic_music_circle);
       }else if(record.getType() == RecordItem.Type.Video){
-        imageViewRecordType.setBackgroundResource(android.R.drawable.presence_video_online);
+        imageViewRecordType.setBackgroundResource(R.drawable.ic_filmstrip);
       }else {
         imageViewRecordType.setBackgroundResource(0);
       }

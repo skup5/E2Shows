@@ -3,9 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
-    <item android:id="@+id/action_refresh_shows"
-        android:icon="@android:drawable/stat_notify_sync"
-        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/filter_records_list"
+        android:title="@string/all_filter"
+        app:showAsAction="always">
+        <menu>
+            <item android:id="@+id/action_filter_all"
+                android:title="@string/all_filter"/>
+            <item
+                android:id="@+id/action_filter_audio"
+                android:icon="@drawable/ic_music_circle"
+                android:title="@string/audio_filter"/>
+            <item
+                android:id="@+id/action_filter_video"
+                android:icon="@drawable/ic_filmstrip"
+                android:title="@string/video_filter"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/action_refresh_shows"
+        android:icon="@drawable/ic_refresh"
+        android:title="@string/refresh_button"
+        app:showAsAction="always"/>
     <!--<item android:id="@+id/action_settings" android:title="@string/action_settings"-->
-        <!--android:orderInCategory="100" app:showAsAction="never" />-->
+    <!--android:orderInCategory="100" app:showAsAction="never" />-->
 </menu>

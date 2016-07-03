@@ -5,26 +5,29 @@
     android:background="@color/background_material_dark"
     android:paddingBottom="4dp">
 
-
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_gravity="center_vertical"
         android:layout_marginTop="4dp"
         android:layout_marginLeft="4dp"
         android:id="@+id/imageViewRecordType"/>
-
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <TextView
         android:id="@+id/textViewRecordName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/abc_text_size_medium_material"
         android:typeface="serif"
-        android:layout_marginLeft="4dp"
+        android:paddingLeft="@dimen/abc_dropdownitem_text_padding_left"
         android:layout_alignParentLeft="false"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@id/imageViewRecordType"/>
+        android:layout_alignParentTop="true"/>
 
     <TextView
         android:id="@+id/textViewRecordCategory"
@@ -43,6 +46,6 @@
         android:layout_below="@id/textViewRecordName"
         android:paddingRight="@dimen/abc_dropdownitem_text_padding_right"
         android:textSize="@dimen/abc_text_size_small_material" />
-
-
+</RelativeLayout>
+</LinearLayout>
 </RelativeLayout>
