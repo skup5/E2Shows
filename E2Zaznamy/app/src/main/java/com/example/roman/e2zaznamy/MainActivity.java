@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.DataSetObserver;
 import android.graphics.Color;
@@ -12,6 +13,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.GravityCompat;
@@ -33,7 +35,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.roman.e2zaznamy.DownloaderFactory.*;
 import com.example.roman.e2zaznamy.record.RecordItem;
+import com.example.roman.e2zaznamy.record.RecordItem.Type;
 import com.example.roman.e2zaznamy.record.RecordsAdapter;
 import com.example.roman.e2zaznamy.show.ShowItem;
 import com.example.roman.e2zaznamy.show.ShowsAdapter;
@@ -56,14 +60,16 @@ import jEvropa2.data.Show;
 public class MainActivity extends AppCompatActivity {
 
   public static final String
-          SHOWS_ARE_READY = "Show jsou připraveny",
           DOWNLOADING_SHOWS = "Stahuji seznam Show...",
           ERROR_ON_LOADING = "Při načítání došlo k chybě :-(",
           ERROR_NO_CONNECTION = "Nejsi připojen k síti",
           LOADING = "Načítání",
+          SHOWS_ARE_READY = "Show jsou připraveny",
           STILL_DOWNLOADING = "Stahování probíhá...",
+          STORNO = "Storno",
           SUB_URL_ARCHIV = "/mp3-archiv/",
           SUB_URL_SHOWS = "/shows/",
+          TRY_NEXT_RECORD = "Zkus další",
           URL_E2 = "https://evropa2.cz";
 
   private static final int
@@ -215,13 +221,20 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle(LOADING)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setMessage(ERROR_ON_LOADING)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                .setPositiveButton(TRY_NEXT_RECORD, new DialogInterface.OnClickListener() {
                   @Override
                   public void onClick(DialogInterface dialog, int which) {
                     audioPlayerControl.next();
                     dialog.dismiss();
                   }
-                }).show();
+                }).setCancelable(true)
+//                .setNegativeButton(STORNO, new DialogInterface.OnClickListener() {
+//                  @Override
+//                  public void onClick(DialogInterface dialogInterface, int i) {
+//                    dialogInterface.dismiss();
+//                  }
+//                })
+                .show();
       }
     });
     ps.execute(url);
@@ -280,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void downloadCoverImage(RecordItem record) {
-    DownloaderFactory.CoverImageDownloader downloader = (DownloaderFactory.CoverImageDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.CoverImage);
+    CoverImageDownloader downloader = (CoverImageDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.CoverImage);
     downloader.setOnCompleteListener(bitmap -> {
       audioController.setCoverImage(bitmap);
       record.setCover(bitmap);
@@ -290,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void downloadNextRecords(ShowItem item) {
-    DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
+    RecordsDownloader downloader = (RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
     downloader.setOnCompleteListener(result -> {
       onRecordsDownloaded(item, result);
       recordsAdapter.update();
@@ -308,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
     } else if (!showsAreDownloading) {
       startDownloadShowsToast();
       runShowRefreshAnim();
-      DownloaderFactory.ShowsDownloader downloader = (DownloaderFactory.ShowsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Shows);
+      ShowsDownloader downloader = (ShowsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Shows);
       downloader.setOnCompleteListener(set -> {
         showsAreDownloading = false;
         finishDownloadShowsToast();
@@ -550,7 +563,7 @@ public class MainActivity extends AppCompatActivity {
         audioController.setEnabled(true);
         audioController.setUpSeekBar();
                 /* play mp3 */
-        audioController.clickOnPlay();
+        audioController.clickOnPlayPause();
       }
 
     });
@@ -565,7 +578,10 @@ public class MainActivity extends AppCompatActivity {
   private void initRecordsList() {
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
     recordsList = (RecyclerView) findViewById(R.id.recycler_view);
-    recordsAdapter = new RecordsAdapter(this, (record, index) -> onRecordItemClick(record, index));
+    recordsAdapter = new RecordsAdapter(this, (record, index) -> {
+      onRecordItemClick(record, index);
+//    onVideoItemClick(record);
+    });
     recordsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
       @Override
       public void onChanged() {
@@ -630,6 +646,22 @@ public class MainActivity extends AppCompatActivity {
     mDrawerLayout.setDrawerLockMode(lockMode);
   }
 
+  private void onAudioItemClick(RecordItem record) {
+    if (record.getRecord().hasMediaUrl()) {
+      prepareMediaPlayerSource(record.getRecord().getMediaUrl().toString());
+    } else {
+      MediaUrlDownloader downloader = (MediaUrlDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.MediaUrl);
+      downloader.setOnCompleteListener(url -> {
+        if (url != null) {
+          record.getRecord().setMediaUrl(url);
+          prepareMediaPlayerSource(record.getRecord().getMediaUrl().toString());
+        }
+      });
+      downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
+      downloader.execute(new MediaUrlDownloader.Params(MediaUrlDownloader.Params.TYPE_AUDIO, record.getRecord().getWebSiteUrl()));
+    }
+  }
+
   private void onNavigationItemClick(ShowItem item, int position) {
     if (chosenShowPosition == position) {
       mDrawerLayout.closeDrawer(showsList);
@@ -663,7 +695,7 @@ public class MainActivity extends AppCompatActivity {
     toast(record.toString(), Toast.LENGTH_SHORT);
     int selected = getSelectedRecordIndex();
     if (selected == index) {
-      audioController.clickOnPlay();
+      audioController.clickOnPlayPause();
       return;
     }
 
@@ -671,18 +703,15 @@ public class MainActivity extends AppCompatActivity {
     chosenRecord = record;
     playShow = chosenShow;
 
-    if (record.getRecord().hasMp3Url()) {
-      prepareMediaPlayerSource(record.getRecord().getMp3Url().toString());
-    } else {
-      DownloaderFactory.Mp3UrlDownloader downloader = (DownloaderFactory.Mp3UrlDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Mp3Url);
-      downloader.setOnCompleteListener(url -> {
-        if (url != null) {
-          record.getRecord().setMp3Url(url);
-          prepareMediaPlayerSource(record.getRecord().getMp3Url().toString());
-        }
-      });
-      downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
-      downloader.execute(record.getRecord().getWebSiteUrl());
+    switch (record.getType()) {
+      case Audio:
+        onAudioItemClick(record);
+        break;
+      case Video:
+        onVideoItemClick(record);
+        break;
+      default:
+        break;
     }
 
     if (record.hasCover()) {
@@ -713,9 +742,9 @@ public class MainActivity extends AppCompatActivity {
     Set<RecordItem> records = (Set<RecordItem>) result.get("records");
     if (!records.isEmpty()) {
       for (RecordItem i : records) {
-        if (i.getType() == RecordItem.Type.Audio) {
+        if (i.getType() == Type.Audio) {
           audioList.add(i);
-        } else if (i.getType() == RecordItem.Type.Video) {
+        } else if (i.getType() == Type.Video) {
           videoList.add(i);
         }
       }
@@ -742,6 +771,39 @@ public class MainActivity extends AppCompatActivity {
     } else {
       swipeRefreshLayout.setRefreshing(false);
       toast("Refresh done", Toast.LENGTH_LONG);
+    }
+  }
+
+  private void onVideoItemClick(RecordItem record) {
+    if (record.getRecord().hasMediaUrl()) {
+      playVideo(record.getRecord().getMediaUrl());
+    } else {
+      MediaUrlDownloader downloader = (MediaUrlDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.MediaUrl);
+      downloader.setOnCompleteListener(url -> {
+        if (url != null) {
+          record.getRecord().setMediaUrl(url);
+          playVideo(record.getRecord().getMediaUrl());
+        }
+      });
+      downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
+      downloader.execute(new MediaUrlDownloader.Params(MediaUrlDownloader.Params.TYPE_VIDEO, record.getRecord().getWebSiteUrl()));
+    }
+  }
+
+  private void playVideo(URL url) {
+   /* if (recordItem.getType().compareTo(Type.Video) != 0) return;
+    if (audioController.isPlaying()) audioController.clickOnPlayPause();
+*/
+    Uri path = Uri.parse(url.toExternalForm());
+    Intent intent = new Intent(Intent.ACTION_VIEW);
+    intent.setDataAndType(path, "video/*");
+//    intent.setType("text/plain");
+
+// Verify that the intent will resolve to an activity
+    if (intent.resolveActivity(getPackageManager()) != null) {
+      startActivity(intent);
+    } else {
+      toast("None app to playing video", Toast.LENGTH_LONG);
     }
   }
 

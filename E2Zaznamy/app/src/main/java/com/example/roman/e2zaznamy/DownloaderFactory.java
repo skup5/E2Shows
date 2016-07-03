@@ -38,7 +38,7 @@ public class DownloaderFactory {
 
   private static final String DOWNLOADING = "Stahuji...";
 
-  public enum Type {Records, NextRecords, CoverImage, Shows, Mp3Url}
+  public enum Type {Records, NextRecords, CoverImage, Shows, MediaUrl}
 
   private DownloaderFactory() {
   }
@@ -51,8 +51,8 @@ public class DownloaderFactory {
     switch (type) {
       case CoverImage:
         return new CoverImageDownloader(context, dialogTitle);
-      case Mp3Url:
-        return new Mp3UrlDownloader(context, dialogTitle);
+      case MediaUrl:
+        return new MediaUrlDownloader(context, dialogTitle);
       case NextRecords:
         return new NextRecordsDownloader(context, dialogTitle);
       case Records:
@@ -156,20 +156,20 @@ public class DownloaderFactory {
             records.add(new RecordItem(i, RecordItem.Type.Audio));
           }
         }
-          /*
-          activeItem = null;
-          activeItem = htmlParser.parseActiveVideoShowItem(active);
-          if (activeItem != null) records.add(new RecordItem(activeItem, RecordItem.Type.Video));
-          recordsElements = Extractor.getVideoItems(doc);
-          if(!recordsElements.isEmpty()){
-            itemSet = this.htmlParser.parseVideoItems(recordsElements);
-            for (Item i : itemSet) {
+
+        activeItem = null;
+        activeItem = htmlParser.parseActiveVideoShowItem(active);
+        if (activeItem != null) records.add(new RecordItem(activeItem, RecordItem.Type.Video));
+        recordsElements = Extractor.getVideoItems(doc);
+        if (!recordsElements.isEmpty()) {
+          itemSet = htmlParser.parseVideoShowItems(recordsElements);
+          for (Item i : itemSet) {
             records.add(new RecordItem(i, RecordItem.Type.Video));
           }
-          }*/
+        }
 
         Element next = Extractor.getNextShowItems(doc);
-        if(next != null) nextPageUrl = htmlParser.parseNextPageUrl(next);
+        if (next != null) nextPageUrl = htmlParser.parseNextPageUrl(next);
       } catch (IOException e) {
         e.printStackTrace();
         errors.add("Chyba při stahování seznamu záznamů.");
@@ -264,30 +264,47 @@ public class DownloaderFactory {
     }
   }
 
-  static class Mp3UrlDownloader extends AbstractDownloader<URL, Void, URL> {
-    public Mp3UrlDownloader(Context context, String dialogTitle) {
+  static class MediaUrlDownloader extends AbstractDownloader<MediaUrlDownloader.Params, Void, URL> {
+    public MediaUrlDownloader(Context context, String dialogTitle) {
       super(context, dialogTitle);
     }
 
     @Override
-    protected URL download(URL... urls) {
-      URL mp3Url = null;
+    protected URL download(Params... params) {
+      URL url = null;
       Document doc;
+      Params param;
       try {
-        doc = HttpRequests.httpGetSite(urls[0].toString());
+        param = params[0];
+        doc = HttpRequests.httpGetSite(param.url.toString());
         Element element = Extractor.getPlayerScript(doc);
         if (element != null) {
-          mp3Url = htmlParser.parseMp3Url(element);
+          switch(param.type) {
+            case Params.TYPE_AUDIO : url = htmlParser.parseMp3Url(element); break;
+            case Params.TYPE_VIDEO: url = htmlParser.parseMp4Url(element); break;
+            default: break;
+          }
         }
       } catch (IOException e) {
         e.printStackTrace();
-        errors.add("Chyba při extrakci mp3 url adresy.");
+        errors.add("Chyba při extrakci audio nebo video url adresy.");
       }
-      return mp3Url;
+      return url;
+    }
+
+    public static class Params{
+      public static final int TYPE_AUDIO = 1,TYPE_VIDEO=2;
+      public int type;
+      public URL url;
+
+      public Params(int type, URL url) {
+        this.type = type;
+        this.url = url;
+      }
     }
   }
 
-  public interface OnCompleteListener<Result>{
+  public interface OnCompleteListener<Result> {
     void onComplete(Result result);
   }
 
