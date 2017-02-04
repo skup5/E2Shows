@@ -3,5 +3,6 @@ E2Zaznamy/local.properties
 E2Zaznamy/.idea
 E2Zaznamy/.DS_Store
 E2Zaznamy/build
+E2Zaznamy/app/src/main/res/holo_*
 /E2Zaznamy/.nb-gradle/private/
 *.html
