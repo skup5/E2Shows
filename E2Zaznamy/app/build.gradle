@@ -7,8 +7,8 @@ android {
         applicationId "com.example.roman.e2zaznamy"
         minSdkVersion 17
         targetSdkVersion 25
-        versionCode 3
-        versionName '2.0.1'
+        versionCode 4
+        versionName '2.0.2'
         jackOptions{
             enabled true
         }

@@ -280,21 +280,28 @@ public class DownloaderFactory {
         doc = HttpRequests.httpGetSite(param.url.toString());
         Element element = Extractor.getPlayerScript(doc);
         if (element != null) {
-          switch(param.type) {
-            case Params.TYPE_AUDIO : url = htmlParser.parseMp3Url(element); break;
-            case Params.TYPE_VIDEO: url = htmlParser.parseMp4Url(element); break;
-            default: break;
+          switch (param.type) {
+            case Params.TYPE_AUDIO:
+              url = htmlParser.parseMp3Url(element);
+              break;
+            case Params.TYPE_VIDEO:
+              url = htmlParser.parseMp4Url(element);
+              break;
+            default:
+              break;
           }
+        } else {
+          errors.add("Script s obsahující url adresu nenalezen");
         }
-      } catch (IOException e) {
+      } catch (Exception e) {
         e.printStackTrace();
         errors.add("Chyba při extrakci audio nebo video url adresy.");
       }
       return url;
     }
 
-    public static class Params{
-      public static final int TYPE_AUDIO = 1,TYPE_VIDEO=2;
+    public static class Params {
+      public static final int TYPE_AUDIO = 1, TYPE_VIDEO = 2;
       public int type;
       public URL url;
 
