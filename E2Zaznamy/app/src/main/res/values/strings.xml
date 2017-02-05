@@ -12,5 +12,7 @@
     <string name="audio_filter">Audio</string>
     <string name="video_filter">Video</string>
     <string name="all_filter">Vše</string>
+    <string name="context_action_play">Přehrát</string>
+    <string name="context_action_detail">Detail</string>
 
 </resources>

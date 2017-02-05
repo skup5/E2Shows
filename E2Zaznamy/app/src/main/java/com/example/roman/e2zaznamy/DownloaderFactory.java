@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
 import com.example.roman.e2zaznamy.record.RecordItem;
+import com.example.roman.e2zaznamy.record.RecordType;
 import com.example.roman.e2zaznamy.show.ShowItem;
 
 import org.jsoup.nodes.Document;
@@ -148,23 +149,23 @@ public class DownloaderFactory {
         Document doc = HttpRequests.httpGetSite(site.toString());
         Element active = Extractor.getActiveItem(doc);
         activeItem = htmlParser.parseActiveAudioShowItem(active);
-        if (activeItem != null) records.add(new RecordItem(activeItem, RecordItem.Type.Audio));
+        if (activeItem != null) records.add(new RecordItem(activeItem, RecordType.Audio));
         Elements recordsElements = Extractor.getAudioItems(doc);
         if (!recordsElements.isEmpty()) {
           itemSet = htmlParser.parseAudioShowItems(recordsElements);
           for (Item i : itemSet) {
-            records.add(new RecordItem(i, RecordItem.Type.Audio));
+            records.add(new RecordItem(i, RecordType.Audio));
           }
         }
 
         activeItem = null;
         activeItem = htmlParser.parseActiveVideoShowItem(active);
-        if (activeItem != null) records.add(new RecordItem(activeItem, RecordItem.Type.Video));
+        if (activeItem != null) records.add(new RecordItem(activeItem, RecordType.Video));
         recordsElements = Extractor.getVideoItems(doc);
         if (!recordsElements.isEmpty()) {
           itemSet = htmlParser.parseVideoShowItems(recordsElements);
           for (Item i : itemSet) {
-            records.add(new RecordItem(i, RecordItem.Type.Video));
+            records.add(new RecordItem(i, RecordType.Video));
           }
         }
 

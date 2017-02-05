@@ -24,7 +24,10 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
@@ -36,8 +39,10 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.roman.e2zaznamy.DownloaderFactory.*;
+import com.example.roman.e2zaznamy.record.OnMenuItemClickListener;
 import com.example.roman.e2zaznamy.record.RecordItem;
-import com.example.roman.e2zaznamy.record.RecordItem.Type;
+import com.example.roman.e2zaznamy.record.RecordItemViewHolder;
+import com.example.roman.e2zaznamy.record.RecordType;
 import com.example.roman.e2zaznamy.record.RecordsAdapter;
 import com.example.roman.e2zaznamy.show.ShowItem;
 import com.example.roman.e2zaznamy.show.ShowsAdapter;
@@ -372,8 +377,8 @@ public class MainActivity extends AppCompatActivity {
     recordsList.scrollToPosition(getSelectedRecordIndex());
   }
 
-  private void filterRecords(Type type){
-    if(recordsAdapter == null)return;
+  private void filterRecords(RecordType type) {
+    if (recordsAdapter == null) return;
     recordsAdapter.filter(type);
   }
 
@@ -599,9 +604,21 @@ public class MainActivity extends AppCompatActivity {
   private void initRecordsList() {
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
     recordsList = (RecyclerView) findViewById(R.id.recycler_view);
-    recordsAdapter = new RecordsAdapter(this, (record, index) -> {
+    recordsAdapter = new RecordsAdapter(this);
+    recordsAdapter.setOnRecordClickListener((record, index) -> {
       onRecordItemClick(record, index);
-//    onVideoItemClick(record);
+    });
+    recordsAdapter.setOnMenuClickListener((item, source) -> {
+      switch (item.getItemId()) {
+        case R.id.context_action_detail:
+          onRecordItemDetail(source.getActualRecord());
+          return true;
+//      case R.id.context_action_play:
+//        onRecordItemClick();
+//        return true;
+        default:
+          return false;
+      }
     });
     recordsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
       @Override
@@ -611,27 +628,18 @@ public class MainActivity extends AppCompatActivity {
     });
     recordsList.setAdapter(recordsAdapter);
     recordsList.setLayoutManager(linearLayoutManager);
-    recordsList.addOnScrollListener(new EndlessScrollListener(
-            new EndlessScrollListener.LoadNextItems() {
-              @Override
-              public void loadNextItems() {
-                if (!recordsAreDownloading) {
-                  downloadNextRecords(playShow);
-                }
-              }
-            }, VISIBLE_TRESHOLD
+    recordsList.addOnScrollListener(new EndlessScrollListener(() -> {
+      if (!recordsAreDownloading) {
+        downloadNextRecords(playShow);
+      }
+    }, VISIBLE_TRESHOLD
     ));
     recordsList.addItemDecoration(new SpacesItemDecoration(ITEM_OFFSET));
 //        recordsList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
     recordsList.setHasFixedSize(true);
     recordsList.setVisibility(View.GONE);
     swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
-    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-      @Override
-      public void onRefresh() {
-        onRefreshRecords();
-      }
-    });
+    swipeRefreshLayout.setOnRefreshListener(() -> onRefreshRecords());
     swipeRefreshLayout.setColorSchemeColors(Color.BLUE, Color.RED, Color.WHITE);
     swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.primary_material_dark);
     selectedRecords = new HashMap<>();
@@ -668,17 +676,17 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void onAllFilterClick() {
-    filterRecords(Type.All);
+    filterRecords(RecordType.All);
     updateFilterMenuItem(menu.findItem(R.id.action_filter_all));
   }
 
   private void onAudioFilterClick() {
-    filterRecords(Type.Audio);
+    filterRecords(RecordType.Audio);
     updateFilterMenuItem(menu.findItem(R.id.action_filter_audio));
   }
 
   private void onVideoFilterClick() {
-    filterRecords(Type.Video);
+    filterRecords(RecordType.Video);
     updateFilterMenuItem(menu.findItem(R.id.action_filter_video));
   }
 
@@ -761,15 +769,29 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView.ViewHolder viewHolder = recordsList.findViewHolderForAdapterPosition(index);
     if (viewHolder != null) {
-      recordsAdapter.markViewHolder((RecordsAdapter.MyViewHolder) viewHolder);
+      recordsAdapter.markViewHolder((RecordItemViewHolder) viewHolder);
     }
     viewHolder = recordsList.findViewHolderForAdapterPosition(selected);
     if (viewHolder != null) {
-      recordsAdapter.unmarkViewHolder((RecordsAdapter.MyViewHolder) viewHolder);
+      recordsAdapter.unmarkViewHolder((RecordItemViewHolder) viewHolder);
     }
 
     selectedRecords.put(playShow.getShow().getName(), index);
     recordsAdapter.setSelected(index);
+  }
+
+  private void onRecordItemDetail(RecordItem recordItem) {
+    AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle("Detail")
+            .setMessage(recordItem.getRecord().info())
+            .setIcon(android.R.drawable.ic_dialog_info)
+            .setNeutralButton("OK", new DialogInterface.OnClickListener() {
+              @Override
+              public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+              }
+            })
+            .show();
   }
 
   private void onRecordsDownloaded(ShowItem item, Map<String, Object> result) {
@@ -778,9 +800,9 @@ public class MainActivity extends AppCompatActivity {
     Set<RecordItem> records = (Set<RecordItem>) result.get("records");
     if (!records.isEmpty()) {
       for (RecordItem i : records) {
-        if (i.getType() == Type.Audio) {
+        if (i.getType() == RecordType.Audio) {
           audioList.add(i);
-        } else if (i.getType() == Type.Video) {
+        } else if (i.getType() == RecordType.Video) {
           videoList.add(i);
         }
       }
@@ -882,7 +904,7 @@ public class MainActivity extends AppCompatActivity {
     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
   }
 
-  private void updateFilterMenuItem(MenuItem item){
+  private void updateFilterMenuItem(MenuItem item) {
     MenuItem filterItem = menu.findItem(R.id.filter_records_list);
     filterItem.setTitle(item.getTitle());
     filterItem.setIcon(item.getIcon());

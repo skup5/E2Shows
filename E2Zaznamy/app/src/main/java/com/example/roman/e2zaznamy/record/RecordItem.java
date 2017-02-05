@@ -1,19 +1,20 @@
 package com.example.roman.e2zaznamy.record;
 
 import android.graphics.Bitmap;
-import android.graphics.Interpolator;
 
 import jEvropa2.data.Item;
 
 /**
- * Created by Roman on 16.6.2016.
+ * Wrapper of {@link Item} record
+ *
+ * @author Skup
  */
 public class RecordItem implements Comparable<RecordItem> {
   private Item record;
   private Bitmap cover = null;
-  private Type type;
+  private RecordType type;
 
-  public RecordItem(Item record, Type type) {
+  public RecordItem(Item record, RecordType type) {
     this.record = record;
     this.type = type;
   }
@@ -26,7 +27,7 @@ public class RecordItem implements Comparable<RecordItem> {
     return record;
   }
 
-  public Type getType() {
+  public RecordType getType() {
     return type;
   }
 
@@ -71,7 +72,9 @@ public class RecordItem implements Comparable<RecordItem> {
           try {
             a = Integer.parseInt(thisTime[1]);
             b = Integer.parseInt(itemTime[1]);
-          }catch (NumberFormatException nfe){nfe.printStackTrace();}
+          } catch (NumberFormatException nfe) {
+            nfe.printStackTrace();
+          }
           return a - b;
         }
         return 1;
@@ -91,5 +94,4 @@ public class RecordItem implements Comparable<RecordItem> {
     return 6;
   }
 
-  public enum Type {All, Audio, Video}
 }

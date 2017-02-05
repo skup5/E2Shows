@@ -1,7 +1,6 @@
 package com.example.roman.e2zaznamy.record;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
@@ -10,16 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
-
 
 import com.example.roman.e2zaznamy.R;
 import com.example.roman.e2zaznamy.show.ShowItem;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -28,38 +22,44 @@ import java.util.TreeSet;
  *
  * @author Roman Zelenik
  */
-public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHolder> implements Filterable {
+public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> implements Filterable {
 
   private static final int ITEM_MARK_BG = android.R.color.holo_blue_dark;
 
   private Context context;
   private ShowItem source;
-  private OnRecordClickListener onRecordClickListener;
+  private OnRecordItemClickListener onRecordClickListener;
+  private OnMenuItemClickListener<RecordItemViewHolder> onMenuClickListener;
   private RecordItem[] publicRecords = new RecordItem[0];
-  private RecordItem.Type filterType = RecordItem.Type.All;
+  private RecordType filterType = RecordType.All;
   private Drawable itemBackground;
   private Filter filter;
   private int selected;
   private boolean loading;
 
-  public RecordsAdapter(Context context, OnRecordClickListener listener) {
-    this(context, listener, null);
+  public RecordsAdapter(Context context) {
+    this(context, null);
   }
 
-  public RecordsAdapter(Context context, OnRecordClickListener listener, ShowItem source) {
+  public RecordsAdapter(Context context, ShowItem source) {
     this.context = context;
-    this.onRecordClickListener = listener;
     this.loading = false;
     this.selected = -1;
     if (source != null) setSource(source);
     this.filter = initFilter();
   }
 
-  public void filter(RecordItem.Type type){
+  public void filter(RecordType type) {
     this.filterType = type;
     getFilter().filter(type.name());
   }
 
+  /**
+   * Returns {@link RecordItem} from actual records at specific index.
+   *
+   * @param index index in array
+   * @return item or null
+   */
   public RecordItem getItem(int index) {
     return index >= 0 && index < publicRecords.length ? publicRecords[index] : null;
   }
@@ -79,7 +79,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
     return false;
   }
 
-  public void markViewHolder(MyViewHolder viewHolder) {
+  public void markViewHolder(RecordItemViewHolder viewHolder) {
     viewHolder.getParentView().setBackgroundResource(ITEM_MARK_BG);
     //viewHolder.getTextViewRecordName().setTypeface(null, Typeface.ITALIC);
   }
@@ -93,18 +93,28 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
     /*SortedSet<RecordItem> recs = new TreeSet<>(source.getAudioRecords());
     recs.addAll(source.getVideoRecords());
     publicRecords = recs.toArray(new RecordItem[recs.size()]);
-    */filter(filterType);
+    */
+    filter(filterType);
     //notifyDataSetChanged();
   }
 
-  public void unmarkViewHolder(MyViewHolder viewHolder) {
+  public void setOnRecordClickListener(OnRecordItemClickListener onRecordClickListener) {
+    this.onRecordClickListener = onRecordClickListener;
+  }
+
+  public void setOnMenuClickListener(OnMenuItemClickListener<RecordItemViewHolder> onMenuClickListener) {
+    this.onMenuClickListener = onMenuClickListener;
+  }
+
+  public void unmarkViewHolder(RecordItemViewHolder viewHolder) {
     viewHolder.getParentView().setBackground(itemBackground);
     //viewHolder.getTextViewRecordName().setTypeface(null, Typeface.NORMAL);
   }
 
-  public void update(){
+  public void update() {
     setSource(this.source);
-}
+  }
+
   /**
    * Called when RecyclerView needs a new {@link ViewHolder} of the given type to represent
    * an item.
@@ -126,9 +136,11 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
    * @see #onBindViewHolder(ViewHolder, int)
    */
   @Override
-  public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+  public RecordItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
     View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.records_listview_item, null);
-    MyViewHolder holder = new MyViewHolder(v, onRecordClickListener);
+    RecordItemViewHolder holder = new RecordItemViewHolder(v);
+    holder.setRecordItemClickListener(onRecordClickListener);
+    holder.setMenuItemClickListener(onMenuClickListener);
     itemBackground = v.getBackground();
     return holder;
   }
@@ -151,7 +163,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
    * @param position The position of the item within the adapter's data set.
    */
   @Override
-  public void onBindViewHolder(MyViewHolder holder, int position) {
+  public void onBindViewHolder(RecordItemViewHolder holder, int position) {
     if (!isEmpty()) {
       holder.setData(getSource().getShow().getName(), publicRecords[position], position);
       if (isSelected(position)) {
@@ -181,22 +193,22 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
     return this.filter;
   }
 
-  private Filter initFilter(){
+  private Filter initFilter() {
     return new Filter() {
       @Override
       protected FilterResults performFiltering(CharSequence charSequence) {
         FilterResults results = new FilterResults();
         String type = charSequence.toString();
-        String a = RecordItem.Type.All.name();
-        String m = RecordItem.Type.Audio.name();
-        String v = RecordItem.Type.Video.name();
+        String a = RecordType.All.name();
+        String m = RecordType.Audio.name();
+        String v = RecordType.Video.name();
         results.values = publicRecords;
         if (hasSource()) {
           if (type.compareTo(m) == 0) {
             results.values = getSource().getAudioRecords().toArray(new RecordItem[getSource().getAudioRecords().size()]);
           } else if (type.compareTo(v) == 0) {
             results.values = getSource().getVideoRecords().toArray(new RecordItem[getSource().getVideoRecords().size()]);
-          } else if (type.compareTo(a) == 0){
+          } else if (type.compareTo(a) == 0) {
             SortedSet<RecordItem> set = new TreeSet<>(getSource().getAudioRecords());
             set.addAll(getSource().getVideoRecords());
             results.values = set.toArray(new RecordItem[set.size()]);
@@ -214,62 +226,4 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.MyViewHo
     };
   }
 
-  public static class MyViewHolder extends ViewHolder implements View.OnClickListener {
-
-    //private static final DateFormat dateFormat = new SimpleDateFormat("dd. M. yyyy");
-    private View parentView;
-    private TextView textViewRecordName,
-        textViewRecordCategory,
-        textViewRecordDate;
-    private ImageView imageViewRecordType;
-    private RecordItem actualRecord;
-    private OnRecordClickListener listener;
-    private int recordIndex;
-
-    public MyViewHolder(View itemView, OnRecordClickListener listener) {
-      super(itemView);
-      this.listener = listener;
-      this.parentView = itemView;
-
-      parentView.setOnClickListener(this);
-      textViewRecordName = (TextView) itemView.findViewById(R.id.textViewRecordName);
-      textViewRecordCategory = (TextView) itemView.findViewById(R.id.textViewRecordCategory);
-      textViewRecordDate = (TextView) itemView.findViewById(R.id.textViewRecordDate);
-      imageViewRecordType = (ImageView) itemView.findViewById(R.id.imageViewRecordType);
-      actualRecord = null;
-      recordIndex = -1;
-    }
-
-    public View getParentView() {
-      return parentView;
-    }
-
-    public TextView getTextViewRecordName() {
-      return textViewRecordName;
-    }
-
-    public void setData(String showName, RecordItem record, int index) {
-      textViewRecordName.setText(record.getRecord().getName());
-      textViewRecordCategory.setText(showName);
-      textViewRecordDate.setText(record.getRecord().getTime());
-      if(record.getType() == RecordItem.Type.Audio){
-        imageViewRecordType.setBackgroundResource(R.drawable.ic_music_circle);
-      }else if(record.getType() == RecordItem.Type.Video){
-        imageViewRecordType.setBackgroundResource(R.drawable.ic_filmstrip);
-      }else {
-        imageViewRecordType.setBackgroundResource(0);
-      }
-      actualRecord = record;
-      recordIndex = index;
-    }
-
-    @Override
-    public void onClick(View view) {
-      listener.onRecordClick(actualRecord, recordIndex);
-    }
-  }
-
-  public interface OnRecordClickListener {
-    void onRecordClick(RecordItem record, int index);
-  }
 }
