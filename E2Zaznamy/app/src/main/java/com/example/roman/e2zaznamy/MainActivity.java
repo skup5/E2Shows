@@ -51,11 +51,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jEvropa2.data.Show;
+import cz.skup5.jEvropa2.data.Show;
 
 /**
  * Main class of application and the only activity.
@@ -323,6 +325,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void downloadNextRecords(ShowItem item) {
+    Log.d(getClass().getSimpleName(), "downloadNextRecords: for show " + item.getShow().info());
     RecordsDownloader downloader = (RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
     downloader.setOnCompleteListener(result -> {
       onRecordsDownloaded(item, result);
@@ -795,23 +798,18 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void onRecordsDownloaded(ShowItem item, Map<String, Object> result) {
-    ArrayList<RecordItem> audioList = new ArrayList<>(),
-            videoList = new ArrayList<>();
+    Log.d(getClass().getSimpleName(), "onRecordsDownloaded: for show " + item.getShow().info());
+//    List<RecordItem> audioList = new ArrayList<>(),
+//            videoList = new ArrayList<>();
+//    Set<RecordItem> audioSet = new LinkedHashSet<>();
     Set<RecordItem> records = (Set<RecordItem>) result.get("records");
     if (!records.isEmpty()) {
-      for (RecordItem i : records) {
-        if (i.getType() == RecordType.Audio) {
-          audioList.add(i);
-        } else if (i.getType() == RecordType.Video) {
-          videoList.add(i);
-        }
-      }
-      item.getAudioRecords().addAll(audioList);
-      item.getVideoRecords().addAll(videoList);
+      item.addRecordItems(records);
     }
     URL nextPage = (URL) result.get("nextPage");
     if (nextPage != null) item.setNextPageUrl(nextPage);
     recordsAreDownloading = false;
+    Log.d(getClass().getSimpleName(), "onRecordsDownloaded: done");
   }
 
   private void onRefreshRecords() {
@@ -824,6 +822,7 @@ public class MainActivity extends AppCompatActivity {
     });
     downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
     if (playShow.getShow().getWebSiteUrl() != Show.EMPTY_URL) {
+      Log.d(getClass().getSimpleName(), "onRefreshRecords: from " + playShow.getShow().getWebSiteUrl());
       downloader.execute(playShow.getShow().getWebSiteUrl());
       recordsAreDownloading = true;
     } else {

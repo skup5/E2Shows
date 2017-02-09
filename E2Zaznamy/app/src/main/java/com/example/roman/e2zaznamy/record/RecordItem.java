@@ -2,7 +2,7 @@ package com.example.roman.e2zaznamy.record;
 
 import android.graphics.Bitmap;
 
-import jEvropa2.data.Item;
+import cz.skup5.jEvropa2.data.Item;
 
 /**
  * Wrapper of {@link Item} record

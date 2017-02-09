@@ -205,13 +205,13 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
         results.values = publicRecords;
         if (hasSource()) {
           if (type.compareTo(m) == 0) {
-            results.values = getSource().getAudioRecords().toArray(new RecordItem[getSource().getAudioRecords().size()]);
+            results.values = getSource().getAudioRecords().toArray(new RecordItem[0]);
           } else if (type.compareTo(v) == 0) {
-            results.values = getSource().getVideoRecords().toArray(new RecordItem[getSource().getVideoRecords().size()]);
+            results.values = getSource().getVideoRecords().toArray(new RecordItem[0]);
           } else if (type.compareTo(a) == 0) {
             SortedSet<RecordItem> set = new TreeSet<>(getSource().getAudioRecords());
             set.addAll(getSource().getVideoRecords());
-            results.values = set.toArray(new RecordItem[set.size()]);
+            results.values = set.toArray(new RecordItem[0]);
           }
         }
         results.count = ((RecordItem[]) results.values).length;

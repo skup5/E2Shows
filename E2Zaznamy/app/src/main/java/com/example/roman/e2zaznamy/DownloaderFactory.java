@@ -10,6 +10,7 @@ import com.example.roman.e2zaznamy.record.RecordItem;
 import com.example.roman.e2zaznamy.record.RecordType;
 import com.example.roman.e2zaznamy.show.ShowItem;
 
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -24,11 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jEvropa2.Extractor;
-import jEvropa2.HtmlParser;
-import jEvropa2.HttpRequests;
-import jEvropa2.data.Item;
-import jEvropa2.data.Show;
+import cz.skup5.jEvropa2.Extractor;
+import cz.skup5.jEvropa2.HtmlParser;
+import cz.skup5.jEvropa2.HttpRequests;
+import cz.skup5.jEvropa2.data.Item;
+import cz.skup5.jEvropa2.data.Show;
+
 
 /**
  * This factory class creates AsyncTasks for downloading data (Downloaders).
@@ -101,7 +103,12 @@ public class DownloaderFactory {
     @Override
     protected Result doInBackground(Params... params) {
       if (params != null && params.length > 0) {
-        return download(params);
+        try {
+          return download(params);
+        }catch (Exception e){
+          e.printStackTrace();
+          errors.add(e.getLocalizedMessage());
+        }
       }
       return null;
     }
