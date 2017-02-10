@@ -14,6 +14,9 @@ import android.widget.ListView;
 import com.example.roman.e2zaznamy.R;
 import com.example.roman.e2zaznamy.show.ShowItem;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -30,7 +33,8 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
   private ShowItem source;
   private OnRecordItemClickListener onRecordClickListener;
   private OnMenuItemClickListener<RecordItemViewHolder> onMenuClickListener;
-  private RecordItem[] publicRecords = new RecordItem[0];
+  //  private RecordItem[] publicRecords = new RecordItem[0];
+  private ArrayList<RecordItem> publicRecords;
   private RecordType filterType = RecordType.All;
   private Drawable itemBackground;
   private Filter filter;
@@ -45,8 +49,9 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
     this.context = context;
     this.loading = false;
     this.selected = -1;
-    if (source != null) setSource(source);
     this.filter = initFilter();
+    initData();
+    if (source != null) setSource(source);
   }
 
   public void filter(RecordType type) {
@@ -61,7 +66,9 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
    * @return item or null
    */
   public RecordItem getItem(int index) {
-    return index >= 0 && index < publicRecords.length ? publicRecords[index] : null;
+    if(index < 0 || index >= publicRecords.size())
+      return null;
+    return publicRecords.get(index);
   }
 
   public ShowItem getSource() {
@@ -74,7 +81,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
 
   public boolean isEmpty() {
     if (hasSource()) {
-      return publicRecords.length == 0;
+      publicRecords.isEmpty();
     }
     return false;
   }
@@ -165,7 +172,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
   @Override
   public void onBindViewHolder(RecordItemViewHolder holder, int position) {
     if (!isEmpty()) {
-      holder.setData(getSource().getShow().getName(), publicRecords[position], position);
+      holder.setData(getSource().getShow().getName(), publicRecords.get(position), position);
       if (isSelected(position)) {
         markViewHolder(holder);
       } else {
@@ -185,12 +192,24 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
    */
   @Override
   public int getItemCount() {
-    return publicRecords.length;
+    return publicRecords.size();
   }
 
   @Override
   public Filter getFilter() {
     return this.filter;
+  }
+
+  /**
+   * Initializes {@code publicRecords}
+   */
+  private void initData() {
+    publicRecords = new ArrayList<>();
+  }
+
+  private void setData(Collection<RecordItem> newData) {
+    publicRecords.clear();
+    publicRecords.addAll(newData);
   }
 
   private Filter initFilter() {
@@ -199,29 +218,24 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
       protected FilterResults performFiltering(CharSequence charSequence) {
         FilterResults results = new FilterResults();
         String type = charSequence.toString();
-        String a = RecordType.All.name();
-        String m = RecordType.Audio.name();
-        String v = RecordType.Video.name();
-        results.values = publicRecords;
+        List<RecordItem> values = new ArrayList<>();
         if (hasSource()) {
-          if (type.compareTo(m) == 0) {
-            results.values = getSource().getAudioRecords().toArray(new RecordItem[0]);
-          } else if (type.compareTo(v) == 0) {
-            results.values = getSource().getVideoRecords().toArray(new RecordItem[0]);
-          } else if (type.compareTo(a) == 0) {
-            SortedSet<RecordItem> set = new TreeSet<>(getSource().getAudioRecords());
-            set.addAll(getSource().getVideoRecords());
-            results.values = set.toArray(new RecordItem[0]);
+          try {
+            values.addAll(getSource().getRecordItemsWithType(RecordType.valueOf(type)));
+          } catch (IllegalArgumentException e) {
+            e.printStackTrace();
           }
         }
-        results.count = ((RecordItem[]) results.values).length;
+        results.values = values;
+        results.count = values.size();
         return results;
       }
 
       @Override
       protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
-        publicRecords = (RecordItem[]) filterResults.values;
-        notifyDataSetChanged();
+          setData((List<RecordItem>) filterResults.values);
+//          notifyItemRangeInserted(0, filterResults.count);
+          notifyDataSetChanged();
       }
     };
   }

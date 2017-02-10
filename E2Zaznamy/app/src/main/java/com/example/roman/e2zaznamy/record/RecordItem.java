@@ -41,6 +41,10 @@ public class RecordItem implements Comparable<RecordItem> {
 
   @Override
   public int compareTo(RecordItem recordItem) {
+//    System.out.println(this);
+//    System.out.println("RecordItem.compareTo");
+//    System.out.println(recordItem);
+//    System.out.println("----------------------------");
     int timeCmp = compareTimes(recordItem);
     if (timeCmp == 0)
       return getRecord().getName().compareTo(recordItem.getRecord().getName());

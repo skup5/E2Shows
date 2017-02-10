@@ -628,6 +628,11 @@ public class MainActivity extends AppCompatActivity {
       public void onChanged() {
         showsAdapter.notifyDataSetChanged();
       }
+
+      @Override
+      public void onItemRangeInserted(int positionStart, int itemCount) {
+        onChanged();
+      }
     });
     recordsList.setAdapter(recordsAdapter);
     recordsList.setLayoutManager(linearLayoutManager);
@@ -723,7 +728,7 @@ public class MainActivity extends AppCompatActivity {
     mDrawerLayout.closeDrawer(showsList);
     showLoading();
 
-    if (item.getAudioRecords().isEmpty() && item.getVideoRecords().isEmpty()) {
+    if (item.isEmpty()) {
       DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
       downloader.setOnCompleteListener(result -> {
         onRecordsDownloaded(item, result);
@@ -821,7 +826,7 @@ public class MainActivity extends AppCompatActivity {
       toast("Refresh done", Toast.LENGTH_LONG);
     });
     downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
-    if (playShow.getShow().getWebSiteUrl() != Show.EMPTY_URL) {
+    if (playShow.getShow().hasWebSiteUrl()) {
       Log.d(getClass().getSimpleName(), "onRefreshRecords: from " + playShow.getShow().getWebSiteUrl());
       downloader.execute(playShow.getShow().getWebSiteUrl());
       recordsAreDownloading = true;
