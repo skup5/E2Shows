@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy;
+package cz.skup5.e2zaznamy;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -17,12 +17,10 @@ public class PrepareStream extends AsyncTask<String, Void, Boolean> {
 
     private ProgressDialog progress;
     private MediaPlayer mediaPlayer;
-    private Context context;
     private OnErrorListener listener;
 
     public PrepareStream(Context context, MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
-        this.context = context;
         progress = new ProgressDialog(context);
         listener = new OnErrorListener() {
             @Override

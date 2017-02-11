@@ -4,7 +4,7 @@ android {
     compileSdkVersion 23
     buildToolsVersion '24.0.3'
     defaultConfig {
-        applicationId "com.example.roman.e2zaznamy"
+        applicationId 'cz.skup5.e2zaznamy'
         minSdkVersion 17
         targetSdkVersion 23
         versionCode 5

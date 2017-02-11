@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy;
+package cz.skup5.e2zaznamy;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -30,7 +30,7 @@ public class AudioController {
   private TextView curTime, totalTime;
   private TextView infoLine;
   private Date cur, total;
-  private SimpleDateFormat dateFormater;
+  private SimpleDateFormat dateFormatter;
   private AudioPlayerControl controller;
   private View view;
   private Runnable run;
@@ -47,7 +47,7 @@ public class AudioController {
         seekBarUpdate();
       }
     };
-    this.dateFormater = new SimpleDateFormat("mm:ss");
+    this.dateFormatter = new SimpleDateFormat("mm:ss");
     this.cur = new Date();
     this.total = new Date();
 
@@ -116,7 +116,7 @@ public class AudioController {
     int duration = controller.getDuration();
     seekBar.setMax(duration);
     total.setTime(duration * 1000);
-    totalTime.setText(dateFormater.format(total));
+    totalTime.setText(dateFormatter.format(total));
     seekBar.setEnabled(true);
   }
 
@@ -201,7 +201,7 @@ public class AudioController {
     int currentPosition = controller.getCurrentPosition();
     cur.setTime(currentPosition * 1000);
     seekBar.setProgress(currentPosition);
-    curTime.setText(dateFormater.format(cur));
+    curTime.setText(dateFormatter.format(cur));
     if (controller.isPlaying()) {
       seekHandler.postDelayed(run, 1000);
     }

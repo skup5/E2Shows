@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy;
+package cz.skup5.e2zaznamy;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -6,9 +6,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
-import com.example.roman.e2zaznamy.record.RecordItem;
-import com.example.roman.e2zaznamy.record.RecordType;
-import com.example.roman.e2zaznamy.show.ShowItem;
+import cz.skup5.e2zaznamy.record.RecordItem;
+import cz.skup5.e2zaznamy.record.RecordType;
+import cz.skup5.e2zaznamy.show.ShowItem;
 
 
 import org.jsoup.nodes.Document;

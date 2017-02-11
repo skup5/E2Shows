@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy;
+package cz.skup5.e2zaznamy;
 
 import android.content.Context;
 import android.content.res.TypedArray;

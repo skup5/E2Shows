@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy.record;
+package cz.skup5.e2zaznamy.record;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.ContextMenu;
@@ -7,8 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.roman.e2zaznamy.R;
-
+import cz.skup5.e2zaznamy.R;
 
 /**
  * Defines View for one {@link RecordItem}
@@ -61,9 +60,9 @@ public class RecordItemViewHolder extends RecyclerView.ViewHolder implements Vie
     textViewRecordCategory.setText(showName);
     textViewRecordDate.setText(record.getRecord().getTime());
     if (record.getType() == RecordType.Audio) {
-      imageViewRecordType.setBackgroundResource(R.drawable.ic_music_circle);
+      imageViewRecordType.setBackgroundResource(cz.skup5.e2zaznamy.R.drawable.ic_music_circle);
     } else if (record.getType() == RecordType.Video) {
-      imageViewRecordType.setBackgroundResource(R.drawable.ic_filmstrip);
+      imageViewRecordType.setBackgroundResource(cz.skup5.e2zaznamy.R.drawable.ic_filmstrip);
     } else {
       imageViewRecordType.setBackgroundResource(0);
     }

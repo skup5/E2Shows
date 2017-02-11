@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy.record;
+package cz.skup5.e2zaznamy.record;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -11,14 +11,13 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ListView;
 
-import com.example.roman.e2zaznamy.R;
-import com.example.roman.e2zaznamy.show.ShowItem;
+import cz.skup5.e2zaznamy.show.ShowItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+
+import cz.skup5.e2zaznamy.R;
 
 /**
  * A Adapter used to provide data and ViewHolders from records to an RecyclerView.
@@ -66,7 +65,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
    * @return item or null
    */
   public RecordItem getItem(int index) {
-    if(index < 0 || index >= publicRecords.size())
+    if (index < 0 || index >= publicRecords.size())
       return null;
     return publicRecords.get(index);
   }
@@ -233,9 +232,9 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
 
       @Override
       protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
-          setData((List<RecordItem>) filterResults.values);
+        setData((List<RecordItem>) filterResults.values);
 //          notifyItemRangeInserted(0, filterResults.count);
-          notifyDataSetChanged();
+        notifyDataSetChanged();
       }
     };
   }

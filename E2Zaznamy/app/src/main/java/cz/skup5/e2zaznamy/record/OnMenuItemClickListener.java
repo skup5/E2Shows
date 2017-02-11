@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy.record;
+package cz.skup5.e2zaznamy.record;
 
 import android.view.MenuItem;
 

@@ -1,12 +1,11 @@
-package com.example.roman.e2zaznamy.show;
+package cz.skup5.e2zaznamy.show;
 
-import com.example.roman.e2zaznamy.record.RecordItem;
-import com.example.roman.e2zaznamy.record.RecordType;
+import cz.skup5.e2zaznamy.record.RecordItem;
+import cz.skup5.e2zaznamy.record.RecordType;
 
 import java.net.URL;
 import java.util.Collection;
 import java.util.NavigableSet;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 import cz.skup5.jEvropa2.data.Show;

@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy.show;
+package cz.skup5.e2zaznamy.show;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.example.roman.e2zaznamy.R;
+import cz.skup5.e2zaznamy.R;
 
 /**
  * Created by Roman on 16.6.2016.

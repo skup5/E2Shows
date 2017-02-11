@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy;
+package cz.skup5.e2zaznamy;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

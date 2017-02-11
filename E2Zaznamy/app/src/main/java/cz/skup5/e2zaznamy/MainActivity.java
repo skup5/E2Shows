@@ -1,4 +1,4 @@
-package com.example.roman.e2zaznamy;
+package cz.skup5.e2zaznamy;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -36,16 +36,16 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.roman.e2zaznamy.DownloaderFactory.CoverImageDownloader;
-import com.example.roman.e2zaznamy.DownloaderFactory.MediaUrlDownloader;
-import com.example.roman.e2zaznamy.DownloaderFactory.RecordsDownloader;
-import com.example.roman.e2zaznamy.DownloaderFactory.ShowsDownloader;
-import com.example.roman.e2zaznamy.record.RecordItem;
-import com.example.roman.e2zaznamy.record.RecordItemViewHolder;
-import com.example.roman.e2zaznamy.record.RecordType;
-import com.example.roman.e2zaznamy.record.RecordsAdapter;
-import com.example.roman.e2zaznamy.show.ShowItem;
-import com.example.roman.e2zaznamy.show.ShowsAdapter;
+import cz.skup5.e2zaznamy.DownloaderFactory.CoverImageDownloader;
+import cz.skup5.e2zaznamy.DownloaderFactory.MediaUrlDownloader;
+import cz.skup5.e2zaznamy.DownloaderFactory.RecordsDownloader;
+import cz.skup5.e2zaznamy.DownloaderFactory.ShowsDownloader;
+import cz.skup5.e2zaznamy.record.RecordItem;
+import cz.skup5.e2zaznamy.record.RecordItemViewHolder;
+import cz.skup5.e2zaznamy.record.RecordType;
+import cz.skup5.e2zaznamy.record.RecordsAdapter;
+import cz.skup5.e2zaznamy.show.ShowItem;
+import cz.skup5.e2zaznamy.show.ShowsAdapter;
 
 import java.net.MalformedURLException;
 import java.net.URL;
