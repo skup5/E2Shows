@@ -25,9 +25,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
@@ -38,8 +36,10 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.roman.e2zaznamy.DownloaderFactory.*;
-import com.example.roman.e2zaznamy.record.OnMenuItemClickListener;
+import com.example.roman.e2zaznamy.DownloaderFactory.CoverImageDownloader;
+import com.example.roman.e2zaznamy.DownloaderFactory.MediaUrlDownloader;
+import com.example.roman.e2zaznamy.DownloaderFactory.RecordsDownloader;
+import com.example.roman.e2zaznamy.DownloaderFactory.ShowsDownloader;
 import com.example.roman.e2zaznamy.record.RecordItem;
 import com.example.roman.e2zaznamy.record.RecordItemViewHolder;
 import com.example.roman.e2zaznamy.record.RecordType;
@@ -51,8 +51,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
   private DrawerLayout mDrawerLayout;
   private ActionBar actionBar;
   private RecordItem chosenRecord;
-  private ShowItem chosenShow, playShow;
+  private ShowItem playShow;
   private int chosenShowPosition = -1;
   private View loadingBar;
   private int crossfadeAnimDuration;
@@ -369,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
     errorReportsDialog(this, reports);
   }
 
-  private void fillRecList(ShowItem show) {
+  private void fillRecordsList(ShowItem show) {
     recordsAdapter.setSource(show);
     int selected = getSelectedRecordIndex();
     if (chosenRecord != null && chosenRecord.equals(recordsAdapter.getItem(selected))) {
@@ -394,6 +392,18 @@ public class MainActivity extends AppCompatActivity {
   private int getSelectedRecordIndex() {
     Integer selected = selectedRecords.get(playShow.getShow().getName());
     return selected == null ? -1 : selected.intValue();
+  }
+
+  /**
+   * The last chosen {@link ShowItem} from navigation. Record items this show are actual in {@code recordsAdapter}.
+   *
+   * @return actual {@link ShowItem} or null
+   */
+  private ShowItem getChosenShow() {
+    if (recordsAdapter != null) {
+      return recordsAdapter.getSource();
+    }
+    return null;
   }
 
   private void init() {
@@ -569,7 +579,7 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onClick(View v) {
         if (audioController.isEnabled() && chosenRecord != null) {
-          if (playShow.equals(chosenShow)) {
+          if (playShow.equals(getChosenShow())) {
             recordsList.smoothScrollToPosition(getSelectedRecordIndex());
           }
         }
@@ -637,8 +647,8 @@ public class MainActivity extends AppCompatActivity {
     recordsList.setAdapter(recordsAdapter);
     recordsList.setLayoutManager(linearLayoutManager);
     recordsList.addOnScrollListener(new EndlessScrollListener(() -> {
-      if (!recordsAreDownloading) {
-        downloadNextRecords(playShow);
+      if (!recordsAreDownloading && getChosenShow() != null) {
+        downloadNextRecords(getChosenShow());
       }
     }, VISIBLE_TRESHOLD
     ));
@@ -722,7 +732,7 @@ public class MainActivity extends AppCompatActivity {
 
     showsAdapter.setSelectedItem(position);
     chosenShowPosition = position;
-    chosenShow = item;
+    //chosenShow = item;
     if (playShow == null) playShow = item;
 
     mDrawerLayout.closeDrawer(showsList);
@@ -732,13 +742,13 @@ public class MainActivity extends AppCompatActivity {
       DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
       downloader.setOnCompleteListener(result -> {
         onRecordsDownloaded(item, result);
-        fillRecList(item);
+        fillRecordsList(item);
         crossfadeAnimation();
       });
       downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
       downloader.execute(item.getShow().getWebSiteUrl());
     } else {
-      fillRecList(item);
+      fillRecordsList(item);
       crossfadeAnimation();
     }
   }
@@ -753,7 +763,7 @@ public class MainActivity extends AppCompatActivity {
 
     audioPlayerControl.stop();
     chosenRecord = record;
-    playShow = chosenShow;
+    playShow = getChosenShow();
 
     switch (record.getType()) {
       case Audio:
@@ -870,8 +880,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void refreshActionBarSubtitle() {
-    if (chosenShow != null) {
-      actionBar.setSubtitle(chosenShow.getShow().getName() + " (" + recordsAdapter.getItemCount() + ")");
+    if (getChosenShow() != null) {
+      actionBar.setSubtitle(getChosenShow().getShow().getName() + " (" + recordsAdapter.getItemCount() + ")");
     }
   }
 
