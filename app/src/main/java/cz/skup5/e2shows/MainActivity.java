@@ -40,6 +40,8 @@ import cz.skup5.e2shows.DownloaderFactory.CoverImageDownloader;
 import cz.skup5.e2shows.DownloaderFactory.MediaUrlDownloader;
 import cz.skup5.e2shows.DownloaderFactory.RecordsDownloader;
 import cz.skup5.e2shows.DownloaderFactory.ShowsDownloader;
+import cz.skup5.e2shows.manager.BasicPlaylistManager;
+import cz.skup5.e2shows.playlist.PlaylistManager;
 import cz.skup5.e2shows.record.RecordItem;
 import cz.skup5.e2shows.record.RecordItemViewHolder;
 import cz.skup5.e2shows.record.RecordType;
@@ -81,13 +83,15 @@ public class MainActivity extends AppCompatActivity {
           ITEM_OFFSET = 6,
           VISIBLE_TRESHOLD = 5;
 
+  private static final PlaylistManager playlistManager = BasicPlaylistManager.getInstance();
+
   private MediaPlayer mediaPlayer;
-  private AudioController audioController;
+  private AudioController<RecordItem> audioController;
   private AudioController.AudioPlayerControl audioPlayerControl;
 
   private SwipeRefreshLayout swipeRefreshLayout;
   private RecyclerView recordsList;
-  private RecordsAdapter recordsAdapter;
+//  private RecordsAdapter recordsAdapter;
 
   private ListView showsList;
   private ShowsAdapter showsAdapter;
@@ -292,6 +296,38 @@ public class MainActivity extends AppCompatActivity {
       ###              PRIVATE METHODS                    ###
       #######################################################*/
 
+  private RecordsAdapter createRecordsAdapter() {
+    RecordsAdapter recordsAdapter = new RecordsAdapter(this);
+    recordsAdapter.setOnRecordClickListener((record, index) -> {
+      onRecordItemClick(record, index);
+    });
+    recordsAdapter.setOnMenuClickListener((item, source) -> {
+      switch (item.getItemId()) {
+        case R.id.context_action_detail:
+          onRecordItemDetail(source.getActualRecord());
+          return true;
+//      case R.id.context_action_play:
+//        onRecordItemClick();
+//        return true;
+        default:
+          return false;
+      }
+    });
+    recordsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+      @Override
+      public void onChanged() {
+        showsAdapter.notifyDataSetChanged();
+      }
+
+      @Override
+      public void onItemRangeInserted(int positionStart, int itemCount) {
+        onChanged();
+      }
+    });
+
+    return recordsAdapter;
+  }
+
   private void crossfadeAnimation() {
     recordsList.setAlpha(0f);
     recordsList.setVisibility(View.VISIBLE);
@@ -327,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
     RecordsDownloader downloader = (RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
     downloader.setOnCompleteListener(result -> {
       onRecordsDownloaded(item, result);
-      recordsAdapter.update();
+      getRecordsListAdapter().update();
     });
     downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
     if (item.hasNextPageUrl()) {
@@ -368,6 +404,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void fillRecordsList(ShowItem show) {
+    RecordsAdapter recordsAdapter = getRecordsListAdapter();
+    audioController.setPlaylist(recordsAdapter);
     recordsAdapter.setSource(show);
     int selected = getSelectedRecordIndex();
     if (chosenRecord != null && chosenRecord.equals(recordsAdapter.getItem(selected))) {
@@ -379,6 +417,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void filterRecords(RecordType type) {
+    RecordsAdapter recordsAdapter = getRecordsListAdapter();
     if (recordsAdapter == null) return;
     recordsAdapter.filter(type);
   }
@@ -400,10 +439,15 @@ public class MainActivity extends AppCompatActivity {
    * @return actual {@link ShowItem} or null
    */
   private ShowItem getChosenShow() {
+    RecordsAdapter recordsAdapter = getRecordsListAdapter();
     if (recordsAdapter != null) {
       return recordsAdapter.getSource();
     }
     return null;
+  }
+
+  private RecordsAdapter getRecordsListAdapter() {
+    return (RecordsAdapter) recordsList.getAdapter();
   }
 
   private void init() {
@@ -546,25 +590,23 @@ public class MainActivity extends AppCompatActivity {
       }
 
       @Override
-      public void next() {
-        int selected = getSelectedRecordIndex();
-        RecordItem nextRecord = recordsAdapter.getItem(selected + 1);
-        if (nextRecord != null) {
-          onRecordItemClick(nextRecord, selected + 1);
+      void next() {
+        RecordItem nextItem = audioController.getPlaylist().next();
+        if (nextItem != null) {
+          onRecordItemClick(nextItem, audioController.getPlaylist().indexOf(nextItem));
         }
       }
 
       @Override
-      public void previous() {
+      void previous() {
         if (getCurrentPosition() > 3) {
           seekTo(0);
         } else {
-          int selected = getSelectedRecordIndex();
-          RecordItem previousRecord = recordsAdapter.getItem(selected - 1);
-          if (previousRecord == null) {
+          RecordItem previousItem = audioController.getPlaylist().previous();
+          if (previousItem == null) {
             seekTo(0);
           } else {
-            onRecordItemClick(previousRecord, selected - 1);
+            onRecordItemClick(previousItem, audioController.getPlaylist().indexOf(previousItem));
           }
         }
       }
@@ -575,13 +617,10 @@ public class MainActivity extends AppCompatActivity {
       }
 
     };
-    controllerView.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (audioController.isEnabled() && chosenRecord != null) {
-          if (playShow.equals(getChosenShow())) {
-            recordsList.smoothScrollToPosition(getSelectedRecordIndex());
-          }
+    controllerView.setOnClickListener(v -> {
+      if (audioController.isEnabled() && chosenRecord != null) {
+        if (playShow.equals(getChosenShow())) {
+          recordsList.smoothScrollToPosition(getSelectedRecordIndex());
         }
       }
     });
@@ -617,33 +656,8 @@ public class MainActivity extends AppCompatActivity {
   private void initRecordsList() {
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
     recordsList = (RecyclerView) findViewById(R.id.recycler_view);
-    recordsAdapter = new RecordsAdapter(this);
-    recordsAdapter.setOnRecordClickListener((record, index) -> {
-      onRecordItemClick(record, index);
-    });
-    recordsAdapter.setOnMenuClickListener((item, source) -> {
-      switch (item.getItemId()) {
-        case R.id.context_action_detail:
-          onRecordItemDetail(source.getActualRecord());
-          return true;
-//      case R.id.context_action_play:
-//        onRecordItemClick();
-//        return true;
-        default:
-          return false;
-      }
-    });
-    recordsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-      @Override
-      public void onChanged() {
-        showsAdapter.notifyDataSetChanged();
-      }
 
-      @Override
-      public void onItemRangeInserted(int positionStart, int itemCount) {
-        onChanged();
-      }
-    });
+    RecordsAdapter recordsAdapter = createRecordsAdapter();
     recordsList.setAdapter(recordsAdapter);
     recordsList.setLayoutManager(linearLayoutManager);
     recordsList.addOnScrollListener(new EndlessScrollListener(() -> {
@@ -784,6 +798,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     audioController.setInfoLineText(record.getRecord().getName());
+    RecordsAdapter recordsAdapter = getRecordsListAdapter();
 
     RecyclerView.ViewHolder viewHolder = recordsList.findViewHolderForAdapterPosition(index);
     if (viewHolder != null) {
@@ -831,7 +846,7 @@ public class MainActivity extends AppCompatActivity {
     DownloaderFactory.RecordsDownloader downloader = (DownloaderFactory.RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
     downloader.setOnCompleteListener(result -> {
       onRecordsDownloaded(playShow, result);
-      recordsAdapter.update();
+      getRecordsListAdapter().update();
       swipeRefreshLayout.setRefreshing(false);
       toast("Refresh done", Toast.LENGTH_LONG);
     });
@@ -881,7 +896,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void refreshActionBarSubtitle() {
     if (getChosenShow() != null) {
-      actionBar.setSubtitle(getChosenShow().getShow().getName() + " (" + recordsAdapter.getItemCount() + ")");
+      actionBar.setSubtitle(getChosenShow().getShow().getName() + " (" + getRecordsListAdapter().getItemCount() + ")");
     }
   }
 

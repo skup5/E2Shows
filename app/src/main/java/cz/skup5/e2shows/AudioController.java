@@ -16,13 +16,17 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import cz.skup5.e2shows.playlist.NonPlaylistException;
+import cz.skup5.e2shows.playlist.Playlist;
+import cz.skup5.e2shows.playlist.PlaylistItem;
+
 /**
  * A view containing controls for MediaPlayer.
  * Play/Pause, Forward and Previous buttons and progress slider.
  *
  * @author Roman Zelenik
  */
-public class AudioController {
+public class AudioController<Item extends PlaylistItem> {
 
   private ImageButton next, play, previous;
   private ImageView coverImage;
@@ -37,6 +41,8 @@ public class AudioController {
   private Handler seekHandler = new Handler();
   private Animation infoLineAnim, coverImageAnim;
   private boolean enabled;
+
+  private Playlist<Item> playlist;
 
   public AudioController(View view, AudioPlayerControl controller) {
     this.enabled = false;
@@ -73,6 +79,10 @@ public class AudioController {
     }
   }
 
+  public Playlist<Item> getPlaylist() {
+    return playlist;
+  }
+
   public boolean isEnabled() {
     return enabled;
   }
@@ -105,6 +115,10 @@ public class AudioController {
     prepareInfoLineAnim();
 //        infoLine.setSelected(true);
     infoLine.startAnimation(infoLineAnim);
+  }
+
+  public void setPlaylist(Playlist<Item> playlist) {
+    this.playlist = playlist;
   }
 
   public void setView(View view) {
@@ -155,28 +169,27 @@ public class AudioController {
   }
 
   private void initListeners() {
-    next.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (enabled) {
-          controller.next();
+    next.setOnClickListener(v -> {
+      if (enabled) {
+        if (playlist == null) {
+          throw new NonPlaylistException();
         }
+       // controller.onNext(playlist.actual(), playlist.next());
+        controller.next();
       }
     });
-    play.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        //Toast.makeText(context, play.getWidth()+"x"+play.getHeight(), Toast.LENGTH_SHORT).show();
-        clickOnPlayPause();
-      }
+    play.setOnClickListener(v -> {
+      //Toast.makeText(context, play.getWidth()+"x"+play.getHeight(), Toast.LENGTH_SHORT).show();
+      clickOnPlayPause();
     });
-    previous.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        // Toast.makeText(context, previous.getWidth()+"x"+previous.getHeight(), Toast.LENGTH_SHORT).show();
-        if (enabled) {
-          controller.previous();
+    previous.setOnClickListener(v -> {
+      // Toast.makeText(context, previous.getWidth()+"x"+previous.getHeight(), Toast.LENGTH_SHORT).show();
+      if (enabled) {
+        if (playlist == null) {
+          throw new NonPlaylistException();
         }
+       // controller.onPrevious(playlist.actual(), playlist.previous());
+        controller.previous();
       }
     });
     seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -217,6 +230,22 @@ public class AudioController {
 
   static abstract class AudioPlayerControl implements MediaController.MediaPlayerControl {
     abstract void next();
+
+//    /**
+//     * Invoked when user click "next".
+//     *
+//     * @param actualItem the last selected (played) item or null if none item wasn't selected yet
+//     * @param nextItem   the next item in actual {@link Playlist}
+//     */
+   // abstract void onNext(Item actualItem, Item nextItem);
+
+//    /**
+//     * Invoked when user click "previous".
+//     *
+//     * @param actualItem   the last selected (played) item or null if none item wasn't selected yet
+//     * @param previousItem the previous item in actual {@link Playlist}
+//     */
+    //abstract void onPrevious(Item actualItem, Item previousItem);
 
     abstract void previous();
 

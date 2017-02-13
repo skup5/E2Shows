@@ -2,6 +2,7 @@ package cz.skup5.e2shows.record;
 
 import android.graphics.Bitmap;
 
+import cz.skup5.e2shows.playlist.PlaylistItem;
 import cz.skup5.jEvropa2.data.Item;
 
 /**
@@ -9,7 +10,7 @@ import cz.skup5.jEvropa2.data.Item;
  *
  * @author Skup
  */
-public class RecordItem implements Comparable<RecordItem> {
+public class RecordItem implements Comparable<RecordItem>, PlaylistItem {
   private Item record;
   private Bitmap cover = null;
   private RecordType type;
