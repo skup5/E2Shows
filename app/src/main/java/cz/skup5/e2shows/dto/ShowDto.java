@@ -1,19 +1,18 @@
-package cz.skup5.e2shows.show;
-
-import cz.skup5.e2shows.record.RecordItem;
-import cz.skup5.e2shows.record.RecordType;
+package cz.skup5.e2shows.dto;
 
 import java.net.URL;
 import java.util.Collection;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
+import cz.skup5.e2shows.record.RecordItem;
+import cz.skup5.e2shows.record.RecordType;
 import cz.skup5.jEvropa2.data.Show;
 
 /**
  * Created by Roman on 16.6.2016.
  */
-public class ShowItem {
+public class ShowDto {
 
   private static final URL EMPTY_URL = null;
   private final NavigableSet<RecordItem> recordItems = new TreeSet<>();
@@ -23,7 +22,7 @@ public class ShowItem {
   //  private int page = 1;
   private URL nextPageUrl = EMPTY_URL;
 
-  public ShowItem(Show show) {
+  public ShowDto(Show show) {
     this.show = show;
   }
 
@@ -66,23 +65,38 @@ public class ShowItem {
 //    return videoRecords;
 //  }
 
-  /**
-   * @return true if has none record items
-   */
-  public boolean isEmpty() {
-    return recordItems.isEmpty();
+  public String getInfo() {
+    return show.info();
+  }
+
+  public String getName() {
+    return show.getName();
   }
 
   public URL getNextPageUrl() {
     return nextPageUrl;
   }
 
-  public Show getShow() {
-    return show;
+  //  public Show getShow() {
+//    return show;
+//  }
+  public URL getWebSiteUrl() {
+    return show.getWebSiteUrl();
   }
 
   public boolean hasNextPageUrl() {
     return nextPageUrl != EMPTY_URL;
+  }
+
+  public boolean hasWebSiteUrl() {
+    return show.hasWebSiteUrl();
+  }
+
+  /**
+   * @return true if has none record items
+   */
+  public boolean isEmpty() {
+    return recordItems.isEmpty();
   }
 
   public void setNextPageUrl(URL nextPageUrl) {

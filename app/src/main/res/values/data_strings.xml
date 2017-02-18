@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--Downloading-->
+    <string name="downloading_shows">Stahuji seznam Show...</string>
+    <string name="still_downloading">Stahování probíhá...</string>
+
+    <!--Loading-->
+    <string name="loading">Načítání</string>
+
+    <!--Refresh/Update-->
+    <string name="refresh_done">Aktualizováno</string>
+
+    <!--Show-->
+    <string name="shows_are_ready">Show jsou připraveny</string>
+    <string name="shows_empty_list">Seznam je prázdný</string>
+</resources>

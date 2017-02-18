@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_on_loading">Při načítání došlo k chybě :-(</string>
+    <string name="error_no_connection">Nejsi připojen k síti</string>
+    <string name="error_none_video_app">Nenalezen žádný přehrávač videa</string>
+    <string name="error_on_show_list_loading">Chyba při stahování seznamu show.</string>
+</resources>

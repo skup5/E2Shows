@@ -16,7 +16,7 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import cz.skup5.e2shows.playlist.NonPlaylistException;
+import cz.skup5.e2shows.exception.NonPlaylistException;
 import cz.skup5.e2shows.playlist.Playlist;
 import cz.skup5.e2shows.playlist.PlaylistItem;
 

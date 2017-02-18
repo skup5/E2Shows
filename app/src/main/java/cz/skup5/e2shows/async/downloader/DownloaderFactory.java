@@ -1,4 +1,4 @@
-package cz.skup5.e2shows;
+package cz.skup5.e2shows.async.downloader;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -8,7 +8,7 @@ import android.os.AsyncTask;
 
 import cz.skup5.e2shows.record.RecordItem;
 import cz.skup5.e2shows.record.RecordType;
-import cz.skup5.e2shows.show.ShowItem;
+import cz.skup5.e2shows.dto.ShowDto;
 
 
 import org.jsoup.nodes.Document;
@@ -41,7 +41,7 @@ public class DownloaderFactory {
 
   private static final String DOWNLOADING = "Stahuji...";
 
-  public enum Type {Records, NextRecords, CoverImage, Shows, MediaUrl}
+  public enum Type {Records, NextRecords, CoverImage, MediaUrl}
 
   private DownloaderFactory() {
   }
@@ -60,8 +60,6 @@ public class DownloaderFactory {
         return new NextRecordsDownloader(context, dialogTitle);
       case Records:
         return new RecordsDownloader(context, dialogTitle);
-      case Shows:
-        return new ShowsDownloader(context, dialogTitle);
       default:
         return null;
     }
@@ -138,7 +136,7 @@ public class DownloaderFactory {
     }
   }
 
-  static class RecordsDownloader extends AbstractDownloader<URL, Void, Map<String, Object>> {
+  public static class RecordsDownloader extends AbstractDownloader<URL, Void, Map<String, Object>> {
 
     public RecordsDownloader(Context context, String dialogTitle) {
       super(context, dialogTitle);
@@ -189,15 +187,15 @@ public class DownloaderFactory {
     }
   }
 
-  static class NextRecordsDownloader extends AbstractDownloader<ShowItem, Void, Set<RecordItem>> {
+  public static class NextRecordsDownloader extends AbstractDownloader<ShowDto, Void, Set<RecordItem>> {
 
     public NextRecordsDownloader(Context context, String dialogTitle) {
       super(context, dialogTitle);
     }
 
     @Override
-    protected Set<RecordItem> download(ShowItem... shows) {
-     /* ShowItem show = shows[0];
+    protected Set<RecordItem> download(ShowDto... shows) {
+     /* ShowDto show = shows[0];
       URL site = show.getShow().getWebSiteUrl();
       site.
       int page = category.getPage();
@@ -223,7 +221,7 @@ public class DownloaderFactory {
     }
   }
 
-  static class CoverImageDownloader extends AbstractDownloader<URL, Void, Bitmap> {
+  public static class CoverImageDownloader extends AbstractDownloader<URL, Void, Bitmap> {
 
     public CoverImageDownloader(Context context, String dialogTitle) {
       super(context, dialogTitle);
@@ -248,31 +246,7 @@ public class DownloaderFactory {
     }
   }
 
-  static class ShowsDownloader extends AbstractDownloader<URL, Void, Set<Show>> {
-
-    public ShowsDownloader(Context context, String dialogTitle) {
-      super(context, dialogTitle);
-    }
-
-    @Override
-    protected Set<Show> download(URL... urls) {
-      Set<Show> showsSet = new HashSet<>();
-      Document site;
-      try {
-        site = HttpRequests.httpGetSite(urls[0].toString());
-        Elements shows = Extractor.getShowsList(site);
-        if (!shows.isEmpty()) {
-          showsSet = htmlParser.parseShows(shows);
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-        errors.add("Chyba při stahování Shows seznamu.");
-      }
-      return showsSet;
-    }
-  }
-
-  static class MediaUrlDownloader extends AbstractDownloader<MediaUrlDownloader.Params, Void, URL> {
+  public static class MediaUrlDownloader extends AbstractDownloader<MediaUrlDownloader.Params, Void, URL> {
     public MediaUrlDownloader(Context context, String dialogTitle) {
       super(context, dialogTitle);
     }

@@ -14,6 +14,7 @@ import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.GravityCompat;
@@ -31,33 +32,33 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import cz.skup5.e2shows.DownloaderFactory.CoverImageDownloader;
-import cz.skup5.e2shows.DownloaderFactory.MediaUrlDownloader;
-import cz.skup5.e2shows.DownloaderFactory.RecordsDownloader;
-import cz.skup5.e2shows.DownloaderFactory.ShowsDownloader;
+import cz.skup5.e2shows.async.downloader.DownloaderFactory;
+import cz.skup5.e2shows.async.downloader.DownloaderFactory.CoverImageDownloader;
+import cz.skup5.e2shows.async.downloader.DownloaderFactory.MediaUrlDownloader;
+import cz.skup5.e2shows.async.downloader.DownloaderFactory.RecordsDownloader;
+import cz.skup5.e2shows.dto.ShowDto;
+import cz.skup5.e2shows.exception.ShowLoadingException;
 import cz.skup5.e2shows.manager.BasicPlaylistManager;
-import cz.skup5.e2shows.playlist.PlaylistManager;
+import cz.skup5.e2shows.manager.BasicShowManager;
+import cz.skup5.e2shows.manager.PlaylistManager;
+import cz.skup5.e2shows.manager.ShowManager;
 import cz.skup5.e2shows.record.RecordItem;
 import cz.skup5.e2shows.record.RecordItemViewHolder;
 import cz.skup5.e2shows.record.RecordType;
 import cz.skup5.e2shows.record.RecordsAdapter;
-import cz.skup5.e2shows.show.ShowItem;
 import cz.skup5.e2shows.show.ShowsAdapter;
+import cz.skup5.e2shows.utils.NetworkUtils;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import cz.skup5.jEvropa2.data.Show;
 
 /**
  * Main class of application and the only activity.
@@ -66,24 +67,14 @@ import cz.skup5.jEvropa2.data.Show;
  */
 public class MainActivity extends AppCompatActivity {
 
-  public static final String
-          DOWNLOADING_SHOWS = "Stahuji seznam Show...",
-          ERROR_ON_LOADING = "Při načítání došlo k chybě :-(",
-          ERROR_NO_CONNECTION = "Nejsi připojen k síti",
-          LOADING = "Načítání",
-          SHOWS_ARE_READY = "Show jsou připraveny",
-          STILL_DOWNLOADING = "Stahování probíhá...",
-          STORNO = "Storno",
-          SUB_URL_ARCHIV = "/mp3-archiv/",
-          SUB_URL_SHOWS = "/shows/",
-          TRY_NEXT_RECORD = "Zkus další",
-          URL_E2 = "https://evropa2.cz";
+  public static final String TRY_NEXT_RECORD = "Zkus další";
 
   private static final int
           ITEM_OFFSET = 6,
           VISIBLE_TRESHOLD = 5;
 
-  private static final PlaylistManager playlistManager = BasicPlaylistManager.getInstance();
+  private static Context CONTEXT;
+  private static final ShowManager showManager = BasicShowManager.getInstance();
 
   private MediaPlayer mediaPlayer;
   private AudioController<RecordItem> audioController;
@@ -91,10 +82,9 @@ public class MainActivity extends AppCompatActivity {
 
   private SwipeRefreshLayout swipeRefreshLayout;
   private RecyclerView recordsList;
-//  private RecordsAdapter recordsAdapter;
 
   private ListView showsList;
-  private ShowsAdapter showsAdapter;
+  //private ShowsAdapter showsAdapter;
 
   private boolean
           recordsAreDownloading = false,
@@ -104,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
   private DrawerLayout mDrawerLayout;
   private ActionBar actionBar;
   private RecordItem chosenRecord;
-  private ShowItem playShow;
+  private ShowDto playShow;
   private int chosenShowPosition = -1;
   private View loadingBar;
   private int crossfadeAnimDuration;
@@ -149,6 +139,10 @@ public class MainActivity extends AppCompatActivity {
             }).show();
   }
 
+  public static Context getContext() {
+    return CONTEXT;
+  }
+
     /*#######################################################
       ###               OVERRIDE METHODS                  ###
       #######################################################*/
@@ -156,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    CONTEXT = this;
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     setContentView(R.layout.main_layout);
 //    setContentView(R.layout.testing_layout);
@@ -186,8 +181,9 @@ public class MainActivity extends AppCompatActivity {
 //                return true;
 
       case android.R.id.home:
+        ShowsAdapter showsAdapter = getShowsListAdapter();
         if (showsAdapter != null && showsAdapter.isEmpty()) {
-          toast("Seznam je prázdný", Toast.LENGTH_SHORT);
+          toast(R.string.shows_empty_list, Toast.LENGTH_SHORT);
           return true;
         }
         if (mDrawerLayout.isDrawerOpen(showsList)) {
@@ -198,13 +194,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
 
       case R.id.action_refresh_shows:
-        try {
-          downloadShows();
-        } catch (MalformedURLException e) {
-          List list = new ArrayList<>();
-          list.add(e.getLocalizedMessage());
-          errorReportsDialog(list);
-        }
+        onRefreshShows();
         return true;
 
       case R.id.action_filter_all:
@@ -232,8 +222,8 @@ public class MainActivity extends AppCompatActivity {
     if (mediaPlayer == null) {
       initMediaPlayer();
     }
-    if (!isNetworkConnected()) {
-      toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
+    if (!NetworkUtils.isNetworkConnected()) {
+      noConnectionToast();
       return;
     }
 
@@ -242,9 +232,9 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onError() {
         new AlertDialog.Builder(MainActivity.this)
-                .setTitle(LOADING)
+                .setTitle(R.string.loading)
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setMessage(ERROR_ON_LOADING)
+                .setMessage(R.string.error_on_loading)
                 .setPositiveButton(TRY_NEXT_RECORD, new DialogInterface.OnClickListener() {
                   @Override
                   public void onClick(DialogInterface dialog, int which) {
@@ -264,18 +254,6 @@ public class MainActivity extends AppCompatActivity {
     ps.execute(url);
   }
 
-  /**
-   * Checks network connection
-   *
-   * @return <code>true</code> if and only if device is connected,
-   * <code>false</code> otherwise
-   */
-  public boolean isNetworkConnected() {
-    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-    NetworkInfo ni = cm.getActiveNetworkInfo();
-    return ni != null;
-  }
-
   public void hideLoading() {
     loadingBar.setVisibility(View.GONE);
   }
@@ -286,6 +264,10 @@ public class MainActivity extends AppCompatActivity {
     if (recordsList != null && recordsList.getVisibility() != View.GONE) {
       recordsList.setVisibility(View.INVISIBLE);
     }
+  }
+
+  public void toast(int resId, int duration) {
+    Toast.makeText(this, resId, duration).show();
   }
 
   public void toast(String msg, int duration) {
@@ -316,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
     recordsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
       @Override
       public void onChanged() {
-        showsAdapter.notifyDataSetChanged();
+        getShowsListAdapter().notifyDataSetChanged();
       }
 
       @Override
@@ -326,6 +308,19 @@ public class MainActivity extends AppCompatActivity {
     });
 
     return recordsAdapter;
+  }
+
+  private ShowsAdapter createShowsAdapter() {
+    ShowsAdapter showsAdapter = new ShowsAdapter(this);
+    showsAdapter.registerDataSetObserver(new DataSetObserver() {
+      @Override
+      public void onChanged() {
+        if (!mDrawerLayout.isDrawerOpen(showsList)) {
+          refreshActionBarSubtitle();
+        }
+      }
+    });
+    return showsAdapter;
   }
 
   private void crossfadeAnimation() {
@@ -358,8 +353,8 @@ public class MainActivity extends AppCompatActivity {
     downloader.execute(record.getRecord().getImgUrl());
   }
 
-  private void downloadNextRecords(ShowItem item) {
-    Log.d(getClass().getSimpleName(), "downloadNextRecords: for show " + item.getShow().info());
+  private void downloadNextRecords(ShowDto item) {
+    Log.d(getClass().getSimpleName(), "downloadNextRecords: for show " + item.getInfo());
     RecordsDownloader downloader = (RecordsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Records);
     downloader.setOnCompleteListener(result -> {
       onRecordsDownloaded(item, result);
@@ -372,38 +367,11 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void downloadShows() throws MalformedURLException {
-    if (!isNetworkConnected()) {
-      toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
-    } else if (!showsAreDownloading) {
-      showsAreDownloading = true;
-      startDownloadShowsToast();
-      runShowRefreshAnim();
-      ShowsDownloader downloader = (ShowsDownloader) DownloaderFactory.getDownloader(DownloaderFactory.Type.Shows);
-      downloader.setOnCompleteListener(set -> {
-        showsAreDownloading = false;
-        finishDownloadShowsToast();
-        ArrayList<ShowItem> shows = new ArrayList(set.size());
-        for (Show s : set) {
-          shows.add(new ShowItem(s));
-        }
-        setShowsNavigation(shows.toArray(new ShowItem[shows.size()]));
-        stopShowRefreshAnim();
-        unlockNavigationDrawer();
-      });
-      downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
-      downloader.execute(new URL(URL_E2 + SUB_URL_SHOWS));
-
-    } else {
-      toast(STILL_DOWNLOADING, Toast.LENGTH_SHORT);
-    }
-  }
-
   private void errorReportsDialog(List<String> reports) {
     errorReportsDialog(this, reports);
   }
 
-  private void fillRecordsList(ShowItem show) {
+  private void fillRecordsList(ShowDto show) {
     RecordsAdapter recordsAdapter = getRecordsListAdapter();
     audioController.setPlaylist(recordsAdapter);
     recordsAdapter.setSource(show);
@@ -416,29 +384,18 @@ public class MainActivity extends AppCompatActivity {
     recordsList.scrollToPosition(getSelectedRecordIndex());
   }
 
-  private void filterRecords(RecordType type) {
-    RecordsAdapter recordsAdapter = getRecordsListAdapter();
-    if (recordsAdapter == null) return;
-    recordsAdapter.filter(type);
-  }
-
-  private void finishDownloadShowsToast() {
-    if (!showsAreDownloading) {
-      toast(SHOWS_ARE_READY, Toast.LENGTH_SHORT);
-    }
-  }
 
   private int getSelectedRecordIndex() {
-    Integer selected = selectedRecords.get(playShow.getShow().getName());
+    Integer selected = selectedRecords.get(playShow.getName());
     return selected == null ? -1 : selected.intValue();
   }
 
   /**
-   * The last chosen {@link ShowItem} from navigation. Record items this show are actual in {@code recordsAdapter}.
+   * The last chosen {@link ShowDto} from navigation. Record items this show are actual in {@code recordsAdapter}.
    *
-   * @return actual {@link ShowItem} or null
+   * @return actual {@link ShowDto} or null
    */
-  private ShowItem getChosenShow() {
+  private ShowDto getChosenShow() {
     RecordsAdapter recordsAdapter = getRecordsListAdapter();
     if (recordsAdapter != null) {
       return recordsAdapter.getSource();
@@ -450,14 +407,13 @@ public class MainActivity extends AppCompatActivity {
     return (RecordsAdapter) recordsList.getAdapter();
   }
 
+  private ShowsAdapter getShowsListAdapter() {
+    return (ShowsAdapter) showsList.getAdapter();
+  }
+
   private void init() {
-    try {
-      downloadShows();
-    } catch (MalformedURLException e) {
-      List list = new ArrayList<>();
-      list.add(e.getLocalizedMessage());
-      errorReportsDialog(list);
-    }
+    onRefreshShows();
+
     loadingBar = findViewById(R.id.loadingPanel);
     loadingBar.setVisibility(View.GONE);
     // Retrieve and cache the system's default "short" animation time.
@@ -677,35 +633,23 @@ public class MainActivity extends AppCompatActivity {
     selectedRecords = new HashMap<>();
   }
 
-  private void initShowsAdapter() {
-    showsAdapter = new ShowsAdapter(this);
-    showsAdapter.registerDataSetObserver(new DataSetObserver() {
-      @Override
-      public void onChanged() {
-        if (!mDrawerLayout.isDrawerOpen(showsList)) {
-          refreshActionBarSubtitle();
-        }
-      }
-    });
-  }
-
   private void initShowsList() {
+    ShowsAdapter showsAdapter = createShowsAdapter();
     showsList = (ListView) findViewById(R.id.left_drawer);
     showsList.setSmoothScrollbarEnabled(true);
-    initShowsAdapter();
     showsList.setAdapter(showsAdapter);
-    showsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      @Override
-      public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        ShowItem s = (ShowItem) showsAdapter.getItem(i);
-        onNavigationItemClick(s, i);
-      }
+    showsList.setOnItemClickListener((adapterView, view, i, l) -> {
+      ShowDto s = (ShowDto) showsAdapter.getItem(i);
+      onNavigationItemClick(s, i);
     });
   }
 
-  private void lockNavigationDrawer(int lockMode) {
-    mDrawerLayout.setDrawerLockMode(lockMode);
+  private void setShowsNavigation(List<ShowDto> shows) {
+    getShowsListAdapter().setShows(shows.toArray(new ShowDto[0]));
+    getShowsListAdapter().notifyDataSetChanged();
   }
+
+  /*### Event handlers ###*/
 
   private void onAllFilterClick() {
     filterRecords(RecordType.All);
@@ -738,13 +682,13 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void onNavigationItemClick(ShowItem item, int position) {
+  private void onNavigationItemClick(ShowDto item, int position) {
     if (chosenShowPosition == position) {
       mDrawerLayout.closeDrawer(showsList);
       return;
     }
 
-    showsAdapter.setSelectedItem(position);
+    getShowsListAdapter().setSelectedItem(position);
     chosenShowPosition = position;
     //chosenShow = item;
     if (playShow == null) playShow = item;
@@ -760,7 +704,7 @@ public class MainActivity extends AppCompatActivity {
         crossfadeAnimation();
       });
       downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
-      downloader.execute(item.getShow().getWebSiteUrl());
+      downloader.execute(item.getWebSiteUrl());
     } else {
       fillRecordsList(item);
       crossfadeAnimation();
@@ -809,7 +753,7 @@ public class MainActivity extends AppCompatActivity {
       recordsAdapter.unmarkViewHolder((RecordItemViewHolder) viewHolder);
     }
 
-    selectedRecords.put(playShow.getShow().getName(), index);
+    selectedRecords.put(playShow.getName(), index);
     recordsAdapter.setSelected(index);
   }
 
@@ -827,8 +771,8 @@ public class MainActivity extends AppCompatActivity {
             .show();
   }
 
-  private void onRecordsDownloaded(ShowItem item, Map<String, Object> result) {
-    Log.d(getClass().getSimpleName(), "onRecordsDownloaded: for show " + item.getShow().info());
+  private void onRecordsDownloaded(ShowDto item, Map<String, Object> result) {
+    Log.d(getClass().getSimpleName(), "onRecordsDownloaded: for show " + item.getInfo());
 //    List<RecordItem> audioList = new ArrayList<>(),
 //            videoList = new ArrayList<>();
 //    Set<RecordItem> audioSet = new LinkedHashSet<>();
@@ -848,16 +792,60 @@ public class MainActivity extends AppCompatActivity {
       onRecordsDownloaded(playShow, result);
       getRecordsListAdapter().update();
       swipeRefreshLayout.setRefreshing(false);
-      toast("Refresh done", Toast.LENGTH_LONG);
+      toast(R.string.refresh_done, Toast.LENGTH_LONG);
     });
     downloader.setOnErrorListener(errors -> errorReportsDialog(errors));
-    if (playShow.getShow().hasWebSiteUrl()) {
-      Log.d(getClass().getSimpleName(), "onRefreshRecords: from " + playShow.getShow().getWebSiteUrl());
-      downloader.execute(playShow.getShow().getWebSiteUrl());
+    if (playShow.hasWebSiteUrl()) {
+      Log.d(getClass().getSimpleName(), "onRefreshRecords: from " + playShow.getWebSiteUrl());
+      downloader.execute(playShow.getWebSiteUrl());
       recordsAreDownloading = true;
     } else {
       swipeRefreshLayout.setRefreshing(false);
-      toast("Refresh done", Toast.LENGTH_LONG);
+      toast(R.string.refresh_done, Toast.LENGTH_LONG);
+    }
+  }
+
+  private void onRefreshShows() {
+    if (!NetworkUtils.isNetworkConnected()) {
+      noConnectionToast();
+    } else if (!showsAreDownloading) {
+      AsyncTask<Void, Void, List<ShowDto>> loadTask = new AsyncTask<Void, Void, List<ShowDto>>() {
+        private String error = null;
+
+        @Override
+        protected void onPreExecute() {
+          showsAreDownloading = true;
+          startDownloadShowsToast();
+          runShowRefreshAnim();
+        }
+
+        @Override
+        protected List<ShowDto> doInBackground(Void... params) {
+          try {
+            return showManager.loadAllShows();
+          } catch (ShowLoadingException e) {
+            error = e.getLocalizedMessage();
+          }
+          return Collections.EMPTY_LIST;
+        }
+
+        @Override
+        protected void onPostExecute(List<ShowDto> shows) {
+          showsAreDownloading = false;
+          finishDownloadShowsToast();
+          if (error == null) {
+            setShowsNavigation(shows);
+          } else {
+            errorReportsDialog(Collections.singletonList(error));
+          }
+          stopShowRefreshAnim();
+          unlockNavigationDrawer();
+        }
+      };
+      loadTask.execute();
+
+    } else {
+      toast(R.string.still_downloading, Toast.LENGTH_SHORT);
     }
   }
 
@@ -877,6 +865,15 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
+  /*### Actions ###*/
+
+  private void filterRecords(RecordType type) {
+    RecordsAdapter recordsAdapter = getRecordsListAdapter();
+    if (recordsAdapter == null) return;
+    recordsAdapter.filter(type);
+  }
+
+
   private void playVideo(URL url) {
    /* if (recordItem.getType().compareTo(Type.Video) != 0) return;
     if (audioController.isPlaying()) audioController.clickOnPlayPause();
@@ -890,13 +887,13 @@ public class MainActivity extends AppCompatActivity {
     if (intent.resolveActivity(getPackageManager()) != null) {
       startActivity(intent);
     } else {
-      toast("None app to playing video", Toast.LENGTH_LONG);
+      toast(R.string.error_none_video_app, Toast.LENGTH_LONG);
     }
   }
 
   private void refreshActionBarSubtitle() {
     if (getChosenShow() != null) {
-      actionBar.setSubtitle(getChosenShow().getShow().getName() + " (" + getRecordsListAdapter().getItemCount() + ")");
+      actionBar.setSubtitle(getChosenShow().getName() + " (" + getRecordsListAdapter().getItemCount() + ")");
     }
   }
 
@@ -908,10 +905,6 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void startDownloadShowsToast() {
-    if (!showsAreDownloading) toast(DOWNLOADING_SHOWS, Toast.LENGTH_SHORT);
-  }
-
   private void stopShowRefreshAnim() {
     if (refreshShowButton != null) {
       if (!showsAreDownloading) {
@@ -920,13 +913,8 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void setShowsNavigation(ShowItem[] shows) {
-    if (showsAdapter == null) {
-      initShowsAdapter();
-      showsList.setAdapter(showsAdapter);
-    }
-    showsAdapter.setShows(shows);
-    showsAdapter.notifyDataSetChanged();
+  private void lockNavigationDrawer(int lockMode) {
+    mDrawerLayout.setDrawerLockMode(lockMode);
   }
 
   private void unlockNavigationDrawer() {
@@ -938,4 +926,20 @@ public class MainActivity extends AppCompatActivity {
     filterItem.setTitle(item.getTitle());
     filterItem.setIcon(item.getIcon());
   }
+
+  /*### Toasts ###*/
+
+  private void noConnectionToast(){
+    toast(R.string.error_no_connection, Toast.LENGTH_LONG);
+  }
+  private void finishDownloadShowsToast() {
+    if (!showsAreDownloading) {
+      toast(R.string.shows_are_ready, Toast.LENGTH_SHORT);
+    }
+  }
+
+  private void startDownloadShowsToast() {
+    if (!showsAreDownloading) toast(R.string.downloading_shows, Toast.LENGTH_SHORT);
+  }
+
 }

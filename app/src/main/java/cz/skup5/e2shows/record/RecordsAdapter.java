@@ -9,8 +9,8 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 
+import cz.skup5.e2shows.dto.ShowDto;
 import cz.skup5.e2shows.playlist.Playlist;
-import cz.skup5.e2shows.show.ShowItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +29,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
   private static final int ITEM_MARK_BG = android.R.color.holo_blue_dark;
 
   private Context context;
-  private ShowItem source;
+  private ShowDto source;
   private OnRecordItemClickListener onRecordClickListener;
   private OnMenuItemClickListener<RecordItemViewHolder> onMenuClickListener;
   //  private RecordItem[] publicRecords = new RecordItem[0];
@@ -44,7 +44,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
     this(context, null);
   }
 
-  public RecordsAdapter(Context context, ShowItem source) {
+  public RecordsAdapter(Context context, ShowDto source) {
     this.context = context;
     this.loading = false;
     this.selected = SELECTED_NONE;
@@ -133,7 +133,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
     return publicRecords.get(index);
   }
 
-  public ShowItem getSource() {
+  public ShowDto getSource() {
     return source;
   }
 
@@ -161,7 +161,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
     this.selected = selected;
   }
 
-  public void setSource(ShowItem source) {
+  public void setSource(ShowDto source) {
     this.source = source;
     /*SortedSet<RecordItem> recs = new TreeSet<>(source.getAudioRecords());
     recs.addAll(source.getVideoRecords());
@@ -203,7 +203,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> i
   @Override
   public void onBindViewHolder(RecordItemViewHolder holder, int position) {
     if (!isEmpty()) {
-      holder.setData(getSource().getShow().getName(), publicRecords.get(position), position);
+      holder.setData(getSource().getName(), publicRecords.get(position), position);
       if (isSelected(position)) {
         markViewHolder(holder);
       } else {

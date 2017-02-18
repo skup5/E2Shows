@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_evropa2_domain">https://evropa2.cz/</string>
+    <string name="url_evropa2_shows_subdomain">shows/</string>
+</resources>
