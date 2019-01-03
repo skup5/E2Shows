@@ -1,37 +1,34 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '24.0.3'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId 'cz.skup5.e2shows'
         minSdkVersion 17
-        targetSdkVersion 23
+        targetSdkVersion 28
         versionCode 5
         versionName '2.0.3'
-        jackOptions{
-            enabled true
-        }
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     productFlavors {
     }
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:23.+'
-    compile 'com.android.support:recyclerview-v7:23.+'
-    compile 'com.android.support:support-v4:23.+'
+    compile 'com.android.support:appcompat-v7:28.0.0'
+    compile 'com.android.support:recyclerview-v7:28.0.0'
+    compile 'com.android.support:support-v4:28.0.0'
     compile files('../libs/jEvropa2/jEvropa2.jar')
     compile 'org.jsoup:jsoup:1.10.2'
     compile 'org.mod4j.org.apache.commons:lang:2.1.0'
