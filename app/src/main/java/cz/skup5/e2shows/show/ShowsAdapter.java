@@ -9,13 +9,14 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import cz.skup5.e2shows.R;
+import cz.skup5.e2shows.dto.ShowDto;
 
 /**
  * Created by Roman on 16.6.2016.
  */
 public class ShowsAdapter extends BaseAdapter {
 
-  private ShowItem[] shows = new ShowItem[0];
+  private ShowDto[] shows = new ShowDto[0];
   private LayoutInflater inflater;
   private int textColor = Color.TRANSPARENT;
   private int markItemColor;
@@ -50,7 +51,7 @@ public class ShowsAdapter extends BaseAdapter {
     view = inflater.inflate(R.layout.shows_list_item, null);
     textView = (TextView) view.findViewById(R.id.shows_list_item);
 
-    textView.setText(((ShowItem) getItem(i)).getShow().getName());
+    textView.setText(((ShowDto) getItem(i)).getName());
 
     if (textColor == Color.TRANSPARENT) {
       textColor = textView.getCurrentTextColor();
@@ -84,7 +85,7 @@ public class ShowsAdapter extends BaseAdapter {
     this.selectedItem = selectedItem;
   }
 
-  public void setShows(ShowItem[] shows) {
+  public void setShows(ShowDto[] shows) {
     this.shows = shows;
   }
 }

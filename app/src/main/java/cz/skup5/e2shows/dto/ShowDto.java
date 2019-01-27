@@ -1,13 +1,12 @@
-package cz.skup5.e2shows.show;
-
-import cz.skup5.e2shows.record.RecordItem;
-import cz.skup5.e2shows.record.RecordType;
+package cz.skup5.e2shows.dto;
 
 import java.net.URL;
 import java.util.Collection;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
+import cz.skup5.e2shows.record.RecordItem;
+import cz.skup5.e2shows.record.RecordType;
 import cz.skup5.jEvropa2.data.Show;
 
 /**
@@ -17,7 +16,7 @@ import cz.skup5.jEvropa2.data.Show;
  *
  * @author Skup5
  */
-public class ShowItem {
+public class ShowDto {
 
     public static final int ITEMS_PER_PAGE = 10;
 
@@ -30,11 +29,11 @@ public class ShowItem {
     private int audioPage = 0;
     private URL nextPageUrl = EMPTY_URL;
 
-    public ShowItem(Show show) {
-        this.show = show;
-    }
+  public ShowDto(Show show) {
+    this.show = show;
+  }
 
-    public void addRecordItems(Collection<RecordItem> newRecordItems) {
+  public void addRecordItems(Collection<RecordItem> newRecordItems) {
 //    for (RecordItem item : newRecordItems) {
 //      recordItems.add(item);
 //    }
@@ -42,28 +41,28 @@ public class ShowItem {
 //      System.out.println(r);
 //    System.out.println("##################");
 
-        recordItems.addAll(newRecordItems);
-    }
+    recordItems.addAll(newRecordItems);
+  }
 
-    /**
-     * Returns set of {@link RecordItem}s with the requested {@link RecordType}.
-     *
-     * @param type the requested {@link RecordType}. If is {@link RecordType#All}, returns all record items
-     * @return set of record items with the given {@link RecordType} or empty set
-     */
-    public NavigableSet<RecordItem> getRecordItemsWithType(RecordType type) {
-        NavigableSet<RecordItem> filteredSet = new TreeSet<>();
-        if (type == RecordType.All) {
-            filteredSet.addAll(recordItems);
-        } else {
-            for (RecordItem item : recordItems) {
-                if (item.getType() == type) {
-                    filteredSet.add(item);
-                }
-            }
+  /**
+   * Returns set of {@link RecordItem}s with the requested {@link RecordType}.
+   *
+   * @param type the requested {@link RecordType}. If is {@link RecordType#All}, returns all record items
+   * @return set of record items with the given {@link RecordType} or empty set
+   */
+  public NavigableSet<RecordItem> getRecordItemsWithType(RecordType type) {
+    NavigableSet<RecordItem> filteredSet = new TreeSet<>();
+    if (type == RecordType.All) {
+      filteredSet.addAll(recordItems);
+    } else {
+      for (RecordItem item : recordItems) {
+        if (item.getType() == type) {
+          filteredSet.add(item);
         }
-        return filteredSet;
+      }
     }
+    return filteredSet;
+  }
 
     /**
      * Increases the current audio page number and returns new value.
@@ -92,13 +91,21 @@ public class ShowItem {
         return recordItems.isEmpty();
     }
 
+    public String getInfo() {
+     return show.info();
+  }
+
+    public String getName() {
+        return show.getName();
+    }
+
     public int getAudioPage() {
         return audioPage;
     }
 
-    public Show getShow() {
-        return show;
-    }
+  public Show getShow() {
+    return show;
+  }
 
     public URL getNextPageUrl() {
         return nextPageUrl;
@@ -108,7 +115,7 @@ public class ShowItem {
         return nextPageUrl != EMPTY_URL;
     }
 
-    public void setNextPageUrl(URL nextPageUrl) {
-        this.nextPageUrl = nextPageUrl;
-    }
+  public void setNextPageUrl(URL nextPageUrl) {
+    this.nextPageUrl = nextPageUrl;
+  }
 }

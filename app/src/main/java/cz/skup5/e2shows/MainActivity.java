@@ -8,13 +8,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.DataSetObserver;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.GravityCompat;
@@ -33,14 +33,12 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,13 +47,16 @@ import java.util.Set;
 import cz.skup5.e2shows.downloader.CoverImageDownloader;
 import cz.skup5.e2shows.downloader.MediaUrlDownloader;
 import cz.skup5.e2shows.downloader.RecordsDownloader;
-import cz.skup5.e2shows.downloader.ShowsDownloader;
+import cz.skup5.e2shows.dto.ShowDto;
+import cz.skup5.e2shows.exception.ShowLoadingException;
+import cz.skup5.e2shows.manager.BasicShowManager;
+import cz.skup5.e2shows.manager.ShowManager;
 import cz.skup5.e2shows.record.RecordItem;
 import cz.skup5.e2shows.record.RecordItemViewHolder;
 import cz.skup5.e2shows.record.RecordType;
 import cz.skup5.e2shows.record.RecordsAdapter;
-import cz.skup5.e2shows.show.ShowItem;
 import cz.skup5.e2shows.show.ShowsAdapter;
+import cz.skup5.e2shows.utils.NetworkUtils;
 
 //import cz.skup5.e2shows.manager.BasicPlaylistManager;
 //import cz.skup5.e2shows.playlist.PlaylistManager;
@@ -67,19 +68,14 @@ import cz.skup5.e2shows.show.ShowsAdapter;
  */
 public class MainActivity extends AppCompatActivity {
 
-    public static final String
-        DOWNLOADING_SHOWS = "Stahuji seznam Show...",
-        ERROR_ON_LOADING = "Při načítání došlo k chybě :-(",
-        ERROR_NO_CONNECTION = "Nejsi připojen k síti",
-        LOADING = "Načítání",
-        SHOWS_ARE_READY = "Show jsou připraveny",
-        STILL_DOWNLOADING = "Stahování probíhá...",
-        TRY_NEXT_RECORD = "Zkus další";
+    public static final String TRY_NEXT_RECORD = "Zkus další";
 
     private static final int
         ITEM_OFFSET = 6,
         VISIBLE_TRESHOLD = 5;
 
+    private static Context CONTEXT;
+    private static final ShowManager showManager = BasicShowManager.getInstance();
 //  private static final PlaylistManager playlistManager = BasicPlaylistManager.getInstance();
 
     private MediaPlayer mediaPlayer;
@@ -88,10 +84,10 @@ public class MainActivity extends AppCompatActivity {
 
     private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recordsList;
-//  private RecordsAdapter recordsAdapter;
+    //  private RecordsAdapter recordsAdapter;
 
     private ListView showsList;
-    private ShowsAdapter showsAdapter;
+    //private ShowsAdapter showsAdapter;
 
     private boolean
         recordsAreDownloading = false,
@@ -101,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private ActionBar actionBar;
     private RecordItem chosenRecord;
-    private ShowItem playShow;
+    private ShowDto playShow;
     private int chosenShowPosition = -1;
     private View loadingBar;
     private int crossfadeAnimDuration;
@@ -146,6 +142,10 @@ public class MainActivity extends AppCompatActivity {
             }).show();
     }
 
+    public static Context getContext() {
+        return CONTEXT;
+    }
+
     /*#######################################################
       ###               OVERRIDE METHODS                  ###
       #######################################################*/
@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CONTEXT = this;
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main_layout);
 //        setContentView(R.layout.testing_layout);
@@ -183,8 +184,9 @@ public class MainActivity extends AppCompatActivity {
 //                return true;
 
             case android.R.id.home:
+                ShowsAdapter showsAdapter = getShowsListAdapter();
                 if (showsAdapter != null && showsAdapter.isEmpty()) {
-                    toast("Seznam je prázdný", Toast.LENGTH_SHORT);
+                    toast(R.string.shows_empty_list, Toast.LENGTH_SHORT);
                     return true;
                 }
                 if (mDrawerLayout.isDrawerOpen(showsList)) {
@@ -195,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_refresh_shows:
-                downloadShows();
+                onRefreshShows();
                 return true;
 
             case R.id.action_filter_all:
@@ -223,8 +225,8 @@ public class MainActivity extends AppCompatActivity {
         if (mediaPlayer == null) {
             initMediaPlayer();
         }
-        if (!isNetworkConnected()) {
-            toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
+        if (!NetworkUtils.isNetworkConnected()) {
+            noConnectionToast();
             return;
         }
 
@@ -233,12 +235,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onError() {
                 new AlertDialog.Builder(MainActivity.this)
-                    .setTitle(LOADING)
+                    .setTitle(R.string.loading)
                     .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setMessage(ERROR_ON_LOADING)
-                    .setPositiveButton(TRY_NEXT_RECORD, (dialog, which) -> {
-                        audioPlayerControl.next();
-                        dialog.dismiss();
+                    .setMessage(R.string.error_on_loading)
+                    .setPositiveButton(TRY_NEXT_RECORD, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            audioPlayerControl.next();
+                            dialog.dismiss();
+                        }
                     }).setCancelable(true)
 //                .setNegativeButton(STORNO, new DialogInterface.OnClickListener() {
 //                  @Override
@@ -306,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
         recordsAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {
-                showsAdapter.notifyDataSetChanged();
+                getShowsListAdapter().notifyDataSetChanged();
             }
 
             @Override
@@ -316,6 +321,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
         return recordsAdapter;
+    }
+
+    private ShowsAdapter createShowsAdapter() {
+        ShowsAdapter showsAdapter = new ShowsAdapter(this);
+        showsAdapter.registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                if (!mDrawerLayout.isDrawerOpen(showsList)) {
+                    refreshActionBarSubtitle();
+                }
+            }
+        });
+        return showsAdapter;
     }
 
     private void crossfadeAnimation() {
@@ -339,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void downloadCoverImage(RecordItem record) {
-        CoverImageDownloader downloader = new CoverImageDownloader();
+        final CoverImageDownloader downloader = new CoverImageDownloader();
         downloader.setOnCompleteListener(bitmap -> {
             audioController.setCoverImage(bitmap);
             record.setCover(bitmap);
@@ -354,10 +372,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void downloadNextRecords(ShowItem item) {
+    private void downloadNextRecords(ShowDto item) {
         Log.d(getClass().getSimpleName(), "downloadNextRecords: for show " + item.getShow().getName());
 
-        RecordsDownloader downloader = new RecordsDownloader(item.incAudioPage(), ShowItem.ITEMS_PER_PAGE, item.getShow());
+        final RecordsDownloader downloader = new RecordsDownloader(item.incAudioPage(), ShowDto.ITEMS_PER_PAGE, item.getShow());
         downloader.setOnCompleteListener(result -> {
             onRecordsDownloaded(item, result);
             getRecordsListAdapter().update();
@@ -371,34 +389,11 @@ public class MainActivity extends AppCompatActivity {
         recordsAreDownloading = true;
     }
 
-    private void downloadShows() {
-        if (!isNetworkConnected()) {
-            toast(ERROR_NO_CONNECTION, Toast.LENGTH_LONG);
-        } else if (!showsAreDownloading) {
-            showsAreDownloading = true;
-            startDownloadShowsToast();
-            runShowRefreshAnim();
-            ShowsDownloader downloader = new ShowsDownloader();
-            downloader.setOnCompleteListener(showItemSet -> {
-                showsAreDownloading = false;
-                finishDownloadShowsToast();
-                setShowsNavigation(showItemSet.toArray(new ShowItem[0]));
-                stopShowRefreshAnim();
-                unlockNavigationDrawer();
-            });
-            downloader.setOnErrorListener(this::errorReportsDialog);
-            downloader.execute();
-
-        } else {
-            toast(STILL_DOWNLOADING, Toast.LENGTH_SHORT);
-        }
-    }
-
     private void errorReportsDialog(List<String> reports) {
         errorReportsDialog(this, reports);
     }
 
-    private void fillRecordsList(ShowItem show) {
+    private void fillRecordsList(ShowDto show) {
         RecordsAdapter recordsAdapter = getRecordsListAdapter();
         audioController.setPlaylist(recordsAdapter);
         recordsAdapter.setSource(show);
@@ -411,29 +406,17 @@ public class MainActivity extends AppCompatActivity {
         recordsList.scrollToPosition(getSelectedRecordIndex());
     }
 
-    private void filterRecords(RecordType type) {
-        RecordsAdapter recordsAdapter = getRecordsListAdapter();
-        if (recordsAdapter == null) return;
-        recordsAdapter.filter(type);
-    }
-
-    private void finishDownloadShowsToast() {
-        if (!showsAreDownloading) {
-            toast(SHOWS_ARE_READY, Toast.LENGTH_SHORT);
-        }
-    }
-
     private int getSelectedRecordIndex() {
         Integer selected = selectedRecords.get(playShow.getShow().getName());
         return selected == null ? -1 : selected;
     }
 
     /**
-     * The last chosen {@link ShowItem} from navigation. Record items this show are actual in {@code recordsAdapter}.
+     * The last chosen {@link ShowDto} from navigation. Record items this show are actual in {@code recordsAdapter}.
      *
-     * @return actual {@link ShowItem} or null
+     * @return actual {@link ShowDto} or null
      */
-    private ShowItem getChosenShow() {
+    private ShowDto getChosenShow() {
         RecordsAdapter recordsAdapter = getRecordsListAdapter();
         if (recordsAdapter != null) {
             return recordsAdapter.getSource();
@@ -445,8 +428,12 @@ public class MainActivity extends AppCompatActivity {
         return (RecordsAdapter) recordsList.getAdapter();
     }
 
+    private ShowsAdapter getShowsListAdapter() {
+        return (ShowsAdapter) showsList.getAdapter();
+    }
+
     private void init() {
-        downloadShows();
+        onRefreshShows();
 
         loadingBar = findViewById(R.id.loadingPanel);
         loadingBar.setVisibility(View.GONE);
@@ -490,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
 
         mDrawerLayout = findViewById(R.id.drawer);
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        lockNavigationDrawer(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
         final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,
             mDrawerLayout, R.string.navigation_drawer_open,
@@ -654,32 +641,24 @@ public class MainActivity extends AppCompatActivity {
         selectedRecords = new HashMap<>();
     }
 
-    private void initShowsAdapter() {
-        showsAdapter = new ShowsAdapter(this);
-        showsAdapter.registerDataSetObserver(new DataSetObserver() {
-            @Override
-            public void onChanged() {
-                if (!mDrawerLayout.isDrawerOpen(showsList)) {
-                    refreshActionBarSubtitle();
-                }
-            }
-        });
-    }
-
     private void initShowsList() {
+        ShowsAdapter showsAdapter = createShowsAdapter();
         showsList = findViewById(R.id.left_drawer);
         showsList.setSmoothScrollbarEnabled(true);
-        initShowsAdapter();
         showsList.setAdapter(showsAdapter);
         showsList.setOnItemClickListener((adapterView, view, i, l) -> {
-            ShowItem s = (ShowItem) showsAdapter.getItem(i);
+            ShowDto s = (ShowDto) showsAdapter.getItem(i);
             onNavigationItemClick(s, i);
         });
     }
 
-    private void lockNavigationDrawer(int lockMode) {
-        mDrawerLayout.setDrawerLockMode(lockMode);
+    private void setShowsNavigation(List<ShowDto> shows) {
+        getShowsListAdapter().setShows(shows.toArray(new ShowDto[0]));
+        getShowsListAdapter().notifyDataSetChanged();
     }
+
+
+    /*### Event handlers ###*/
 
     private void onAllFilterClick() {
         filterRecords(RecordType.All);
@@ -700,7 +679,7 @@ public class MainActivity extends AppCompatActivity {
         if (record.getRecord().hasMediaUri()) {
             prepareMediaPlayerSource(record.getRecord().getMediaUri().toString());
         } else {
-            MediaUrlDownloader downloader = new MediaUrlDownloader();
+            final MediaUrlDownloader downloader = new MediaUrlDownloader();
             downloader.setOnCompleteListener(uri -> {
                 if (uri != null) {
                     record.getRecord().setMediaUri(uri);
@@ -712,13 +691,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void onNavigationItemClick(ShowItem item, int position) {
+    private void onNavigationItemClick(ShowDto item, int position) {
         if (chosenShowPosition == position) {
             mDrawerLayout.closeDrawer(showsList);
             return;
         }
 
-        showsAdapter.setSelectedItem(position);
+        getShowsListAdapter().setSelectedItem(position);
         chosenShowPosition = position;
         //chosenShow = item;
         if (playShow == null) playShow = item;
@@ -727,7 +706,7 @@ public class MainActivity extends AppCompatActivity {
         showLoading();
 
         if (item.isEmpty()) {
-            RecordsDownloader downloader = new RecordsDownloader(item.incAudioPage(), ShowItem.ITEMS_PER_PAGE, item.getShow());
+            final RecordsDownloader downloader = new RecordsDownloader(item.incAudioPage(), ShowDto.ITEMS_PER_PAGE, item.getShow());
             downloader.setOnCompleteListener(result -> {
                 onRecordsDownloaded(item, result);
                 fillRecordsList(item);
@@ -799,8 +778,11 @@ public class MainActivity extends AppCompatActivity {
             .show();
     }
 
-    private void onRecordsDownloaded(ShowItem item, Set<RecordItem> records) {
-        Log.d(getClass().getSimpleName(), "onRecordsDownloaded: for show " + item.getShow().info());
+    private void onRecordsDownloaded(ShowDto item, Set<RecordItem> records) {
+        Log.d(getClass().getSimpleName(), "onRecordsDownloaded: for show " + item.getInfo());
+//    List<RecordItem> audioList = new ArrayList<>(),
+//            videoList = new ArrayList<>();
+//    Set<RecordItem> audioSet = new LinkedHashSet<>();
 
         if (!records.isEmpty()) {
             item.addRecordItems(records);
@@ -811,7 +793,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onRefreshRecords() {
-        RecordsDownloader downloader = new RecordsDownloader(1, ShowItem.ITEMS_PER_PAGE, playShow.getShow());
+        final RecordsDownloader downloader = new RecordsDownloader(1, ShowDto.ITEMS_PER_PAGE, playShow.getShow());
         downloader.setOnCompleteListener(result -> {
             onRecordsDownloaded(playShow, result);
             getRecordsListAdapter().update();
@@ -822,6 +804,50 @@ public class MainActivity extends AppCompatActivity {
         Log.d(getClass().getSimpleName(), "onRefreshRecords: from " + playShow.getShow().getName());
         downloader.execute();
         recordsAreDownloading = true;
+    }
+
+    private void onRefreshShows() {
+        if (!NetworkUtils.isNetworkConnected()) {
+            noConnectionToast();
+        } else if (!showsAreDownloading) {
+            AsyncTask<Void, Void, List<ShowDto>> loadTask = new AsyncTask<Void, Void, List<ShowDto>>() {
+                private String error = null;
+
+                @Override
+                protected void onPreExecute() {
+                    showsAreDownloading = true;
+                    startDownloadShowsToast();
+                    runShowRefreshAnim();
+                }
+
+                @Override
+                protected List<ShowDto> doInBackground(Void... params) {
+                    try {
+                        return showManager.loadAllShows();
+                    } catch (ShowLoadingException e) {
+                        error = e.getLocalizedMessage();
+                    }
+                    return Collections.EMPTY_LIST;
+                }
+
+                @Override
+                protected void onPostExecute(List<ShowDto> shows) {
+                    showsAreDownloading = false;
+                    finishDownloadShowsToast();
+                    if (error == null) {
+                        setShowsNavigation(shows);
+                    } else {
+                        errorReportsDialog(Collections.singletonList(error));
+                    }
+                    stopShowRefreshAnim();
+                    unlockNavigationDrawer();
+                }
+            };
+            loadTask.execute();
+
+        } else {
+            toast(R.string.still_downloading, Toast.LENGTH_SHORT);
+        }
     }
 
     private void onVideoItemClick(RecordItem record) {
@@ -841,6 +867,15 @@ public class MainActivity extends AppCompatActivity {
         Log.e(getClass().getSimpleName(), "onVideoItemClick(record): Not implemented yet.");
     }
 
+
+    /*### Actions ###*/
+
+    private void filterRecords(RecordType type) {
+        RecordsAdapter recordsAdapter = getRecordsListAdapter();
+        if (recordsAdapter == null) return;
+        recordsAdapter.filter(type);
+    }
+
     private void playVideo(URL url) {
    /* if (recordItem.getType().compareTo(Type.Video) != 0) return;
     if (audioController.isPlaying()) audioController.clickOnPlayPause();
@@ -854,7 +889,7 @@ public class MainActivity extends AppCompatActivity {
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         } else {
-            toast("None app to playing video", Toast.LENGTH_LONG);
+            toast(R.string.error_none_video_app, Toast.LENGTH_LONG);
         }
     }
 
@@ -872,10 +907,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startDownloadShowsToast() {
-        if (!showsAreDownloading) toast(DOWNLOADING_SHOWS, Toast.LENGTH_SHORT);
-    }
-
     private void stopShowRefreshAnim() {
         if (refreshShowButton != null) {
             if (!showsAreDownloading) {
@@ -884,13 +915,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setShowsNavigation(ShowItem[] shows) {
-        if (showsAdapter == null) {
-            initShowsAdapter();
-            showsList.setAdapter(showsAdapter);
-        }
-        showsAdapter.setShows(shows);
-        showsAdapter.notifyDataSetChanged();
+    private void lockNavigationDrawer(int lockMode) {
+        mDrawerLayout.setDrawerLockMode(lockMode);
     }
 
     private void unlockNavigationDrawer() {
@@ -902,4 +928,22 @@ public class MainActivity extends AppCompatActivity {
         filterItem.setTitle(item.getTitle());
         filterItem.setIcon(item.getIcon());
     }
+
+
+    /*### Toasts ###*/
+
+    private void noConnectionToast() {
+        toast(R.string.error_no_connection, Toast.LENGTH_LONG);
+    }
+
+    private void finishDownloadShowsToast() {
+        if (!showsAreDownloading) {
+            toast(R.string.shows_are_ready, Toast.LENGTH_SHORT);
+        }
+    }
+
+    private void startDownloadShowsToast() {
+        if (!showsAreDownloading) toast(R.string.downloading_shows, Toast.LENGTH_SHORT);
+    }
+
 }

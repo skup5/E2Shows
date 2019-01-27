@@ -1,4 +1,4 @@
-package cz.skup5.e2shows.playlist;
+package cz.skup5.e2shows.exception;
 
 /**
  * Created by Skup on 12.2.2017.
