@@ -23,29 +23,30 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/testingButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Stahnout"
-                android:id="@+id/testingButton"
+                android:layout_gravity="center_horizontal"
                 android:nestedScrollingEnabled="false"
-                android:layout_gravity="center_horizontal"/>
+                android:text="Stahnout"/>
 
             <TextView
+                android:id="@+id/testingTextView"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/testingTextView" />
+                android:layout_height="wrap_content"/>
 
             <EditText
+                android:id="@+id/testingTextFied"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/testingTextFied"/>
+                android:layout_height="wrap_content"/>
 
             <ImageView
+                android:id="@+id/testingImage"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:scaleType="centerCrop"
-                android:id="@+id/testingImage"/>
+                android:scaleType="centerCrop"/>
 
+            <include layout="@layout/audio_controller"/>
         </LinearLayout>
 
     </FrameLayout>
