@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import cz.skup5.e2shows.listener.OnCompleteListener;
+import cz.skup5.e2shows.listener.OnErrorListener;
 import cz.skup5.jEvropa2.HtmlParser;
 
 /**
@@ -93,11 +95,4 @@ abstract class AbstractDownloader<Params, Progress, Result> extends AsyncTask<Pa
         }
     }
 
-    public interface OnCompleteListener<Result> {
-        void onComplete(Result result);
-    }
-
-    public interface OnErrorListener {
-        void onError(List<String> errors);
-    }
 }

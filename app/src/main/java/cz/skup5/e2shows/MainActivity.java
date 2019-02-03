@@ -14,7 +14,6 @@ import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.GravityCompat;
@@ -38,7 +37,6 @@ import android.widget.Toast;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +46,6 @@ import cz.skup5.e2shows.downloader.CoverImageDownloader;
 import cz.skup5.e2shows.downloader.MediaUrlDownloader;
 import cz.skup5.e2shows.downloader.RecordsDownloader;
 import cz.skup5.e2shows.dto.ShowDto;
-import cz.skup5.e2shows.exception.ShowLoadingException;
 import cz.skup5.e2shows.manager.BasicShowManager;
 import cz.skup5.e2shows.manager.ShowManager;
 import cz.skup5.e2shows.record.RecordItem;
@@ -810,40 +807,22 @@ public class MainActivity extends AppCompatActivity {
         if (!NetworkUtils.isNetworkConnected()) {
             noConnectionToast();
         } else if (!showsAreDownloading) {
-            AsyncTask<Void, Void, List<ShowDto>> loadTask = new AsyncTask<Void, Void, List<ShowDto>>() {
-                private String error = null;
+            showsAreDownloading = true;
+            startDownloadShowsToast();
+            runShowRefreshAnim();
 
-                @Override
-                protected void onPreExecute() {
-                    showsAreDownloading = true;
-                    startDownloadShowsToast();
-                    runShowRefreshAnim();
-                }
-
-                @Override
-                protected List<ShowDto> doInBackground(Void... params) {
-                    try {
-                        return showManager.loadAllShows();
-                    } catch (ShowLoadingException e) {
-                        error = e.getLocalizedMessage();
-                    }
-                    return Collections.EMPTY_LIST;
-                }
-
-                @Override
-                protected void onPostExecute(List<ShowDto> shows) {
+            showManager.loadAllShowsAsync(
+                shows -> {
                     showsAreDownloading = false;
                     finishDownloadShowsToast();
-                    if (error == null) {
+                    if (shows != null && !shows.isEmpty()) {
                         setShowsNavigation(shows);
-                    } else {
-                        errorReportsDialog(Collections.singletonList(error));
                     }
                     stopShowRefreshAnim();
                     unlockNavigationDrawer();
-                }
-            };
-            loadTask.execute();
+                },
+                (this::errorReportsDialog)
+            );
 
         } else {
             toast(R.string.still_downloading, Toast.LENGTH_SHORT);
