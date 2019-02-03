@@ -7,6 +7,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import cz.skup5.e2shows.R;
 
 /**
@@ -19,15 +23,18 @@ import cz.skup5.e2shows.R;
 
 public class RecordItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnCreateContextMenuListener, MenuItem.OnMenuItemClickListener {
 
-    //private static final DateFormat dateFormat = new SimpleDateFormat("dd. M. yyyy");
+    private static final DateFormat DATEFORMAT = new SimpleDateFormat("h:mm d.M.yyyy");
+    private static final Date DATETIME = new Date();
+
     private View parentView;
     private TextView textViewRecordName,
-        textViewRecordCategory,
-        textViewRecordDate;
+    textViewRecordCategory,
+    textViewRecordDate;
     private ImageView imageViewRecordType;
     private RecordItem actualRecord;
     private OnRecordItemClickListener recordItemClickListener;
     private OnMenuItemClickListener<RecordItemViewHolder> menuItemClickListener;
+
     private int recordIndex;
 
     public RecordItemViewHolder(View itemView) {
@@ -60,7 +67,8 @@ public class RecordItemViewHolder extends RecyclerView.ViewHolder implements Vie
     public void setData(String showName, RecordItem record, int index) {
         textViewRecordName.setText(record.getRecord().getName());
         textViewRecordCategory.setText(showName);
-        textViewRecordDate.setText(record.getRecord().getTimestamp());
+        DATETIME.setTime(record.getRecord().getTimestamp());
+        textViewRecordDate.setText(DATEFORMAT.format(DATETIME));
         if (record.getType() == RecordType.Audio) {
             imageViewRecordType.setBackgroundResource(cz.skup5.e2shows.R.drawable.ic_music_circle);
         } else if (record.getType() == RecordType.Video) {

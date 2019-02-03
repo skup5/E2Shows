@@ -58,6 +58,6 @@ public class RecordItem implements Comparable<RecordItem>, PlaylistItem {
     }
 
     private int compareTimes(RecordItem recordItem) {
-        return recordItem.getRecord().getTimestamp().compareTo(getRecord().getTimestamp());
+        return (int) (recordItem.getRecord().getTimestamp() - getRecord().getTimestamp());
     }
 }
