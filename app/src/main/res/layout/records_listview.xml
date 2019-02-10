@@ -3,14 +3,8 @@
                 xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:weightSum="1"><!--android:orientation="vertical"-->
+                android:weightSum="1">
 
-
-    <!--<ListView-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:id="@+id/listView_records"-->
-    <!--android:layout_above="@+id/audio_controller" />-->
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -27,21 +21,8 @@
             android:layout_height="match_parent"
             android:layout_marginLeft="6dp"
             android:layout_marginRight="6dp"/>
-        <!--android:layout_above="@+id/audio_controller"-->
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <include layout="@layout/audio_controller"/>
-
-    <!--<include layout="@layout/audio_controller"-->
-    <!--android:id="@+id/include" />-->
-
-    <!--<MediaController
-        android:id="@+id/media_controller"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_alignParentBottom="true"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:visibility="visible" />-->
 
 </RelativeLayout>

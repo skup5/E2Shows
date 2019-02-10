@@ -2,8 +2,18 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Base.Theme.AppCompat">
+        <item name="actionBarStyle">@style/ActionBarStyle</item>
         <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
         <item name="actionButtonStyle">@style/AppTheme.Widget.ActionButton</item>
+        <item name="android:fontFamily">@font/biryani</item>
+        <item name="fontFamily">@font/biryani</item>
+    </style>
+
+    <style name="ActionBarStyle" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:minHeight">?attr/actionBarSize</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="titleTextStyle">@style/ToolbarTitleAppearance</item>
+        <item name="subtitleTextStyle">@style/ToolbarSubtitleAppearance</item>
     </style>
 
     <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
@@ -13,6 +23,15 @@
 
     <style name="AppTheme.Widget.ActionButton" parent="@style/Widget.AppCompat.ActionButton">
         <item name="textAllCaps">false</item>
+    </style>
+
+    <style name="ToolbarTitleAppearance" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">18sp</item>
+        <!-- include other attributes you want to change: textColor, textStyle, etc -->
+    </style>
+
+    <style name="ToolbarSubtitleAppearance" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
+        <item name="android:textSize">14sp</item>
     </style>
 
 </resources>
