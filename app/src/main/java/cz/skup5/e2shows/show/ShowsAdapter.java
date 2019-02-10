@@ -27,7 +27,7 @@ public class ShowsAdapter extends BaseAdapter {
 
   public ShowsAdapter(Context context) {
     this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    this.markItemColor = context.getResources().getColor(android.R.color.holo_blue_dark);
+      this.markItemColor = context.getResources().getColor(R.color.colorPrimary);
   }
 
   @Override

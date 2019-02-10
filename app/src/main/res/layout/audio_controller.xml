@@ -8,7 +8,7 @@
     android:layout_alignParentBottom="true"
     android:layout_alignParentLeft="true"
     android:layout_alignParentStart="true"
-    android:background="#ee212121"
+    android:background="?attr/backgroundDarkColor"
     android:minHeight="20dp"
     tools:showIn="@layout/records_listview">
 
@@ -84,7 +84,6 @@
             android:layout_below="@+id/audio_controller_time_controllers"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
-            <!--android:background="@color/background_material_dark"-->
 
             <ImageButton
                 android:id="@+id/audio_controller_previous_button"

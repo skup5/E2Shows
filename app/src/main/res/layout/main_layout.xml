@@ -12,8 +12,7 @@
     <FrameLayout
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/primary_material_dark">
+        android:layout_height="match_parent">
 
         <include layout="@layout/loading_panel" />
         <include layout="@layout/records_listview" />
@@ -29,6 +28,8 @@
         android:layout_gravity="start"
         android:choiceMode="singleChoice"
         android:divider="@android:color/transparent"
-        android:background="@color/material_blue_grey_900"/>
+        android:dividerHeight="@dimen/list_divider"
+        android:paddingLeft="@dimen/list_padding_left"
+        android:background="?attr/navigationBackgroundColor"/>
 
 </android.support.v4.widget.DrawerLayout>

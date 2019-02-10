@@ -9,14 +9,13 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 
-import cz.skup5.e2shows.dto.ShowDto;
-import cz.skup5.e2shows.playlist.Playlist;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import cz.skup5.e2shows.R;
+import cz.skup5.e2shows.dto.ShowDto;
+import cz.skup5.e2shows.playlist.Playlist;
 
 /**
  * A Adapter used to provide data and ViewHolders from records to an RecyclerView.
@@ -26,7 +25,7 @@ import cz.skup5.e2shows.R;
 public class RecordsAdapter extends RecyclerView.Adapter<RecordItemViewHolder> implements Filterable, Playlist<RecordItem> {
 
   public static final int SELECTED_NONE = -1;
-  private static final int ITEM_MARK_BG = android.R.color.holo_blue_dark;
+    private static final int ITEM_MARK_BG = R.color.colorAccent;
 
   private Context context;
   private ShowDto source;
