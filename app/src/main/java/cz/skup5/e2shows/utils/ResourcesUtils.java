@@ -1,7 +1,7 @@
 package cz.skup5.e2shows.utils;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import cz.skup5.e2shows.MainActivity;
 

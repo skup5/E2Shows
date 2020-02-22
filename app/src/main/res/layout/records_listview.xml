@@ -5,7 +5,7 @@
                 android:layout_height="match_parent"
                 android:weightSum="1">
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -15,14 +15,14 @@
 
         <view
             android:id="@+id/recycler_view"
-            class="android.support.v7.widget.RecyclerView"
+            class="androidx.recyclerview.widget.RecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginLeft="6dp"
             android:layout_marginRight="6dp"
             android:divider="@android:color/transparent"
             android:dividerHeight="@dimen/list_divider"/>
-    </android.support.v4.widget.SwipeRefreshLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <include layout="@layout/audio_controller"/>
 

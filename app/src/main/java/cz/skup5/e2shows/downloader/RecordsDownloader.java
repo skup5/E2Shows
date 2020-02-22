@@ -1,7 +1,7 @@
 package cz.skup5.e2shows.downloader;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +9,6 @@ import java.util.Set;
 
 import cz.skup5.e2shows.record.RecordItem;
 import cz.skup5.e2shows.record.RecordType;
-import cz.skup5.jEvropa2.Extractor;
 import cz.skup5.jEvropa2.dao.ItemDao;
 import cz.skup5.jEvropa2.data.Item;
 import cz.skup5.jEvropa2.data.Show;
