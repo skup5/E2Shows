@@ -49,7 +49,7 @@ public class ShowsAdapter extends BaseAdapter {
   public View getView(int i, View view, ViewGroup viewGroup) {
     TextView textView;
     view = inflater.inflate(R.layout.shows_list_item, null);
-    textView = (TextView) view.findViewById(R.id.shows_list_item);
+    textView = view.findViewById(R.id.shows_list_item);
 
     textView.setText(((ShowDto) getItem(i)).getName());
 
@@ -63,6 +63,13 @@ public class ShowsAdapter extends BaseAdapter {
       unmarkItem(textView);
     }
 
+    if (i == 0) {
+      textView.setPadding(
+        textView.getPaddingLeft(), textView.getPaddingBottom(),
+        textView.getPaddingRight(), textView.getPaddingBottom()
+      );
+    }
+    
 //    Animation animation = AnimationUtils.makeInChildBottomAnimation(context);
 //    animation.setDuration(100);
 //    view.setAnimation(animation);

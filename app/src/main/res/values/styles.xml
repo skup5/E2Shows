@@ -6,6 +6,7 @@
         <item name="drawerArrowStyle">@style/AppTheme.DrawerArrowStyle</item>
         <item name="actionButtonStyle">@style/AppTheme.Widget.ActionButton</item>
         <item name="primaryButtonTheme">@style/AppTheme.Widget.Button.Primary</item>
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
         <!--<item name="android:textViewStyle">@style/AppTheme.TextViewStyle</item>-->
 
         <item name="android:fontFamily">@font/biryani</item>
@@ -61,6 +62,24 @@
     </style>
 
     <style name="AppTheme.TextViewStyle" parent="android:Widget.TextView">
+    </style>
+
+    <style name="AppTheme.AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/NeutralButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+    </style>
+
+    <style name="NegativeButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">?attr/buttonTextColor</item>
+    </style>
+
+    <style name="NeutralButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">?attr/buttonTextColor</item>
+    </style>
+
+    <style name="PositiveButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">?attr/buttonTextColor</item>
     </style>
 
 </resources>

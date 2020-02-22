@@ -6,7 +6,8 @@
     <item
         android:id="@+id/filter_records_list"
         android:title="@string/all_filter"
-        app:showAsAction="always">
+        app:showAsAction="always"
+        android:visible="false">
         <menu>
             <item android:id="@+id/action_filter_all"
                 android:title="@string/all_filter"/>

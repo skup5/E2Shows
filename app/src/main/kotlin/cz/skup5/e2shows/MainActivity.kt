@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
                     .setTitle(R.string.loading)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setMessage(R.string.error_on_loading)
-                    .setPositiveButton(TRY_NEXT_RECORD) { dialog, which ->
+                    .setPositiveButton(TRY_NEXT_RECORD) { dialog, _ ->
                         audioPlayerControl!!.next()
                         dialog.dismiss()
                     }.setCancelable(true)
@@ -459,7 +459,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         }
-        controllerView.setOnClickListener { v: View? ->
+        controllerView.setOnClickListener {
             if (audioController!!.isEnabled && chosenRecord != null) {
                 if ((playShow == chosenShow)) {
                     recordsList!!.smoothScrollToPosition(selectedRecordIndex)
@@ -637,7 +637,7 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Detail")
                 .setMessage(recordItem.record.info())
                 .setIcon(android.R.drawable.ic_dialog_info)
-                .setNeutralButton("OK", { dialog1: DialogInterface, which: Int -> dialog1.dismiss() })
+                .setNeutralButton("OK") { dialog1: DialogInterface, _: Int -> dialog1.dismiss() }
                 .show()
     }
 

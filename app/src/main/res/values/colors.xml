@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#213F9D</color>
+    <color name="colorE2Blue">#213F9D</color>
+    <color name="colorE2Red">#e10c08</color>
+    <color name="colorPrimary">@color/colorE2Blue</color>
     <color name="colorPrimaryDark">#1A237E</color>
-    <color name="colorAccent">#e10c08</color>
+    <color name="colorAccent">@color/colorE2Red</color>
+
     <color name="primaryText">#fff</color>
-    <color name="buttonNormal">#e10c08</color>
-    <color name="buttonHighlight">#C62828</color>
-    <color name="buttonText">#FFFFFF</color>
+    <color name="buttonNormal">#fff</color>
+    <color name="buttonHighlight">#fff</color>
+    <color name="buttonText">#fff</color>
     <color name="backgroundDark">#212121</color>
-    <color name="navigationBackground">#e10c08</color>
+    <color name="navigationBackground">@color/colorE2Red</color>
 </resources>
