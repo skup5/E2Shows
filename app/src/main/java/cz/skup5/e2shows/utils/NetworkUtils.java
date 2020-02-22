@@ -28,7 +28,6 @@ public class NetworkUtils {
    */
   public static boolean isNetworkConnected() {
     ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-    NetworkInfo ni = cm.getActiveNetworkInfo();
-    return ni != null;
+    return cm.getActiveNetworkInfo() != null;
   }
 }
