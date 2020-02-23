@@ -25,7 +25,7 @@
         android:id="@+id/action_refresh_shows"
         android:icon="@drawable/ic_refresh"
         android:title="@string/refresh_button"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
     <!--<item android:id="@+id/action_settings" android:title="@string/action_settings"-->
     <!--android:orderInCategory="100" app:showAsAction="never" />-->
 </menu>

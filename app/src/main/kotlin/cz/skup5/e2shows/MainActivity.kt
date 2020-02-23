@@ -812,7 +812,8 @@ class MainActivity : AppCompatActivity() {
                     .setTitle(msg)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setAdapter(adapter, null)
-                    .setNeutralButton("OK") { dialog, _ -> dialog.dismiss() }.show()
+                    .setNeutralButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+                    .show()
         }
 
     }

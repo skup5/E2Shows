@@ -7,9 +7,9 @@
     <color name="colorAccent">@color/colorE2Red</color>
 
     <color name="primaryText">#fff</color>
-    <color name="buttonNormal">#fff</color>
-    <color name="buttonHighlight">#fff</color>
-    <color name="buttonText">#fff</color>
+    <color name="buttonNormal">@color/primaryText</color>
+    <color name="buttonHighlight">@color/primaryText</color>
+    <color name="buttonTextColor">@color/primaryText</color>
     <color name="backgroundDark">#212121</color>
     <color name="navigationBackground">@color/colorE2Red</color>
 </resources>

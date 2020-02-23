@@ -4,22 +4,18 @@
     <style name="AppTheme" parent="Base.Theme.AppCompat">
         <item name="actionBarStyle">@style/AppTheme.ActionBarStyle</item>
         <item name="drawerArrowStyle">@style/AppTheme.DrawerArrowStyle</item>
-        <item name="actionButtonStyle">@style/AppTheme.Widget.ActionButton</item>
-        <item name="primaryButtonTheme">@style/AppTheme.Widget.Button.Primary</item>
-        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
-        <!--<item name="android:textViewStyle">@style/AppTheme.TextViewStyle</item>-->
+        <item name="android:buttonStyle">@style/AppTheme.Widget.Button</item>
 
         <item name="android:fontFamily">@font/biryani</item>
         <item name="fontFamily">@font/biryani</item>
 
-        <!--<item name="android:colorBackground">@color/backgroundDark</item>-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="primaryTextColor">@color/primaryText</item>
         <item name="buttonNormalColor">@color/buttonNormal</item>
         <item name="buttonHighlightColor">@color/buttonHighlight</item>
-        <item name="buttonTextColor">@color/buttonText</item>
+        <item name="buttonTextColor">@color/buttonTextColor</item>
         <item name="backgroundDarkColor">@color/backgroundDark</item>
         <item name="navigationBackgroundColor">@color/navigationBackground</item>
     </style>
@@ -40,46 +36,17 @@
 
     <style name="AppTheme.ActionBar.ToolbarTitleAppearance" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textSize">18sp</item>
-        <!-- include other attributes you want to change: textColor, textStyle, etc -->
     </style>
 
     <style name="AppTheme.ActionBar.ToolbarSubtitleAppearance" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
         <item name="android:textSize">14sp</item>
     </style>
 
-    <style name="AppTheme.Widget.ActionButton" parent="@style/Widget.AppCompat.ActionButton">
+    <style name="AppTheme.Widget.Button" parent="Widget.AppCompat.Button">
         <item name="textAllCaps">false</item>
         <item name="android:textColor">?attr/buttonTextColor</item>
         <item name="colorButtonNormal">?attr/buttonNormalColor</item>
         <item name="colorControlHighlight">?attr/buttonHighlightColor</item>
-    </style>
-
-    <style name="AppTheme.Widget.Button.Primary"
-           parent="Widget.AppCompat.Button">
-        <item name="colorButtonNormal">?attr/buttonNormalColor</item>
-        <item name="colorControlHighlight">?attr/buttonHighlightColor</item>
-        <item name="android:textColor">?attr/buttonTextColor</item>
-    </style>
-
-    <style name="AppTheme.TextViewStyle" parent="android:Widget.TextView">
-    </style>
-
-    <style name="AppTheme.AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
-        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
-        <item name="buttonBarNeutralButtonStyle">@style/NeutralButtonStyle</item>
-        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
-    </style>
-
-    <style name="NegativeButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
-        <item name="android:textColor">?attr/buttonTextColor</item>
-    </style>
-
-    <style name="NeutralButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
-        <item name="android:textColor">?attr/buttonTextColor</item>
-    </style>
-
-    <style name="PositiveButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
-        <item name="android:textColor">?attr/buttonTextColor</item>
     </style>
 
 </resources>
