@@ -16,7 +16,7 @@
         android:screenOrientation="portrait">
 
         <activity
-            android:name="cz.skup5.e2shows.MainActivity"
+            android:name="cz.skup5.e2shows.activity.MainActivity"
             android:label="@string/app_name">
             <!--android:configChanges="orientation|screenSize">-->
             <intent-filter>

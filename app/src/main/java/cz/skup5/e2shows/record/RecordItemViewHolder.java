@@ -8,6 +8,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import cz.skup5.e2shows.R;
+import cz.skup5.e2shows.ui.listener.OnMenuItemClickListener;
+import cz.skup5.e2shows.ui.listener.OnRecordItemClickListener;
 
 /**
  * Defines View for one {@link RecordItem}

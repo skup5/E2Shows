@@ -1,4 +1,4 @@
-package cz.skup5.e2shows;
+package cz.skup5.e2shows.ui.itemdecoration;
 
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;

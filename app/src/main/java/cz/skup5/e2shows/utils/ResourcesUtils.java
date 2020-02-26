@@ -3,7 +3,7 @@ package cz.skup5.e2shows.utils;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import cz.skup5.e2shows.MainActivity;
+import cz.skup5.e2shows.activity.MainActivity;
 
 /**
  * Created by Skup on 16.2.2017.

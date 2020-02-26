@@ -1,6 +1,7 @@
-package cz.skup5.e2shows.show;
+package cz.skup5.e2shows.ui.adapter;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,25 +11,28 @@ import android.widget.TextView;
 
 import cz.skup5.e2shows.R;
 import cz.skup5.e2shows.dto.ShowDto;
+import cz.skup5.e2shows.utils.SystemServiceUtils;
 
 /**
  * Created by Roman on 16.6.2016.
  */
 public class ShowsAdapter extends BaseAdapter {
 
+  public static final int INVALID_POSITION = -1;
+
   private ShowDto[] shows = new ShowDto[0];
   private LayoutInflater inflater;
   private int textColor = Color.TRANSPARENT;
   private int markItemColor;
 
+  private int selectedItemPosition = INVALID_POSITION;
 
-  private int selectedItem = -1;
-
-
-  public ShowsAdapter(Context context) {
-    this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    this.markItemColor = context.getResources().getColor(android.R.color.holo_blue_dark);
+  public ShowsAdapter() {
+    this.inflater = (LayoutInflater) SystemServiceUtils.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    this.markItemColor = Resources.getSystem().getColor(android.R.color.holo_blue_dark);
   }
+
+  /*### Override Adapter ###*/
 
   @Override
   public int getCount() {
@@ -37,6 +41,7 @@ public class ShowsAdapter extends BaseAdapter {
 
   @Override
   public Object getItem(int i) {
+    if (i < 0 || i >= getCount()) return null;
     return shows[i];
   }
 
@@ -48,7 +53,7 @@ public class ShowsAdapter extends BaseAdapter {
   @Override
   public View getView(int i, View view, ViewGroup viewGroup) {
     TextView textView;
-    view = inflater.inflate(R.layout.shows_list_item, null);
+    view = inflater.inflate(R.layout.shows_listview_item, null);
     textView = (TextView) view.findViewById(R.id.shows_list_item);
 
     textView.setText(((ShowDto) getItem(i)).getName());
@@ -69,6 +74,36 @@ public class ShowsAdapter extends BaseAdapter {
     return view;
   }
 
+  /*### Public ###*/
+
+  public void clearSelection() {
+    this.selectedItemPosition = INVALID_POSITION;
+  }
+
+  /**
+   * @return the last selected item or null
+   */
+  public ShowDto getSelectedItem() {
+    return (ShowDto) getItem(getSelectedItemPosition());
+  }
+
+  /**
+   * @return position of last selected item or INVALID_POSITION
+   */
+  public int getSelectedItemPosition() {
+    return selectedItemPosition;
+  }
+
+  public void setSelectedItemPosition(int position) {
+    this.selectedItemPosition = position;
+  }
+
+  public void setShows(ShowDto[] shows) {
+    this.shows = shows;
+  }
+
+  /*### Private ###*/
+
   private void unmarkItem(TextView textView) {
     textView.setTextColor(textColor);
   }
@@ -78,14 +113,7 @@ public class ShowsAdapter extends BaseAdapter {
   }
 
   private boolean isItemSelected(int i) {
-    return i == selectedItem;
+    return i == selectedItemPosition;
   }
 
-  public void setSelectedItem(int selectedItem) {
-    this.selectedItem = selectedItem;
-  }
-
-  public void setShows(ShowDto[] shows) {
-    this.shows = shows;
-  }
 }

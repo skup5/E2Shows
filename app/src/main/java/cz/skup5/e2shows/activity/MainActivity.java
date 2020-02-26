@@ -1,4 +1,4 @@
-package cz.skup5.e2shows;
+package cz.skup5.e2shows.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -11,8 +11,6 @@ import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -36,22 +34,29 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import cz.skup5.e2shows.AudioController;
+import cz.skup5.e2shows.R;
+import cz.skup5.e2shows.async.PrepareStream;
 import cz.skup5.e2shows.async.downloader.DownloaderFactory;
 import cz.skup5.e2shows.async.downloader.DownloaderFactory.CoverImageDownloader;
 import cz.skup5.e2shows.async.downloader.DownloaderFactory.MediaUrlDownloader;
 import cz.skup5.e2shows.async.downloader.DownloaderFactory.RecordsDownloader;
 import cz.skup5.e2shows.dto.ShowDto;
 import cz.skup5.e2shows.exception.ShowLoadingException;
-import cz.skup5.e2shows.manager.BasicPlaylistManager;
 import cz.skup5.e2shows.manager.BasicShowManager;
-import cz.skup5.e2shows.manager.PlaylistManager;
 import cz.skup5.e2shows.manager.ShowManager;
 import cz.skup5.e2shows.record.RecordItem;
 import cz.skup5.e2shows.record.RecordItemViewHolder;
 import cz.skup5.e2shows.record.RecordType;
-import cz.skup5.e2shows.record.RecordsAdapter;
-import cz.skup5.e2shows.show.ShowsAdapter;
+import cz.skup5.e2shows.ui.adapter.RecordsAdapter;
+import cz.skup5.e2shows.ui.adapter.ShowArrayAdapter;
+import cz.skup5.e2shows.ui.adapter.ShowsAdapter;
+import cz.skup5.e2shows.ui.listener.EndlessScrollListener;
+import cz.skup5.e2shows.ui.itemdecoration.SpacesItemDecoration;
+import cz.skup5.e2shows.ui.listener.OnErrorListener;
+import cz.skup5.e2shows.ui.view.ArrayListView;
 import cz.skup5.e2shows.utils.NetworkUtils;
+import cz.skup5.e2shows.utils.ResourcesUtils;
 
 import java.net.URL;
 import java.util.Collections;
@@ -74,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
           VISIBLE_TRESHOLD = 5;
 
   private static Context CONTEXT;
-  private static final ShowManager showManager = BasicShowManager.getInstance();
 
   private MediaPlayer mediaPlayer;
   private AudioController<RecordItem> audioController;
@@ -83,8 +87,7 @@ public class MainActivity extends AppCompatActivity {
   private SwipeRefreshLayout swipeRefreshLayout;
   private RecyclerView recordsList;
 
-  private ListView showsList;
-  //private ShowsAdapter showsAdapter;
+  private ArrayListView<ShowDto> showsList;
 
   private boolean
           recordsAreDownloading = false,
@@ -95,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
   private ActionBar actionBar;
   private RecordItem chosenRecord;
   private ShowDto playShow;
-  private int chosenShowPosition = -1;
   private View loadingBar;
   private int crossfadeAnimDuration;
   private View refreshShowButton;
@@ -123,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1) {
       @Override
       public boolean isEnabled(int position) {
-        return false;
+        return true;
       }
     };
     adapter.addAll(reports);
@@ -181,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
 //                return true;
 
       case android.R.id.home:
-        ShowsAdapter showsAdapter = getShowsListAdapter();
+        ShowArrayAdapter showsAdapter = getShowsListAdapter();
         if (showsAdapter != null && showsAdapter.isEmpty()) {
           toast(R.string.shows_empty_list, Toast.LENGTH_SHORT);
           return true;
@@ -228,13 +230,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     PrepareStream ps = new PrepareStream(this, mediaPlayer);
-    ps.setOnErrorListener(new PrepareStream.OnErrorListener() {
+    ps.setOnErrorListener(new OnErrorListener() {
       @Override
-      public void onError() {
+      public void onError(List<String> errors) {
+        errors.add(0, ResourcesUtils.getString(R.string.error_on_loading));
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(R.string.loading)
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setMessage(R.string.error_on_loading)
+                .setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, errors), null)
                 .setPositiveButton(TRY_NEXT_RECORD, new DialogInterface.OnClickListener() {
                   @Override
                   public void onClick(DialogInterface dialog, int which) {
@@ -310,8 +313,9 @@ public class MainActivity extends AppCompatActivity {
     return recordsAdapter;
   }
 
-  private ShowsAdapter createShowsAdapter() {
-    ShowsAdapter showsAdapter = new ShowsAdapter(this);
+  private ShowArrayAdapter createShowsAdapter() {
+//    ShowsAdapter showsAdapter = new ShowsAdapter();
+    ShowArrayAdapter showsAdapter = new ShowArrayAdapter(this, R.layout.shows_listview_item, R.id.shows_list_item);
     showsAdapter.registerDataSetObserver(new DataSetObserver() {
       @Override
       public void onChanged() {
@@ -384,35 +388,41 @@ public class MainActivity extends AppCompatActivity {
     recordsList.scrollToPosition(getSelectedRecordIndex());
   }
 
-
   private int getSelectedRecordIndex() {
     Integer selected = selectedRecords.get(playShow.getName());
     return selected == null ? -1 : selected.intValue();
   }
 
   /**
-   * The last chosen {@link ShowDto} from navigation. Record items this show are actual in {@code recordsAdapter}.
+   * The last chosen {@link ShowDto} from navigation. Record items this show are currently in {@code recordsAdapter}.
    *
    * @return actual {@link ShowDto} or null
    */
   private ShowDto getChosenShow() {
-    RecordsAdapter recordsAdapter = getRecordsListAdapter();
-    if (recordsAdapter != null) {
-      return recordsAdapter.getSource();
-    }
-    return null;
+//    return getShowsListAdapter().getSelectedItem();
+    return showsList.getLastClickedItem();
+  }
+
+  /**
+   * Returns position of the last chosen {@link ShowDto} in adapter.
+   *
+   * @return Position (starting at 0), or {@link ShowsAdapter#INVALID_POSITION} if there is nothing selected.
+   */
+  private int getChosenShowPosition() {
+//    return getShowsListAdapter().getSelectedItemPosition();
+    return showsList.getLastClickedItemPosition();
   }
 
   private RecordsAdapter getRecordsListAdapter() {
     return (RecordsAdapter) recordsList.getAdapter();
   }
 
-  private ShowsAdapter getShowsListAdapter() {
-    return (ShowsAdapter) showsList.getAdapter();
+  private ShowArrayAdapter getShowsListAdapter() {
+    return (ShowArrayAdapter) showsList.getArrayAdapter();
   }
 
   private void init() {
-    onRefreshShows();
+//    onRefreshShows();
 
     loadingBar = findViewById(R.id.loadingPanel);
     loadingBar.setVisibility(View.GONE);
@@ -546,7 +556,7 @@ public class MainActivity extends AppCompatActivity {
       }
 
       @Override
-      void next() {
+      public void next() {
         RecordItem nextItem = audioController.getPlaylist().next();
         if (nextItem != null) {
           onRecordItemClick(nextItem, audioController.getPlaylist().indexOf(nextItem));
@@ -554,7 +564,7 @@ public class MainActivity extends AppCompatActivity {
       }
 
       @Override
-      void previous() {
+      public void previous() {
         if (getCurrentPosition() > 3) {
           seekTo(0);
         } else {
@@ -634,19 +644,22 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void initShowsList() {
-    ShowsAdapter showsAdapter = createShowsAdapter();
-    showsList = (ListView) findViewById(R.id.left_drawer);
+    ShowArrayAdapter showsAdapter = createShowsAdapter();
+    showsList = (ArrayListView<ShowDto>) findViewById(R.id.left_drawer);
     showsList.setSmoothScrollbarEnabled(true);
-    showsList.setAdapter(showsAdapter);
+    showsList.setArrayAdapter(showsAdapter);
     showsList.setOnItemClickListener((adapterView, view, i, l) -> {
-      ShowDto s = (ShowDto) showsAdapter.getItem(i);
-      onNavigationItemClick(s, i);
+      onNavigationItemClick(showsList.getLastClickedItem(), i);
     });
+    if(showsAdapter.isEmpty()){
+      onRefreshShows();
+    }
   }
 
+  @Deprecated
   private void setShowsNavigation(List<ShowDto> shows) {
-    getShowsListAdapter().setShows(shows.toArray(new ShowDto[0]));
-    getShowsListAdapter().notifyDataSetChanged();
+//    getShowsListAdapter().setShows(shows.toArray(new ShowDto[0]));
+//    getShowsListAdapter().notifyDataSetChanged();
   }
 
   /*### Event handlers ###*/
@@ -683,14 +696,15 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void onNavigationItemClick(ShowDto item, int position) {
-    if (chosenShowPosition == position) {
-      mDrawerLayout.closeDrawer(showsList);
-      return;
-    }
+//    ShowDto item = (ShowDto) getShowsListAdapter().getItem(position);
+    System.out.println("MainActivity.onNavigationItemClick: item = " + item + ", position = " + position);
+//    if (getChosenShowPosition() == position) {
+//      mDrawerLayout.closeDrawer(showsList);
+//      return;
+//    }
 
-    getShowsListAdapter().setSelectedItem(position);
-    chosenShowPosition = position;
-    //chosenShow = item;
+//    getShowsListAdapter().setSelectedItemPosition(position);
+
     if (playShow == null) playShow = item;
 
     mDrawerLayout.closeDrawer(showsList);
@@ -809,7 +823,7 @@ public class MainActivity extends AppCompatActivity {
     if (!NetworkUtils.isNetworkConnected()) {
       noConnectionToast();
     } else if (!showsAreDownloading) {
-      AsyncTask<Void, Void, List<ShowDto>> loadTask = new AsyncTask<Void, Void, List<ShowDto>>() {
+      AsyncTask<Void, Void, Void> loadTask = new AsyncTask<Void, Void, Void>() {
         private String error = null;
 
         @Override
@@ -820,21 +834,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected List<ShowDto> doInBackground(Void... params) {
+        protected Void doInBackground(Void... params) {
           try {
-            return showManager.loadAllShows();
+            getShowsListAdapter().loadData();
           } catch (ShowLoadingException e) {
             error = e.getLocalizedMessage();
           }
-          return Collections.EMPTY_LIST;
+          return null;
         }
 
         @Override
-        protected void onPostExecute(List<ShowDto> shows) {
+        protected void onPostExecute(Void result) {
           showsAreDownloading = false;
           finishDownloadShowsToast();
           if (error == null) {
-            setShowsNavigation(shows);
+//            setShowsNavigation(shows);
           } else {
             errorReportsDialog(Collections.singletonList(error));
           }
@@ -873,7 +887,6 @@ public class MainActivity extends AppCompatActivity {
     recordsAdapter.filter(type);
   }
 
-
   private void playVideo(URL url) {
    /* if (recordItem.getType().compareTo(Type.Video) != 0) return;
     if (audioController.isPlaying()) audioController.clickOnPlayPause();
@@ -892,6 +905,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void refreshActionBarSubtitle() {
+    System.out.println("MainActivity.refreshActionBarSubtitle: getChosenShow() returns " + getChosenShow());
     if (getChosenShow() != null) {
       actionBar.setSubtitle(getChosenShow().getName() + " (" + getRecordsListAdapter().getItemCount() + ")");
     }
@@ -929,9 +943,10 @@ public class MainActivity extends AppCompatActivity {
 
   /*### Toasts ###*/
 
-  private void noConnectionToast(){
+  private void noConnectionToast() {
     toast(R.string.error_no_connection, Toast.LENGTH_LONG);
   }
+
   private void finishDownloadShowsToast() {
     if (!showsAreDownloading) {
       toast(R.string.shows_are_ready, Toast.LENGTH_SHORT);

@@ -23,6 +23,7 @@ public class ShowDto {
   private URL nextPageUrl = EMPTY_URL;
 
   public ShowDto(Show show) {
+    if(show == null) throw new NullPointerException();
     this.show = show;
   }
 
@@ -101,5 +102,10 @@ public class ShowDto {
 
   public void setNextPageUrl(URL nextPageUrl) {
     this.nextPageUrl = nextPageUrl;
+  }
+
+  @Override
+  public String toString() {
+    return getName();
   }
 }

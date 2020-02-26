@@ -1,4 +1,4 @@
-package cz.skup5.e2shows;
+package cz.skup5.e2shows.ui.listener;
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -38,7 +38,7 @@ public class EndlessScrollListener extends OnScrollListener {
         }
     }
 
-    interface LoadNextItems{
+    public interface LoadNextItems{
         void loadNextItems();
     }
 }

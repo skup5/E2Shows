@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cz.skup5.e2shows.ui.listener.OnErrorListener;
 import cz.skup5.jEvropa2.Extractor;
 import cz.skup5.jEvropa2.HtmlParser;
 import cz.skup5.jEvropa2.HttpRequests;
@@ -295,9 +296,5 @@ public class DownloaderFactory {
 
   public interface OnCompleteListener<Result> {
     void onComplete(Result result);
-  }
-
-  public interface OnErrorListener {
-    void onError(List<String> errors);
   }
 }

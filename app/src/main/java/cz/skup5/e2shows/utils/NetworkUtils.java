@@ -4,19 +4,19 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import cz.skup5.e2shows.MainActivity;
+import cz.skup5.e2shows.activity.MainActivity;
 
 /**
  * Created by Skup on 18.2.2017.
  *
  * @author Skup5
  */
-public class NetworkUtils {
+public final class NetworkUtils {
 
   private NetworkUtils() {
   }
 
-  private static Context getContext() {
+  private static final Context getContext() {
     return MainActivity.getContext();
   }
 
@@ -26,8 +26,8 @@ public class NetworkUtils {
    * @return <code>true</code> if and only if device is connected,
    * <code>false</code> otherwise
    */
-  public static boolean isNetworkConnected() {
-    ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+  public static final boolean isNetworkConnected() {
+    ConnectivityManager cm = (ConnectivityManager) SystemServiceUtils.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
     return ni != null;
   }

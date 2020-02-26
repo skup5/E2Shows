@@ -1,4 +1,4 @@
-package cz.skup5.e2shows.record;
+package cz.skup5.e2shows.ui.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -17,6 +17,11 @@ import java.util.Collection;
 import java.util.List;
 
 import cz.skup5.e2shows.R;
+import cz.skup5.e2shows.ui.listener.OnMenuItemClickListener;
+import cz.skup5.e2shows.ui.listener.OnRecordItemClickListener;
+import cz.skup5.e2shows.record.RecordItem;
+import cz.skup5.e2shows.record.RecordItemViewHolder;
+import cz.skup5.e2shows.record.RecordType;
 
 /**
  * A Adapter used to provide data and ViewHolders from records to an RecyclerView.
