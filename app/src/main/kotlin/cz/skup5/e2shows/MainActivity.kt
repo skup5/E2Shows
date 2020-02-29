@@ -786,7 +786,7 @@ class MainActivity : AppCompatActivity() {
         @JvmStatic
         var context: Context? = null
             private set
-        private val showManager: ShowManager = BasicShowManager.getInstance()
+        private val showManager: ShowManager = BasicShowManager
 
         fun createRotateAnim(animatedView: View?, toDegrees: Int, duration: Int, infinite: Boolean): Animation {
             val anim: Animation = RotateAnimation(0F, toDegrees.toFloat(),
