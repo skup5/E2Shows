@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
@@ -20,19 +21,22 @@ android {
     productFlavors {
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = jvmSource
+        targetCompatibility = jvmTarget
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+    viewBinding.enabled = true
 }
 
 dependencies {
-    implementation files('libs/jEvropa2.jar')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.core:core:1.2.0'
+    implementation 'androidx.core:core-ktx:1.2.0'
     implementation 'org.mod4j.org.apache.commons:lang:2.1.0'
+    implementation 'com.github.skup5:jEvropa2:2.1.3'
 }
