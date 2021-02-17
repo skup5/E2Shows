@@ -9,6 +9,12 @@ import cz.skup5.e2shows.exception.ShowLoadingException
  * @author Skup5
  */
 interface ShowDao {
+
+    /**
+     * Stores the given show list.
+     */
+    fun add(shows: List<ShowDto>)
+
     /**
      * Loads and returns list of [ShowDto] instances.
      *
@@ -16,4 +22,9 @@ interface ShowDao {
      */
     @Throws(ShowLoadingException::class)
     fun loadAll(): List<ShowDto>
+
+    /**
+     * Loads and returns list of [ShowDto] instances asynchronously via coroutine.
+     */
+    suspend fun loadAllAsync(): List<ShowDto>
 }

@@ -11,6 +11,7 @@ import cz.skup5.e2shows.listener.OnErrorListener
  * @author Skup5
  */
 interface ShowManager {
+
     /**
      * Loads and returns list of [ShowDto]
      *
@@ -26,4 +27,9 @@ interface ShowManager {
      * @param errorListener    it is called if some error occurred while loading
      */
     fun loadAllShowsAsync(completeListener: OnCompleteListener<List<ShowDto>>, errorListener: OnErrorListener)
+
+    /**
+     * Loads and returns list of [ShowDto] instances asynchronously via coroutine.
+     */
+    suspend fun loadAllShowsAsync(): List<ShowDto>
 }

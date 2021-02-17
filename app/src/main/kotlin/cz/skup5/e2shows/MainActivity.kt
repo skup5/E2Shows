@@ -88,6 +88,8 @@ class MainActivity : AppCompatActivity() {
     private var refreshShowAnim: Animation? = null
     private var selectedRecords: MutableMap<String, Int>? = null
 
+    private lateinit var showManager: ShowManager
+
     /*#######################################################
       ###               OVERRIDE METHODS                  ###
       #######################################################*/
@@ -266,7 +268,7 @@ class MainActivity : AppCompatActivity() {
         val downloader = CoverImageDownloader()
         downloader.setOnCompleteListener({ bitmap: Bitmap? ->
             audioController!!.setCoverImage(bitmap)
-            record.setCover(bitmap)
+            record.cover = bitmap
         })
         downloader.setOnErrorListener({ reports: List<String> -> this.errorReportsDialog(reports) })
         if (record.record.hasImgUri()) {
@@ -331,6 +333,7 @@ class MainActivity : AppCompatActivity() {
         get() = showsList!!.adapter as ShowsAdapter
 
     private fun init() {
+        showManager = BasicShowManager
         onRefreshShows()
         loadingBar = findViewById(R.id.loadingPanel)
         loadingBar?.visibility = View.GONE
@@ -558,8 +561,8 @@ class MainActivity : AppCompatActivity() {
             val downloader = MediaUrlDownloader()
             downloader.setOnCompleteListener({ uri: URI? ->
                 if (uri != null) {
-                    record.getRecord().mediaUri = uri
-                    prepareMediaPlayerSource(record.getRecord().mediaUri.toString())
+                    record.record.mediaUri = uri
+                    prepareMediaPlayerSource(record.record.mediaUri.toString())
                 }
             })
             downloader.setOnErrorListener({ reports: List<String> -> this.errorReportsDialog(reports) })
@@ -781,12 +784,14 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val TRY_NEXT_RECORD = "Zkus další"
+
         private const val ITEM_OFFSET = 6
         private const val VISIBLE_THRESHOLD = 5
+
         @JvmStatic
         var context: Context? = null
             private set
-        private val showManager: ShowManager = BasicShowManager
+
 
         fun createRotateAnim(animatedView: View?, toDegrees: Int, duration: Int, infinite: Boolean): Animation {
             val anim: Animation = RotateAnimation(0F, toDegrees.toFloat(),
