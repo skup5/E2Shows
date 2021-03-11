@@ -46,3 +46,5 @@ interface Playlist<Item : PlaylistItem> {
      */
     fun indexOf(item: Item): Int
 }
+
+fun emptyPlaylist(): Playlist<PlaylistItem> = EmptyPlaylist
