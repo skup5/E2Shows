@@ -2,6 +2,8 @@ package cz.skup5.e2shows.record;
 
 import android.graphics.Bitmap;
 
+import org.jetbrains.annotations.NotNull;
+
 import cz.skup5.e2shows.playlist.PlaylistItem;
 import cz.skup5.jEvropa2.data.Item;
 
@@ -59,5 +61,18 @@ public class RecordItem implements Comparable<RecordItem>, PlaylistItem {
 
     private int compareTimes(RecordItem recordItem) {
         return (int) (recordItem.getRecord().getTimestamp() - getRecord().getTimestamp());
+    }
+
+    @NotNull
+    @Override
+    public String getTitle() {
+        return getRecord().getName();
+    }
+
+    @NotNull
+    @Override
+    public String getArtist() {
+        // FixMe: return show name
+        return "";
     }
 }

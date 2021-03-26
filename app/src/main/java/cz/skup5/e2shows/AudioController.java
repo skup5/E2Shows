@@ -228,8 +228,8 @@ public class AudioController<Item extends PlaylistItem> {
     }
   }
 
-  static abstract class AudioPlayerControl implements MediaController.MediaPlayerControl {
-    abstract void next();
+  public static abstract class AudioPlayerControl implements MediaController.MediaPlayerControl {
+    public abstract void next();
 
 //    /**
 //     * Invoked when user click "next".
@@ -247,9 +247,9 @@ public class AudioController<Item extends PlaylistItem> {
 //     */
     //abstract void onPrevious(Item actualItem, Item previousItem);
 
-    abstract void previous();
+    public abstract void previous();
 
-    abstract void stop();
+    public abstract void stop();
 
     @Override
     public int getAudioSessionId() {

@@ -3,18 +3,15 @@ package cz.skup5.e2shows
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.AlertDialog
-import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
+import android.content.*
 import android.content.pm.ActivityInfo
 import android.database.DataSetObserver
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.media.AudioManager
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -30,19 +27,18 @@ import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import cz.skup5.e2shows.AudioController.AudioPlayerControl
 import cz.skup5.e2shows.EndlessScrollListener.LoadNextItems
 import cz.skup5.e2shows.downloader.CoverImageDownloader
 import cz.skup5.e2shows.downloader.MediaUrlDownloader
 import cz.skup5.e2shows.downloader.RecordsDownloader
 import cz.skup5.e2shows.dto.ShowDto
-import cz.skup5.e2shows.listener.OnCompleteListener
 import cz.skup5.e2shows.listener.OnErrorListener
 import cz.skup5.e2shows.manager.BasicShowManager
 import cz.skup5.e2shows.manager.ShowManager
@@ -50,6 +46,7 @@ import cz.skup5.e2shows.record.RecordItem
 import cz.skup5.e2shows.record.RecordItemViewHolder
 import cz.skup5.e2shows.record.RecordType
 import cz.skup5.e2shows.record.RecordsAdapter
+import cz.skup5.e2shows.service.MediaSessionService
 import cz.skup5.e2shows.show.ShowsAdapter
 import cz.skup5.e2shows.utils.NetworkUtils
 import java.net.MalformedURLException
@@ -66,13 +63,32 @@ import java.util.*
  */
 class MainActivity : AppCompatActivity() {
     //  private static final PlaylistManager playlistManager = BasicPlaylistManager.getInstance();
-    private var mediaPlayer: MediaPlayer? = null
+    private var mediaService: MediaSessionService? = null
+    private var mediaServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Log.i(TAG, "mediaService connected")
+            mediaService = (service as MediaSessionService.LocalBinder).getService()
+            mediaServiceBound = true
+            initAudioController()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            mediaService = null
+            mediaServiceBound = false
+        }
+    }
+    private var mediaServiceBound = false
+
+    //    private var mediaPlayer: MediaPlayer? = null
     private var audioController: AudioController<RecordItem?>? = null
-    private var audioPlayerControl: AudioPlayerControl? = null
+
+    //    private var audioPlayerControl: AudioPlayerControl? = null
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
     private var recordsList: RecyclerView? = null
+
     //  private RecordsAdapter recordsAdapter;
     private var showsList: ListView? = null
+
     //private ShowsAdapter showsAdapter;
     private var recordsAreDownloading = false
     private var showsAreDownloading = false
@@ -88,9 +104,22 @@ class MainActivity : AppCompatActivity() {
     private var refreshShowAnim: Animation? = null
     private var selectedRecords: MutableMap<String, Int>? = null
 
-    /*#######################################################
-      ###               OVERRIDE METHODS                  ###
-      #######################################################*/
+    override fun onStart() {
+        super.onStart()
+
+        // start media service instead of initializing media player
+        val intent = Intent(applicationContext, MediaSessionService::class.java)
+        ContextCompat.startForegroundService(
+                applicationContext,
+                intent
+        )
+
+        if (!mediaServiceBound) {
+            if(!bindService(intent, mediaServiceConnection, BIND_AUTO_CREATE)){
+                Log.e(TAG, "Cannot bind MediaService")
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,8 +132,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer?.release()
+        unbindService(mediaServiceConnection)
     }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -155,35 +185,6 @@ class MainActivity : AppCompatActivity() {
     /*#######################################################
       ###               PUBLIC METHODS                    ###
       #######################################################*/
-
-    fun prepareMediaPlayerSource(url: String?) {
-        if (mediaPlayer == null) {
-            initMediaPlayer()
-        }
-        if (!NetworkUtils.isNetworkConnected()) {
-            noConnectionToast()
-            return
-        }
-        val ps = PrepareStream(this, mediaPlayer)
-        ps.setOnErrorListener {
-            AlertDialog.Builder(this@MainActivity)
-                    .setTitle(R.string.loading)
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setMessage(R.string.error_on_loading)
-                    .setPositiveButton(TRY_NEXT_RECORD) { dialog, _ ->
-                        audioPlayerControl!!.next()
-                        dialog.dismiss()
-                    }.setCancelable(true)
-//                .setNegativeButton(STORNO, new DialogInterface.OnClickListener() {
-//                  @Override
-//                  public void onClick(DialogInterface dialogInterface, int i) {
-//                    dialogInterface.dismiss();
-//                  }
-//                })
-                    .show()
-        }
-        ps.execute(url)
-    }
 
     fun hideLoading() {
         loadingBar!!.visibility = View.GONE
@@ -299,15 +300,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun fillRecordsList(show: ShowDto) {
         val recordsAdapter = recordsListAdapter
-        audioController!!.playlist = recordsAdapter
-        recordsAdapter!!.source = show
-        val selected = selectedRecordIndex
-        if (chosenRecord != null && (chosenRecord == recordsAdapter.getItem(selected))) {
-            recordsAdapter.setSelected(selected)
-        } else {
-            recordsAdapter.setSelected(-1)
+        audioController?.playlist = recordsAdapter
+        recordsAdapter?.let { adapter ->
+            adapter.source = show
+            val selected = selectedRecordIndex
+            if (chosenRecord != null && (chosenRecord == adapter.getItem(selected))) {
+                adapter.setSelected(selected)
+            } else {
+                adapter.setSelected(-1)
+            }
+            recordsList!!.scrollToPosition(selectedRecordIndex)
         }
-        recordsList!!.scrollToPosition(selectedRecordIndex)
     }
 
     private val selectedRecordIndex: Int
@@ -340,8 +343,15 @@ class MainActivity : AppCompatActivity() {
         initShowsList()
         initRecordsList()
         initActionBar()
-        initMediaPlayer()
-        initAudioController()
+
+
+        // TODO: move to MediaSessionService
+//        initMediaPlayer()
+        ////
+
+
+//        initAudioController() //call after mediaService was bound
+
         /*EditText textView = findViewById(R.id.testingTextFied);
         textView.setText("https://m.static.lagardere.cz/evropa2/2018/12/20181224-viki-vanoce.mp3");
 //    textView.setText("https://m.static.lagardere.cz/evropa2/image/2016/01/Leos_Patrik-3-660x336.jpg");
@@ -398,93 +408,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun initAudioController() {
         val controllerView = findViewById<View>(R.id.audio_controller)
-        audioPlayerControl = object : AudioPlayerControl() {
-            override fun start() {
-                mediaPlayer!!.start()
-            }
-
-            public override fun stop() {
-                if (mediaPlayer != null) {
-                    if (isPlaying) {
-                        mediaPlayer!!.pause()
-                    }
-                    mediaPlayer!!.stop()
-                    mediaPlayer!!.reset()
-                }
-            }
-
-            override fun pause() {
-                mediaPlayer!!.pause()
-            }
-
-            override fun getDuration(): Int {
-                return mediaPlayer!!.duration / 1000
-            }
-
-            override fun getCurrentPosition(): Int {
-                return mediaPlayer!!.currentPosition / 1000
-            }
-
-            override fun seekTo(pos: Int) {
-                mediaPlayer!!.seekTo(pos * 1000)
-            }
-
-            override fun isPlaying(): Boolean {
-                return if (mediaPlayer != null) {
-                    mediaPlayer!!.isPlaying
-                } else false
-            }
-
-            public override fun next() {
-                val nextItem = audioController!!.playlist.next()
-                if (nextItem != null) {
-                    onRecordItemClick(nextItem, audioController!!.playlist.indexOf(nextItem))
-                }
-            }
-
-            public override fun previous() {
-                if (currentPosition > 3) {
-                    seekTo(0)
-                } else {
-                    val previousItem = audioController!!.playlist.previous()
-                    if (previousItem == null) {
-                        seekTo(0)
-                    } else {
-                        onRecordItemClick(previousItem, audioController!!.playlist.indexOf(previousItem))
-                    }
-                }
-            }
-
-            override fun canPause(): Boolean {
-                return true
-            }
-        }
         controllerView.setOnClickListener {
-            if (audioController!!.isEnabled && chosenRecord != null) {
+            if (audioController?.isEnabled == true && chosenRecord != null) {
                 if ((playShow == chosenShow)) {
                     recordsList!!.smoothScrollToPosition(selectedRecordIndex)
                 }
             }
         }
-        audioController = AudioController(controllerView, audioPlayerControl)
-    }
-
-    private fun initMediaPlayer() {
-        mediaPlayer = MediaPlayer()
-        mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-        mediaPlayer!!.setOnPreparedListener(MediaPlayer.OnPreparedListener
-        /**
-         * Called when the media file is ready for playback.
-         *
-         * @param mp the MediaPlayer that is ready for playback
-         */
-        {
-            audioController!!.isEnabled = true
-            audioController!!.setUpSeekBar()
-            /* play mp3 */
-            audioController!!.clickOnPlayPause()
-        })
-        mediaPlayer!!.setOnCompletionListener { audioController!!.onCompletion() }
+        mediaService?.audioPlayerControl?.let {
+            audioController = AudioController(controllerView, it)
+        }
     }
 
     private fun initRecordsList() {
@@ -553,16 +486,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun onAudioItemClick(record: RecordItem) {
         if (record.record.hasMediaUri()) {
-            prepareMediaPlayerSource(record.record.mediaUri.toString())
+            mediaService?.prepareMediaPlayerSource(record.record.mediaUri.toString())
         } else {
             val downloader = MediaUrlDownloader()
-            downloader.setOnCompleteListener({ uri: URI? ->
+            downloader.setOnCompleteListener { uri: URI? ->
                 if (uri != null) {
-                    record.getRecord().mediaUri = uri
-                    prepareMediaPlayerSource(record.getRecord().mediaUri.toString())
+                    record.record.mediaUri = uri
+                    mediaService?.prepareMediaPlayerSource(record.record.mediaUri.toString())
                 }
-            })
-            downloader.setOnErrorListener({ reports: List<String> -> this.errorReportsDialog(reports) })
+            }
+            downloader.setOnErrorListener { reports: List<String> -> this.errorReportsDialog(reports) }
             downloader.execute(record.record.webSiteUri)
         }
     }
@@ -600,10 +533,10 @@ class MainActivity : AppCompatActivity() {
         toast(record.toString(), Toast.LENGTH_SHORT)
         val selected = selectedRecordIndex
         if (selected == index) {
-            audioController!!.clickOnPlayPause()
+            audioController?.clickOnPlayPause()
             return
         }
-        audioPlayerControl!!.stop()
+        mediaService?.audioPlayerControl?.stop()
         chosenRecord = record
         playShow = chosenShow
         when (record.type) {
@@ -613,12 +546,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         if (record.hasCover()) {
-            audioController!!.setCoverImage(record.cover)
+            audioController?.setCoverImage(record.cover)
         } else {
-            audioController!!.resetCoverImage()
+            audioController?.resetCoverImage()
             downloadCoverImage(record)
         }
-        audioController!!.setInfoLineText(record.record.name)
+        audioController?.setInfoLineText(record.record.name)
         val recordsAdapter = recordsListAdapter
         var viewHolder = recordsList!!.findViewHolderForAdapterPosition(index)
         if (viewHolder != null) {
@@ -675,10 +608,10 @@ class MainActivity : AppCompatActivity() {
             startDownloadShowsToast()
             runShowRefreshAnim()
             showManager.loadAllShowsAsync(
-                    OnCompleteListener { shows: List<ShowDto?>? ->
+                    { shows: List<ShowDto?>? ->
                         showsAreDownloading = false
                         finishDownloadShowsToast()
-                        if (shows != null && !shows.isEmpty()) {
+                        if (shows != null && shows.isNotEmpty()) {
                             setShowsNavigation(shows)
                         }
                         stopShowRefreshAnim()
@@ -783,6 +716,9 @@ class MainActivity : AppCompatActivity() {
         const val TRY_NEXT_RECORD = "Zkus další"
         private const val ITEM_OFFSET = 6
         private const val VISIBLE_THRESHOLD = 5
+
+        private const val TAG = "MainActivity"
+
         @JvmStatic
         var context: Context? = null
             private set
