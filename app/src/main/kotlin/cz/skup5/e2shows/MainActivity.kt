@@ -49,6 +49,7 @@ import cz.skup5.e2shows.record.RecordsAdapter
 import cz.skup5.e2shows.service.MediaSessionService
 import cz.skup5.e2shows.show.ShowsAdapter
 import cz.skup5.e2shows.utils.NetworkUtils
+import cz.skup5.e2shows.utils.toast
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
@@ -152,7 +153,7 @@ class MainActivity : AppCompatActivity() {
             android.R.id.home -> {
                 val showsAdapter: ShowsAdapter = showsListAdapter
                 if (showsAdapter.isEmpty) {
-                    toast(R.string.shows_empty_list, Toast.LENGTH_SHORT)
+                    toast(this, R.string.shows_empty_list, Toast.LENGTH_SHORT)
                     return true
                 }
                 if (mDrawerLayout!!.isDrawerOpen((showsList)!!)) {
@@ -198,13 +199,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun toast(resourceId: Int, duration: Int) {
-        Toast.makeText(this, resourceId, duration).show()
-    }
-
-    fun toast(msg: String?, duration: Int) {
-        Toast.makeText(this, msg, duration).show()
-    }
 
     /*#######################################################
       ###              PRIVATE METHODS                    ###
@@ -362,7 +356,7 @@ class MainActivity : AppCompatActivity() {
             downloader.setOnCompleteListener(result -> {
                 ImageView iv = (ImageView) findViewById(R.id.testingImage);
                 iv.setImageBitmap((Bitmap) result);
-                toast("cover was downloaded", Toast.LENGTH_LONG);
+                toast(this, "cover was downloaded", Toast.LENGTH_LONG);
             });
             try {
                 downloader.execute(new URL(url));
@@ -530,7 +524,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onRecordItemClick(record: RecordItem, index: Int) {
-        toast(record.toString(), Toast.LENGTH_SHORT)
+        toast(this, record.toString(), Toast.LENGTH_SHORT)
         val selected = selectedRecordIndex
         if (selected == index) {
             audioController?.clickOnPlayPause()
@@ -592,7 +586,7 @@ class MainActivity : AppCompatActivity() {
             onRecordsDownloaded(playShow, result)
             recordsListAdapter!!.update()
             swipeRefreshLayout!!.setRefreshing(false)
-            toast(R.string.refresh_done, Toast.LENGTH_LONG)
+            toast(this, R.string.refresh_done, Toast.LENGTH_LONG)
         })
         downloader.setOnErrorListener({ reports: List<String> -> this.errorReportsDialog(reports) })
         Log.d(javaClass.simpleName, "onRefreshRecords: from " + playShow!!.show.name)
@@ -620,7 +614,7 @@ class MainActivity : AppCompatActivity() {
                     (OnErrorListener { reports: List<String> -> this.errorReportsDialog(reports) })
             )
         } else {
-            toast(R.string.still_downloading, Toast.LENGTH_SHORT)
+            toast(this, R.string.still_downloading, Toast.LENGTH_SHORT)
         }
     }
 
@@ -646,18 +640,19 @@ class MainActivity : AppCompatActivity() {
         recordsAdapter.filter(type)
     }
 
-    private fun playVideo(url: URL) { /* if (recordItem.getType().compareTo(Type.Video) != 0) return;
+    private fun playVideo(url: URL) {
+        /* if (recordItem.getType().compareTo(Type.Video) != 0) return;
     if (audioController.isPlaying()) audioController.clickOnPlayPause();
-*/
+        */
         val path = Uri.parse(url.toExternalForm())
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setDataAndType(path, "video/*")
         //    intent.setType("text/plain");
-// Verify that the intent will resolve to an activity
+        // Verify that the intent will resolve to an activity
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
         } else {
-            toast(R.string.error_none_video_app, Toast.LENGTH_LONG)
+            toast(this, R.string.error_none_video_app, Toast.LENGTH_LONG)
         }
     }
 
@@ -699,17 +694,17 @@ class MainActivity : AppCompatActivity() {
 
     /*### Toasts ###*/
     private fun noConnectionToast() {
-        toast(R.string.error_no_connection, Toast.LENGTH_LONG)
+        toast(this, R.string.error_no_connection, Toast.LENGTH_LONG)
     }
 
     private fun finishDownloadShowsToast() {
         if (!showsAreDownloading) {
-            toast(R.string.shows_are_ready, Toast.LENGTH_SHORT)
+            toast(this, R.string.shows_are_ready, Toast.LENGTH_SHORT)
         }
     }
 
     private fun startDownloadShowsToast() {
-        if (!showsAreDownloading) toast(R.string.downloading_shows, Toast.LENGTH_SHORT)
+        if (!showsAreDownloading) toast(this, R.string.downloading_shows, Toast.LENGTH_SHORT)
     }
 
     companion object {
