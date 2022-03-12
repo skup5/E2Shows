@@ -7,7 +7,7 @@ android {
     buildToolsVersion '29.0.3'
     defaultConfig {
         applicationId 'cz.skup5.e2shows'
-        minSdkVersion 17
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 10
         versionName '2.1.4-SNAPSHOT'

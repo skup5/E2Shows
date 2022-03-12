@@ -55,30 +55,40 @@ import java.net.URI
 import java.net.URL
 import java.util.*
 
-//import cz.skup5.e2shows.manager.BasicPlaylistManager;
-//import cz.skup5.e2shows.playlist.PlaylistManager;
+
 /**
  * Main class of application and the only activity.
  *
  * @author Skup5
  */
 class MainActivity : AppCompatActivity() {
-    //  private static final PlaylistManager playlistManager = BasicPlaylistManager.getInstance();
-    private var mediaService: MediaSessionService? = null
+
     private var mediaServiceConnection = object : ServiceConnection {
+
+        var mediaService: MediaSessionService? = null
+        var mediaServiceBound = false
+
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             Log.i(TAG, "mediaService connected")
             mediaService = (service as MediaSessionService.LocalBinder).getService()
             mediaServiceBound = true
-            initAudioController()
+            mediaService?.let { mediaService ->
+                mediaService.audioPlayerControl?.let { it -> initAudioController(it) }
+                        ?: Log.e(TAG, "Cannot initialize AudioController because AudioPlayerControl is null.")
+            }
+                    ?: Log.e(TAG, "Cannot initialize AudioController because MediaSessionService is null.")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            Log.i(TAG, "mediaService disconnected")
             mediaService = null
             mediaServiceBound = false
         }
+
+        override fun onNullBinding(name: ComponentName?) {
+            Log.i(TAG, "mediaService returns NULL for onBind() call")
+        }
     }
-    private var mediaServiceBound = false
 
     //    private var mediaPlayer: MediaPlayer? = null
     private var audioController: AudioController<RecordItem?>? = null
@@ -109,31 +119,34 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
 
         // start media service instead of initializing media player
-        val intent = Intent(applicationContext, MediaSessionService::class.java)
         ContextCompat.startForegroundService(
-                applicationContext,
-                intent
+                this,
+                Intent(this, MediaSessionService::class.java)
         )
 
-        if (!mediaServiceBound) {
-            if(!bindService(intent, mediaServiceConnection, BIND_AUTO_CREATE)){
+        if (!mediaServiceConnection.mediaServiceBound) {
+            if (!bindService(
+                            Intent(this, MediaSessionService::class.java),
+                            mediaServiceConnection,
+                            BIND_AUTO_CREATE
+                    )
+            ) {
                 Log.e(TAG, "Cannot bind MediaService")
             }
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        unbindService(mediaServiceConnection)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        context = this
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContentView(R.layout.main_layout)
         //        setContentView(R.layout.testing_layout);
         init()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unbindService(mediaServiceConnection)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -339,13 +352,6 @@ class MainActivity : AppCompatActivity() {
         initActionBar()
 
 
-        // TODO: move to MediaSessionService
-//        initMediaPlayer()
-        ////
-
-
-//        initAudioController() //call after mediaService was bound
-
         /*EditText textView = findViewById(R.id.testingTextFied);
         textView.setText("https://m.static.lagardere.cz/evropa2/2018/12/20181224-viki-vanoce.mp3");
 //    textView.setText("https://m.static.lagardere.cz/evropa2/image/2016/01/Leos_Patrik-3-660x336.jpg");
@@ -400,7 +406,7 @@ class MainActivity : AppCompatActivity() {
         mDrawerToggle.syncState()
     }
 
-    private fun initAudioController() {
+    private fun initAudioController(audioPlayerControl: APlayerAdapter) {
         val controllerView = findViewById<View>(R.id.audio_controller)
         controllerView.setOnClickListener {
             if (audioController?.isEnabled == true && chosenRecord != null) {
@@ -409,9 +415,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        mediaService?.audioPlayerControl?.let {
-            audioController = AudioController(controllerView, it)
-        }
+        this.audioController = AudioController(controllerView, audioPlayerControl)
     }
 
     private fun initRecordsList() {
@@ -480,13 +484,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun onAudioItemClick(record: RecordItem) {
         if (record.record.hasMediaUri()) {
-            mediaService?.prepareMediaPlayerSource(record.record.mediaUri.toString())
+            mediaServiceConnection.mediaService?.prepareMediaPlayerSource(record.record.mediaUri.toString())
         } else {
             val downloader = MediaUrlDownloader()
             downloader.setOnCompleteListener { uri: URI? ->
                 if (uri != null) {
                     record.record.mediaUri = uri
-                    mediaService?.prepareMediaPlayerSource(record.record.mediaUri.toString())
+                    mediaServiceConnection.mediaService?.prepareMediaPlayerSource(record.record.mediaUri.toString())
                 }
             }
             downloader.setOnErrorListener { reports: List<String> -> this.errorReportsDialog(reports) }
@@ -530,7 +534,7 @@ class MainActivity : AppCompatActivity() {
             audioController?.clickOnPlayPause()
             return
         }
-        mediaService?.audioPlayerControl?.stop()
+        mediaServiceConnection.mediaService?.audioPlayerControl?.stop()
         chosenRecord = record
         playShow = chosenShow
         when (record.type) {
@@ -595,7 +599,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onRefreshShows() {
-        if (!NetworkUtils.isNetworkConnected()) {
+        if (!NetworkUtils.isNetworkConnected(this)) {
             noConnectionToast()
         } else if (!showsAreDownloading) {
             showsAreDownloading = true
@@ -714,9 +718,6 @@ class MainActivity : AppCompatActivity() {
 
         private const val TAG = "MainActivity"
 
-        @JvmStatic
-        var context: Context? = null
-            private set
         private val showManager: ShowManager = BasicShowManager.getInstance()
 
         fun createRotateAnim(animatedView: View?, toDegrees: Int, duration: Int, infinite: Boolean): Animation {

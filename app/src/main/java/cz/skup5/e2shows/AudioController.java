@@ -9,7 +9,6 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -35,7 +34,7 @@ public class AudioController<Item extends PlaylistItem> {
   private TextView infoLine;
   private Date cur, total;
   private SimpleDateFormat dateFormatter;
-  private AudioPlayerControl controller;
+  private APlayerAdapter controller;
   private View view;
   private Runnable run;
   private Handler seekHandler = new Handler();
@@ -44,7 +43,7 @@ public class AudioController<Item extends PlaylistItem> {
 
   private Playlist<Item> playlist;
 
-  public AudioController(View view, AudioPlayerControl controller) {
+  public AudioController(View view, APlayerAdapter controller) {
     this.enabled = false;
     this.controller = controller;
     this.run = new Runnable() {
@@ -53,7 +52,7 @@ public class AudioController<Item extends PlaylistItem> {
         seekBarUpdate();
       }
     };
-    this.dateFormatter = new SimpleDateFormat("mm:ss");
+    this.dateFormatter = new SimpleDateFormat("HH:mm:ss");
     this.cur = new Date();
     this.total = new Date();
 
@@ -124,6 +123,10 @@ public class AudioController<Item extends PlaylistItem> {
   public void setView(View view) {
     this.view = view;
     initComponents();
+  }
+
+  public void setController(APlayerAdapter controller) {
+    this.controller = controller;
   }
 
   public void setUpSeekBar() {
@@ -228,47 +231,4 @@ public class AudioController<Item extends PlaylistItem> {
     }
   }
 
-  public static abstract class AudioPlayerControl implements MediaController.MediaPlayerControl {
-    public abstract void next();
-
-//    /**
-//     * Invoked when user click "next".
-//     *
-//     * @param actualItem the last selected (played) item or null if none item wasn't selected yet
-//     * @param nextItem   the next item in actual {@link Playlist}
-//     */
-   // abstract void onNext(Item actualItem, Item nextItem);
-
-//    /**
-//     * Invoked when user click "previous".
-//     *
-//     * @param actualItem   the last selected (played) item or null if none item wasn't selected yet
-//     * @param previousItem the previous item in actual {@link Playlist}
-//     */
-    //abstract void onPrevious(Item actualItem, Item previousItem);
-
-    public abstract void previous();
-
-    public abstract void stop();
-
-    @Override
-    public int getAudioSessionId() {
-      return 0;
-    }
-
-    @Override
-    public int getBufferPercentage() {
-      return 0;
-    }
-
-    @Override
-    public boolean canSeekBackward() {
-      return true;
-    }
-
-    @Override
-    public boolean canSeekForward() {
-      return true;
-    }
-  }
 }
