@@ -2,6 +2,7 @@ package cz.skup5.e2shows
 
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.os.PowerManager
 import android.util.Log
 import android.widget.MediaController.MediaPlayerControl
 import cz.skup5.e2shows.playlist.PlaylistItem
@@ -24,7 +25,6 @@ abstract class APlayerAdapter(
                             .setUsage(AudioAttributes.USAGE_MEDIA)
                             .build()
             )
-
         }
     }
 
@@ -70,7 +70,7 @@ abstract class APlayerAdapter(
         mediaPlayer.start()
     }
 
-    fun stop() {
+    open fun stop() {
         if (isPlaying) {
             mediaPlayer.pause()
         }
@@ -111,7 +111,7 @@ abstract class APlayerAdapter(
         mediaPlayer.seekTo(pos * 1000)
     }
 
-    fun release() {
+    open fun release() {
         mediaPlayer.release()
     }
 

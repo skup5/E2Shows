@@ -1,9 +1,13 @@
 package cz.skup5.e2shows.service
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
+import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -21,6 +25,7 @@ import cz.skup5.e2shows.utils.NetworkUtils
  */
 class MediaSessionService : Service() {
 
+    private lateinit var wifiLock: WifiManager.WifiLock
     private val mBinder: IBinder = LocalBinder()
 
     var audioPlayerControl: APlayerAdapter? = null
@@ -59,6 +64,9 @@ class MediaSessionService : Service() {
         val notification = mMediaNotificationManager!!.getNotification(
                 metadata, state, mediaSession!!.sessionToken)
         startForeground(NOTIFICATION_ID, notification)
+
+        wifiLock = createWifiLock()
+
     }
 
     override fun onDestroy() {
@@ -97,6 +105,10 @@ class MediaSessionService : Service() {
     private fun initAudioPlayerControl() {
         audioPlayerControl = object : APlayerAdapter() {
 
+            init {
+                mediaPlayer.setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
+            }
+
             override fun next() {
                 /* val audioController = providers?.getAudioController()?.let {
                      val nextItem = it.playlist.next()
@@ -123,8 +135,44 @@ class MediaSessionService : Service() {
             override fun canPause(): Boolean {
                 return true
             }
+
+            override fun onPrepared(mediaPlayer: MediaPlayer) {
+                super.onPrepared(mediaPlayer)
+
+            }
+
+            override fun start() {
+                super.start()
+                wifiLock.acquire()
+            }
+
+            override fun pause() {
+                super.pause()
+                releaseWifiLock()
+            }
+
+            override fun stop(){
+                super.stop()
+                releaseWifiLock()
+            }
+
+            override fun release(){
+                super.release()
+                releaseWifiLock()
+            }
         }
 
+    }
+
+    private fun releaseWifiLock() {
+        if (wifiLock.isHeld) {
+            wifiLock.release()
+        }
+    }
+
+    private fun createWifiLock(): WifiManager.WifiLock {
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        return wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "E2Shows.MediaSessionService.WifiLock")
     }
 
     fun prepareMediaPlayerSource(url: String) {
@@ -133,6 +181,7 @@ class MediaSessionService : Service() {
             //TODO: noConnectionToast()
             return
         }
+
         audioPlayerControl?.prepareAsync(url)
 //        val ps = PrepareStream(this, mediaPlayer)
 //        ps.setOnErrorListener {
@@ -153,6 +202,8 @@ class MediaSessionService : Service() {
 //                    .show()
 //        }
 //        ps.execute(url)
+
+        wifiLock.acquire()
     }
 
     companion object {
